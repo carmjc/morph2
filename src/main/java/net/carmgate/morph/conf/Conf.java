@@ -29,21 +29,10 @@ public class Conf {
 
 	private Conf() {
 		prop = new Properties();
-		InputStream in = null;
-		try {
-			in = getClass().getResourceAsStream("/config.properties");
+		try (InputStream in = getClass().getResourceAsStream("/config.properties")) {
 			prop.load(in);
 		} catch (IOException e) {
-			LOGGER.error("Could not read config file", e);
-		} finally {
-			if (in != null) {
-				try {
-					in.close();
-				} catch (IOException e) {
-					LOGGER.error("Could not close config file input stream", e);
-				}
-			}
+			LOGGER.error("Exception raised loading properties", e);
 		}
 	}
-
 }

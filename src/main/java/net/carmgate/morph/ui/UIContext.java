@@ -69,8 +69,9 @@ public class UIContext {
 	}
 
 	public static class UIEvent {
+		// nothing in here for now, this class might be transformed in an interface later.
 	}
 
-	private final Deque<UIEvent> eventQueue = new LinkedList<UIContext.UIEvent>();
+	private final Deque<UIEvent> eventQueue = new LinkedList<>();
 
 }
