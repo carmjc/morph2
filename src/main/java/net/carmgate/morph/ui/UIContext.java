@@ -21,9 +21,7 @@ public class UIContext {
 
 		private final EventType eventType;
 		private final int button;
-		private final int[] positionInWindow;
-		private final long timeOfEvent;
-
+		
 		public MouseEvent(EventType eventType) {
 			this(eventType, -1);
 		}
@@ -32,11 +30,14 @@ public class UIContext {
 			this(eventType, button, null);
 		}
 
-		public MouseEvent(EventType eventType, int button, int[] positionInWindow) {
+		public MouseEvent(EventType eventType, int button, int[] mousePositionInWindow) {
+			this(eventType, button, mousePositionInWindow, Calendar.getInstance(TimeZone.getTimeZone("GMT")).getTimeInMillis());
+		}
+
+		public MouseEvent(EventType eventType, int button, int[] mousePositionInWindow, long timeOfEventInMillis) {
+			super(mousePositionInWindow, timeOfEventInMillis);
 			this.eventType = eventType;
 			this.button = button;
-			this.positionInWindow = positionInWindow;
-			timeOfEvent = Calendar.getInstance(TimeZone.getTimeZone("GMT")).getTimeInMillis();
 		}
 
 		/**
@@ -52,7 +53,19 @@ public class UIContext {
 		public EventType getEventType() {
 			return eventType;
 		}
+	}
 
+	public static class UIEvent {
+
+		protected final int[] positionInWindow;
+		protected final long timeOfEventInMillis;
+
+		public UIEvent(int[] positionInWindow, long timeOfEventInMillis) {
+			this.positionInWindow = positionInWindow;
+			this.timeOfEventInMillis = timeOfEventInMillis;
+			
+		}
+		
 		/**
 		 * @return the position of the mouse in the window coordinate system ({x, y}).
 		 */
@@ -63,15 +76,15 @@ public class UIContext {
 		/**
 		 * @return the timestamp of the date/time when the event was created.
 		 */
-		public long getTimeOfEvent() {
-			return timeOfEvent;
+		public long getTimeOfEventInMillis() {
+			return timeOfEventInMillis;
 		}
 	}
 
-	public static class UIEvent {
-		// nothing in here for now, this class might be transformed in an interface later.
-	}
-
 	private final Deque<UIEvent> eventQueue = new LinkedList<>();
+
+	public Deque<UIEvent> getEventQueue() {
+		return eventQueue;
+	}
 
 }

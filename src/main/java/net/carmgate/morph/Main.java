@@ -10,6 +10,9 @@ import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.view.ViewPort;
 import net.carmgate.morph.ui.GameMouse;
 import net.carmgate.morph.ui.UIContext;
+import net.carmgate.morph.ui.UIContext.MouseEvent;
+import net.carmgate.morph.ui.UIContext.MouseEvent.EventType;
+import net.carmgate.morph.ui.UIContext.UIEvent;
 
 import org.lwjgl.LWJGLException;
 import org.lwjgl.input.Mouse;
@@ -253,6 +256,18 @@ public class Main {
 			// To be able to render the scene while it's being dragged, we do not change the focus point as long as the mouse button has not been released
 
 			if (Mouse.next()) {
+				// add interaction to ui context
+				EventType evtType = null;
+				if (Mouse.getEventButton() > 0) {
+					if (Mouse.getEventButtonState()) {
+						evtType = EventType.BUTTON_DOWN;
+					} else {
+						evtType = EventType.BUTTON_UP;
+					}
+				}
+				UIEvent evt = new MouseEvent(evtType, Mouse.getEventButton(), new int[] {Mouse.getEventX(), Mouse.getEventY()});
+				uiContext.getEventQueue().push(evt);
+				
 				// First see if it triggered an event on a model element
 				// TODO implement model elements event handling
 
