@@ -1,6 +1,7 @@
 package net.carmgate.morph.model;
 
 import net.carmgate.morph.model.view.ViewPort;
+import net.carmgate.morph.ui.UIContext;
 
 public class GlobalModel {
 
@@ -12,8 +13,13 @@ public class GlobalModel {
 	}
 
 	private final ViewPort viewport = new ViewPort();
+	private final UIContext uiContext = new UIContext();
 
 	private GlobalModel() {
+	}
+
+	public UIContext getUIContext() {
+		return uiContext;
 	}
 
 	public ViewPort getViewport() {
