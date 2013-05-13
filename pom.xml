@@ -5,6 +5,7 @@
 	<artifactId>morph2</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<platform>windows</platform>
 	</properties>
 	<build>
