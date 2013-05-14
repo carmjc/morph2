@@ -24,7 +24,7 @@ public class GameMouse {
 	public static int getXInWorld() {
 		ViewPort viewport = Model.getModel().getViewport();
 		// TODO move the width to the model
-		return (int) ((Mouse.getX() - Conf.getIntProperty("window.initialWidth") / 2) / viewport.getZoomFactor() + viewport.getFocalPoint().x) ;
+		return (int) ((Mouse.getX() - Conf.getIntProperty("window.initialWidth") / 2) / viewport.getZoomFactor() - viewport.getFocalPoint().x);
 	}
 
 	/**
@@ -40,7 +40,7 @@ public class GameMouse {
 	public static int getYInWorld() {
 		ViewPort viewport = Model.getModel().getViewport();
 		// TODO move the height to the model
-		return (int) ((Mouse.getY() - Conf.getIntProperty("window.initialHeight") / 2) / viewport.getZoomFactor() + viewport.getFocalPoint().y) ;
+		return (int) ((Mouse.getY() - Conf.getIntProperty("window.initialHeight") / 2) / viewport.getZoomFactor() + viewport.getFocalPoint().y);
 	}
 
 }

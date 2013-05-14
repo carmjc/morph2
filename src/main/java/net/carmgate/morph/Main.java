@@ -121,6 +121,9 @@ public class Main {
 		Map<Integer, Object> shipsMap = new HashMap<>();
 		Model.getModel().getEntities().put(Ship.class.getAnnotation(Entity.class).uniqueId(), shipsMap);
 		shipsMap.put(ship.getId(), ship);
+		ship = new Ship(100, 0, 0);
+		ship.rot = 40;
+		shipsMap.put(ship.getId(), ship);
 	}
 
 	/**
