@@ -1,4 +1,4 @@
-package net.carmgate.morph.uihandler;
+package net.carmgate.morph.actions;
 
 import java.nio.IntBuffer;
 import java.util.List;
@@ -11,7 +11,6 @@ import net.carmgate.morph.model.entities.Ship;
 import net.carmgate.morph.ui.GameMouse;
 import net.carmgate.morph.ui.Rendererable.RenderingType;
 import net.carmgate.morph.ui.Selectable;
-import net.carmgate.morph.ui.Event;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
@@ -19,7 +18,7 @@ import org.lwjgl.util.glu.GLU;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Select implements Action {
+public class Select implements Activable {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(Select.class);
 
@@ -111,7 +110,7 @@ public class Select implements Action {
 	}
 
 	@Override
-	public void run(Event event) {
+	public void run() {
 
 		// Clear the selection
 		// TODO find a way to do it more safely. We have to know that the clear must not be done alone, that's not safe.

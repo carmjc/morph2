@@ -1,10 +1,9 @@
-package net.carmgate.morph.uihandler.drag;
+package net.carmgate.morph.actions.drag;
 
+import net.carmgate.morph.actions.Activable;
 import net.carmgate.morph.model.Model;
-import net.carmgate.morph.ui.Event;
-import net.carmgate.morph.uihandler.Action;
 
-public class DraggedWorld implements Action {
+public class DraggedWorld implements Activable {
 
 	private final DragContext dragContext;
 
@@ -14,7 +13,7 @@ public class DraggedWorld implements Action {
 	}
 
 	@Override
-	public void run(Event event) {
+	public void run() {
 		dragContext.reset();
 		Model.getModel().getUIContext().getEventQueue().clear();
 	}

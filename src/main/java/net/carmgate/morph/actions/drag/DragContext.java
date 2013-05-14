@@ -1,4 +1,4 @@
-package net.carmgate.morph.uihandler.drag;
+package net.carmgate.morph.actions.drag;
 
 import net.carmgate.morph.model.common.Vect3D;
 

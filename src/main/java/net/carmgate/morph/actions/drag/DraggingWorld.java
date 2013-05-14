@@ -1,17 +1,16 @@
-package net.carmgate.morph.uihandler.drag;
+package net.carmgate.morph.actions.drag;
 
+import net.carmgate.morph.actions.Activable;
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.view.ViewPort;
 import net.carmgate.morph.ui.GameMouse;
-import net.carmgate.morph.ui.Event;
-import net.carmgate.morph.uihandler.Action;
 
 import org.lwjgl.input.Mouse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DraggingWorld implements Action {
+public class DraggingWorld implements Activable {
 
 	@SuppressWarnings("unused")
 	private static final Logger LOGGER = LoggerFactory.getLogger(DraggingWorld.class);
@@ -24,7 +23,7 @@ public class DraggingWorld implements Action {
 	}
 
 	@Override
-	public void run(Event event) {
+	public void run() {
 		if (dragContext.getOldFP() == null) {
 			dragContext.setOldFP(new Vect3D(Model.getModel().getViewport().getFocalPoint()));
 			dragContext.setOldMousePosInWindow(new Vect3D(GameMouse.getX(), GameMouse.getY(), 0));

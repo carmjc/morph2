@@ -7,21 +7,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import net.carmgate.morph.actions.Activable;
+import net.carmgate.morph.actions.Select;
+import net.carmgate.morph.actions.drag.DragContext;
+import net.carmgate.morph.actions.drag.DraggedWorld;
+import net.carmgate.morph.actions.drag.DraggingWorld;
 import net.carmgate.morph.conf.Conf;
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Entity;
 import net.carmgate.morph.model.entities.Ship;
 import net.carmgate.morph.model.view.ViewPort;
-import net.carmgate.morph.ui.Rendererable;
-import net.carmgate.morph.ui.Rendererable.RenderingType;
 import net.carmgate.morph.ui.Event;
 import net.carmgate.morph.ui.Event.EventType;
-import net.carmgate.morph.uihandler.Action;
-import net.carmgate.morph.uihandler.Select;
-import net.carmgate.morph.uihandler.drag.DragContext;
-import net.carmgate.morph.uihandler.drag.DraggedWorld;
-import net.carmgate.morph.uihandler.drag.DraggingWorld;
+import net.carmgate.morph.ui.Rendererable;
+import net.carmgate.morph.ui.Rendererable.RenderingType;
 
 import org.lwjgl.LWJGLException;
 import org.lwjgl.input.Mouse;
@@ -47,7 +47,7 @@ public class Main {
 
 	private final Model model = Model.getModel();
 
-	private final Map<List<Event>, List<Action>> uiHandlerConfs = new HashMap<>();
+	private final Map<List<Event>, List<Activable>> uiHandlerConfs = new HashMap<>();
 	/** This is used to retrieve picked entities. */
 	private final Map<Integer, Class<?>> entitiesMap = new HashMap<>();
 
@@ -152,11 +152,11 @@ public class Main {
 		DraggedWorld draggedWorld = new DraggedWorld(dragContext);
 		LinkedList<Event> confList = new LinkedList<>();
 		confList.add(new Event(EventType.MOUSE_BUTTON_DOWN, 0, null, 0));
-		uiHandlerConfs.put(confList, new ArrayList<Action>());
+		uiHandlerConfs.put(confList, new ArrayList<Activable>());
 		uiHandlerConfs.get(confList).add(draggingWorld);
 		confList = new LinkedList<>(confList);
 		confList.add(new Event(EventType.MOUSE_BUTTON_UP, 0, null, 0));
-		uiHandlerConfs.put(confList, new ArrayList<Action>());
+		uiHandlerConfs.put(confList, new ArrayList<Activable>());
 		uiHandlerConfs.get(confList).add(draggedWorld);
 		uiHandlerConfs.get(confList).add(new Select());
 	}
@@ -245,18 +245,7 @@ public class Main {
 			Display.update();
 			Display.sync(100);
 
-			// Get mouse position in world coordinates
-			// Vect3D worldMousePos = new Vect3D(GameMouse.getXInWorld(),
-			// GameMouse.getYInWorld(), 0);
-			// Get mouse position in pixels on the display.
-			// TODO is this necessary ?
-			// Vect3D mousePos = new Vect3D(WorldMouse.getX(),
-			// WorldMouse.getY(), 0);
-
-			// To be able to render the scene while it's being dragged, we do
-			// not change the focus point as long as the mouse button has not
-			// been released
-
+			// Fire events accordingly
 			if (Mouse.next()) {
 				// add interaction to ui context
 				EventType evtType = null;
@@ -270,34 +259,14 @@ public class Main {
 					model.getUIContext().getEventQueue().add(evt);
 				}
 
-				// First see if it triggered an event on a model element
-				// TODO implement model elements event handling
-
-				// // Then handle drag
-				// // Drag is done with left button
-				// if (Mouse.getEventButton() == 0) {
-				// if (Mouse.getEventButtonState()) {
-				// LOGGER.debug("mouse down");
-				// // Handle drag if the mouse position delta has reached
-				// // the threshold.
-				// // TODO implement this
-				//
-				// oldFP = new Vect3D(GlobalModel.getModel().getViewport().getFocalPoint());
-				// oldMousePosInWindow = new Vect3D(GameMouse.getX(), GameMouse.getY(), 0);
-				//
-				// } else {
-				// oldFP = null;
-				// oldMousePosInWindow = null;
-				// LOGGER.debug("mouse up");
-				// }
-				// }
 			}
 
+			//
 			if (!model.getUIContext().getEventQueue().isEmpty()) {
-				List<Action> list = uiHandlerConfs.get(model.getUIContext().getEventQueue());
+				List<Activable> list = uiHandlerConfs.get(model.getUIContext().getEventQueue());
 				if (list != null) {
-					for (Action uiHandler : list) {
-						uiHandler.run(null);
+					for (Activable uiHandler : list) {
+						uiHandler.run();
 					}
 				}
 			}
