@@ -11,13 +11,16 @@ import java.util.Set;
 import net.carmgate.morph.conf.Conf;
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.common.Vect3D;
+import net.carmgate.morph.model.entities.Entity;
 import net.carmgate.morph.model.entities.Ship;
 import net.carmgate.morph.model.view.ViewPort;
+import net.carmgate.morph.ui.EntityServices;
 import net.carmgate.morph.ui.UIEvent;
 import net.carmgate.morph.ui.UIEvent.EventType;
 import net.carmgate.morph.ui.renderer.Renderer;
 import net.carmgate.morph.ui.renderer.Renderer.RenderingType;
 import net.carmgate.morph.ui.renderer.Renders;
+import net.carmgate.morph.uihandler.Select;
 import net.carmgate.morph.uihandler.drag.DragContext;
 import net.carmgate.morph.uihandler.drag.DraggedWorld;
 import net.carmgate.morph.uihandler.drag.DraggingWorld;
@@ -48,69 +51,31 @@ public class Main {
 
 	private final Map<List<UIEvent>, List<Runnable>> uiHandlerConfs = new HashMap<>();
 	@SuppressWarnings("rawtypes")
-	private final Map<Class<?>, Renderer> renderers = new HashMap<>();
+	public static final Map<Class<?>, EntityServices> entityServicesMap = new HashMap<>();
+	/** This is used to retrieve picked entities. */
+	private final Map<Integer, Class<?>> entitiesMap = new HashMap<>();
 
-	// public void pick(int x, int y) {
-	//
-	// logger.debug("Picking at " + x + " " + y);
-	// if (World.getWorld().getSelectedShip() != null) {
-	// logger.debug("Selected ship: " + World.getWorld().getSelectedShip().pos);
-	// }
-	//
-	// // get viewport
-	// IntBuffer viewport = BufferUtils.createIntBuffer(16);
-	// GL11.glGetInteger(GL11.GL_VIEWPORT, viewport);
-	//
-	// IntBuffer selectBuf = BufferUtils.createIntBuffer(512);
-	// GL11.glSelectBuffer(selectBuf);
-	// GL11.glRenderMode(GL11.GL_SELECT);
-	//
-	// GL11.glInitNames();
-	// GL11.glPushName(-1);
-	//
-	// GL11.glMatrixMode(GL11.GL_PROJECTION);
-	// GL11.glPushMatrix();
-	// GL11.glLoadIdentity();
-	// // GL11.glScalef(SCALE_FACTOR, SCALE_FACTOR, SCALE_FACTOR);
-	// float pickMatrixX = x; // SCALE_FACTOR;
-	// float pickMatrixY = y; // SCALE_FACTOR;
-	// GLU.gluPickMatrix(pickMatrixX, pickMatrixY, 6.0f, 6.0f, viewport);
-	// GLU.gluOrtho2D(0, WIDTH, 0, HEIGHT);
-	//
-	// worldRenderer.render(GL11.GL_SELECT, null, globalModel);
-	//
-	// GL11.glMatrixMode(GL11.GL_PROJECTION);
-	// GL11.glPopMatrix();
-	// GL11.glFlush();
-	//
-	// int hits = GL11.glRenderMode(GL11.GL_RENDER);
-	//
-	// if (hits == 0) {
-	// if (globalModel.getSelectedShip() != null) {
-	// globalModel.getSelectedShip().setSelectedMorph(-1);
-	// }
-	// globalModel.setSelectedShip(-1);
-	// return;
-	// }
-	//
-	// int j = 0;
-	// Ship lastSelectedShip = globalModel.getSelectedShip();
-	// int index = selectBuf.get(j + 4);
-	// globalModel.setSelectedShip(index);
-	// if (lastSelectedShip != null && lastSelectedShip ==
-	// globalModel.getSelectedShip()) {
-	// globalModel.getSelectedShip().toggleSelectedMorph(selectBuf.get(j + 5));
-	// }
-	// }
-	//
+	/**
+	* Scan for entities and registers them in the entitiesMap.
+	* that allows for fast retrieval of the Class<?> of the entity with its uniqueId.
+	*/
+	private void initEntities() {
+		// Init the reflection API
+		Reflections reflections = new Reflections("net.carmgate.morph");
+
+		// Look for classes annotated with the @Entity annotation
+		Set<Class<?>> entities = reflections.getTypesAnnotatedWith(Entity.class);
+
+		for (Class<?> entity : entities) {
+			entitiesMap.put(entity.getAnnotation(Entity.class).uniqueId(), entity);
+		}
+	}
 
 	/**
 	 * Initialise the GL display
 	 * 
-	 * @param width
-	 *            The width of the display
-	 * @param height
-	 *            The height of the display
+	 * @param width The width of the display
+	 * @param height The height of the display
 	 */
 	private void initGL(int width, int height) {
 		try {
@@ -150,26 +115,70 @@ public class Main {
 		GL11.glLoadIdentity();
 	}
 
+	private void initModel() {
+		Ship ship = new Ship(0, 0, 0);
+		ship.rot = 10;
+		Map<Integer, Object> shipsMap = new HashMap<>();
+		Model.getModel().getEntities().put(Ship.class.getAnnotation(Entity.class).uniqueId(), shipsMap);
+		shipsMap.put(ship.getId(), ship);
+	}
+
 	/**
 	 * Scans the classpath looking for renderers (classes annotated with @{@link Renders})
-	 * and add them to the maps of the renderers
+	 * initializes them and add them to the maps of the renderers
 	 */
 	private void initRenderers() {
+		// Init the reflection API
 		Reflections reflections = new Reflections("net.carmgate.morph");
+
+		// Look for classes annotated with the @Renders annotation
 		Set<Class<?>> renderers = reflections.getTypesAnnotatedWith(Renders.class);
+
+		// Iterate over the result set to register the renderers with the model classes
 		for (Class<?> renderer : renderers) {
+
+			// Get the model classes (entities) for the renderer
 			Renders annotation = renderer.getAnnotation(Renders.class);
 			Class<?>[] entities = annotation.value();
-			if (entities.length > 0) {
-				try {
-					Renderer<?> rendererInstance = (Renderer<?>) renderer.newInstance();
-					rendererInstance.init();
-					for (Class<?> entity : entities) {
-						this.renderers.put(entity, rendererInstance);
+
+			// If the entities array is empty, there's nothing to do, but that is an error
+			if (entities.length == 0) {
+				LOGGER.error("The renderer {} does not render any model element !", renderer.getClass().getName());
+
+				// This renderer cannot be associated with any entity, stopping here
+				continue;
+			}
+
+			try {
+				// Instanciate the new renderer
+				Renderer<?> rendererInstance = (Renderer<?>) renderer.newInstance();
+				// Initialize the renderer (for instance, to initialize renderer assets)
+				rendererInstance.init();
+
+				// Iterate over the entities to associate the renderer with them
+				for (Class<?> entity : entities) {
+					EntityServices entityServices = entityServicesMap.get(entity);
+
+					// Create a new entityService instance if it does not exist
+					if (entityServices == null) {
+						entityServices = new EntityServices();
+						entityServicesMap.put(entity, entityServices);
 					}
-				} catch (InstantiationException | IllegalAccessException e) {
-					LOGGER.error("Exception raised while adding a renderer to the renderers map", e);
+
+					// Check that there aren't any renderer associated yet with this entity
+					if (entityServices.getRenderer() != null) {
+						LOGGER.error("About to replace {} renderer {} with {}", new String[] {
+								entity.getClass().getName(),
+								entityServices.getRenderer().getClass().getName(),
+								renderer.getName()
+						});
+					}
+
+					// Associate
+					entityServices.setRenderer(rendererInstance);
 				}
+			} catch (InstantiationException | IllegalAccessException e) {
+				LOGGER.error("Exception raised while adding a renderer to the renderers map", e);
 			}
 		}
 	}
@@ -187,6 +196,7 @@ public class Main {
 		confList.add(new UIEvent(EventType.MOUSE_BUTTON_DOWN, 0, null, 0));
 		uiHandlerConfs.put(confList, new ArrayList<Runnable>());
 		uiHandlerConfs.get(confList).add(draggingWorld);
+		uiHandlerConfs.get(confList).add(new Select());
 		confList = new LinkedList<>(confList);
 		confList.add(new UIEvent(EventType.MOUSE_BUTTON_UP, 0, null, 0));
 		uiHandlerConfs.put(confList, new ArrayList<Runnable>());
@@ -210,9 +220,10 @@ public class Main {
 		// worldRenderer.render(GL11.GL_RENDER, renderStyle, globalModel);
 
 		// TODO render the world
-		Ship ship = new Ship(0, 0, 0);
-		ship.rot = 10;
-		renderers.get(Ship.class).render(GL11.GL_RENDER, RenderingType.NORMAL, ship);
+		Map<Integer, Ship> shipsMap = Model.getModel().getEntityMap(Ship.class.getAnnotation(Entity.class).uniqueId());
+		for (Ship ship : shipsMap.values()) {
+			entityServicesMap.get(Ship.class).getRenderer().render(GL11.GL_RENDER, RenderingType.NORMAL, ship);
+		}
 
 		GL11.glRotatef(-model.getViewport().getRotation(), 0, 0, 1);
 		GL11.glTranslatef(-focalPoint.x, -focalPoint.y, -focalPoint.z);
@@ -253,18 +264,15 @@ public class Main {
 	 * Start the application
 	 */
 	public void start() {
+		// init OpenGL context
 		initGL(Conf.getIntProperty("window.initialWidth"), Conf.getIntProperty("window.initialHeight"));
-		// TODO Init renderers should be done BY renderers
-		// MorphRenderer.init();
 
-		// Initializes the world and its renderer
-		// TODO do world init in the constructor
-		// globalModel = World.getWorld();
-		// globalModel.init();
-		// worldRenderer = new WorldRenderer();
-		// interfaceRenderer = new InterfaceRenderer();
-		// interfaceRenderer.init();
+		// scan for entities
+		initEntities();
+		// scan for renderers
 		initRenderers();
+		// init world model
+		initModel();
 
 		// Configure UI Handlers
 		initUIHandlers();
