@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import net.carmgate.morph.conf.Conf;
 import net.carmgate.morph.model.Model;
@@ -14,8 +15,9 @@ import net.carmgate.morph.model.entities.Ship;
 import net.carmgate.morph.model.view.ViewPort;
 import net.carmgate.morph.ui.UIEvent;
 import net.carmgate.morph.ui.UIEvent.EventType;
+import net.carmgate.morph.ui.renderer.Renderer;
 import net.carmgate.morph.ui.renderer.Renderer.RenderingType;
-import net.carmgate.morph.ui.renderer.ShipRenderer;
+import net.carmgate.morph.ui.renderer.Renders;
 import net.carmgate.morph.uihandler.drag.DragContext;
 import net.carmgate.morph.uihandler.drag.DraggedWorld;
 import net.carmgate.morph.uihandler.drag.DraggingWorld;
@@ -26,6 +28,7 @@ import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.glu.GLU;
+import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,13 +44,11 @@ public class Main {
 		sample.start();
 	}
 
-	private final Model globalModel = Model.getModel();
+	private final Model model = Model.getModel();
 
-	private final Vect3D holdWorldMousePos = null;
-
-	private Vect3D oldFP;
-	private Vect3D oldMousePosInWindow;
 	private final Map<List<UIEvent>, List<Runnable>> uiHandlerConfs = new HashMap<>();
+	@SuppressWarnings("rawtypes")
+	private final Map<Class<?>, Renderer> renderers = new HashMap<>();
 
 	// public void pick(int x, int y) {
 	//
@@ -138,7 +139,7 @@ public class Main {
 
 		// set viewport
 		// TODO: compute the viewport from the windows size and zoom/scale
-		ViewPort viewport = globalModel.getViewport();
+		ViewPort viewport = model.getViewport();
 		Vect3D focalPoint = viewport.getFocalPoint();
 
 		// TODO : test the zoom factor
@@ -147,6 +148,30 @@ public class Main {
 
 		GL11.glMatrixMode(GL11.GL_MODELVIEW);
 		GL11.glLoadIdentity();
+	}
+
+	/**
+	 * Scans the classpath looking for renderers (classes annotated with @{@link Renders})
+	 * and add them to the maps of the renderers
+	 */
+	private void initRenderers() {
+		Reflections reflections = new Reflections("net.carmgate.morph");
+		Set<Class<?>> renderers = reflections.getTypesAnnotatedWith(Renders.class);
+		for (Class<?> renderer : renderers) {
+			Renders annotation = renderer.getAnnotation(Renders.class);
+			Class<?>[] entities = annotation.value();
+			if (entities.length > 0) {
+				try {
+					Renderer<?> rendererInstance = (Renderer<?>) renderer.newInstance();
+					rendererInstance.init();
+					for (Class<?> entity : entities) {
+						this.renderers.put(entity, rendererInstance);
+					}
+				} catch (InstantiationException | IllegalAccessException e) {
+					LOGGER.error("Exception raised while adding a renderer to the renderers map", e);
+				}
+			}
+		}
 	}
 
 	/**
@@ -173,9 +198,9 @@ public class Main {
 	 */
 	public void render() {
 
-		Vect3D focalPoint = globalModel.getViewport().getFocalPoint();
+		Vect3D focalPoint = model.getViewport().getFocalPoint();
 		GL11.glTranslatef(focalPoint.x, focalPoint.y, focalPoint.z);
-		GL11.glRotatef(globalModel.getViewport().getRotation(), 0, 0, 1);
+		GL11.glRotatef(model.getViewport().getRotation(), 0, 0, 1);
 
 		// TODO draw world
 		// RenderStyle renderStyle = RenderStyle.NORMAL;
@@ -185,9 +210,11 @@ public class Main {
 		// worldRenderer.render(GL11.GL_RENDER, renderStyle, globalModel);
 
 		// TODO render the world
-		new ShipRenderer().render(GL11.GL_RENDER, RenderingType.NORMAL, new Ship(0, 0, 0));
+		Ship ship = new Ship(0, 0, 0);
+		ship.rot = 10;
+		renderers.get(Ship.class).render(GL11.GL_RENDER, RenderingType.NORMAL, ship);
 
-		GL11.glRotatef(-globalModel.getViewport().getRotation(), 0, 0, 1);
+		GL11.glRotatef(-model.getViewport().getRotation(), 0, 0, 1);
 		GL11.glTranslatef(-focalPoint.x, -focalPoint.y, -focalPoint.z);
 
 		// TODO Interface rendering
@@ -237,9 +264,9 @@ public class Main {
 		// worldRenderer = new WorldRenderer();
 		// interfaceRenderer = new InterfaceRenderer();
 		// interfaceRenderer.init();
+		initRenderers();
 
 		// Configure UI Handlers
-
 		initUIHandlers();
 
 		// Rendering loop
@@ -274,7 +301,7 @@ public class Main {
 						evtType = EventType.MOUSE_BUTTON_UP;
 					}
 					UIEvent evt = new UIEvent(evtType, Mouse.getEventButton(), new int[] { Mouse.getEventX(), Mouse.getEventY() });
-					globalModel.getUIContext().getEventQueue().add(evt);
+					model.getUIContext().getEventQueue().add(evt);
 				}
 
 				// First see if it triggered an event on a model element
@@ -300,8 +327,8 @@ public class Main {
 				// }
 			}
 
-			if (!globalModel.getUIContext().getEventQueue().isEmpty()) {
-				List<Runnable> list = uiHandlerConfs.get(Collections.unmodifiableList(globalModel.getUIContext().getEventQueue()));
+			if (!model.getUIContext().getEventQueue().isEmpty()) {
+				List<Runnable> list = uiHandlerConfs.get(Collections.unmodifiableList(model.getUIContext().getEventQueue()));
 				if (list != null) {
 					for (Runnable uiHandler : list) {
 						uiHandler.run();

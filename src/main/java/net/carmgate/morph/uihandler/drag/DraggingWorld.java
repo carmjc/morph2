@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 public class DraggingWorld implements Runnable {
 
+	@SuppressWarnings("unused")
 	private static final Logger LOGGER = LoggerFactory.getLogger(DraggingWorld.class);
 
 	private final DragContext dragContext;

@@ -10,7 +10,8 @@ import org.slf4j.LoggerFactory;
  */
 public class Ship {
 
-	private static final Logger logger = LoggerFactory.getLogger(Ship.class);
+	@SuppressWarnings("unused")
+	private static final Logger lOGGER = LoggerFactory.getLogger(Ship.class);
 
 	/** The ship max speed. */
 	public float maxSpeed = 200;

@@ -16,6 +16,11 @@ public interface Renderer<T> {
 	}
 
 	/**
+	 * Initialize resources if needed.
+	 */
+	void init();
+
+	/**
 	 * Draw the member object in the scene.
 	 * @param glMode {@link GL11#GL_RENDER} or {@link GL11#GL_SELECT}
 	 * @param renderingType {@link RenderingType}
