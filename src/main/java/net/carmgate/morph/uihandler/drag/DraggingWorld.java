@@ -1,6 +1,6 @@
 package net.carmgate.morph.uihandler.drag;
 
-import net.carmgate.morph.model.GlobalModel;
+import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.view.ViewPort;
 import net.carmgate.morph.ui.GameMouse;
@@ -22,20 +22,18 @@ public class DraggingWorld implements Runnable {
 
 	@Override
 	public void run() {
-		LOGGER.debug("huh");
-
 		if (dragContext.getOldFP() == null) {
-			dragContext.setOldFP(new Vect3D(GlobalModel.getModel().getViewport().getFocalPoint()));
+			dragContext.setOldFP(new Vect3D(Model.getModel().getViewport().getFocalPoint()));
 			dragContext.setOldMousePosInWindow(new Vect3D(GameMouse.getX(), GameMouse.getY(), 0));
 		}
 
 		Vect3D oldFP = dragContext.getOldFP();
 		Vect3D oldMousePosInWindow = dragContext.getOldMousePosInWindow();
 		if (oldFP != null) {
-			ViewPort viewport = GlobalModel.getModel().getViewport();
+			ViewPort viewport = Model.getModel().getViewport();
 			Vect3D fp = viewport.getFocalPoint();
-			fp.x = oldFP.x + (Mouse.getX() - oldMousePosInWindow.x) / GlobalModel.getModel().getViewport().getZoomFactor();
-			fp.y = oldFP.y - (Mouse.getY() - oldMousePosInWindow.y) / GlobalModel.getModel().getViewport().getZoomFactor();
+			fp.x = oldFP.x + (Mouse.getX() - oldMousePosInWindow.x) / Model.getModel().getViewport().getZoomFactor();
+			fp.y = oldFP.y - (Mouse.getY() - oldMousePosInWindow.y) / Model.getModel().getViewport().getZoomFactor();
 		}
 	}
 }

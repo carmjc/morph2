@@ -4,13 +4,11 @@ import java.util.Calendar;
 import java.util.TimeZone;
 
 /**
- * A mouse event is any simple (non-composed) interaction with the mouse. For
- * instance, a button down event. TODO Several events might be merged in one.
- * For instance, a button down/button up, without mouse movement might be a
- * button click)
- * 
- * TODO We should split between the conf part (event type and button) and the execution part
- * (mouse position and time of event).
+ * A mouse or keyboard event is any simple (non-composed) interaction with the mouse or keyboard.
+ * For instance, a button down event.
+ * TODO Several events might be merged in one. For instance, a button down/button up, without mouse movement might be a button click)
+ * TODO We should split between the conf part (event type and button) and the execution part (mouse position and time of event).
+ * TODO Some kind of model elements might be valid event members in terms of configuration.
  */
 public class UIEvent {
 

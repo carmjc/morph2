@@ -1,6 +1,6 @@
 package net.carmgate.morph.uihandler.drag;
 
-import net.carmgate.morph.model.GlobalModel;
+import net.carmgate.morph.model.Model;
 
 public class DraggedWorld implements Runnable {
 
@@ -14,7 +14,7 @@ public class DraggedWorld implements Runnable {
 	@Override
 	public void run() {
 		dragContext.reset();
-		GlobalModel.getModel().getUIContext().getEventQueue().clear();
+		Model.getModel().getUIContext().getEventQueue().clear();
 	}
 
 }

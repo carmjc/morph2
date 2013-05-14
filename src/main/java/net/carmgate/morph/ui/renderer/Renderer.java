@@ -7,16 +7,19 @@ import org.lwjgl.opengl.GL11;
  */
 public interface Renderer<T> {
 
-	public static enum RenderStyle {
+	/**
+	 * Allows to switch between normal and debug rendering.
+	 */
+	public static enum RenderingType {
 		NORMAL,
-		DEBUG // TODO Take this renderstyle into account instead of WorldRenderer.debugDisplay
+		DEBUG
 	}
 
 	/**
 	 * Draw the member object in the scene.
 	 * @param glMode {@link GL11#GL_RENDER} or {@link GL11#GL_SELECT}
-	 * @param drawType Normal or Debug ?
+	 * @param renderingType {@link RenderingType}
 	 * @param sceneItem the scene item to render.
 	 */
-	void render(int glMode, RenderStyle drawType, T sceneItem);
+	void render(int glMode, RenderingType renderingType, T sceneItem);
 }

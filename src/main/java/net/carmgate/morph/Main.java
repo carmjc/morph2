@@ -1,20 +1,21 @@
 package net.carmgate.morph;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 import net.carmgate.morph.conf.Conf;
-import net.carmgate.morph.model.GlobalModel;
+import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.common.Vect3D;
+import net.carmgate.morph.model.entities.Ship;
 import net.carmgate.morph.model.view.ViewPort;
 import net.carmgate.morph.ui.UIEvent;
 import net.carmgate.morph.ui.UIEvent.EventType;
+import net.carmgate.morph.ui.renderer.Renderer.RenderingType;
+import net.carmgate.morph.ui.renderer.ShipRenderer;
 import net.carmgate.morph.uihandler.drag.DragContext;
 import net.carmgate.morph.uihandler.drag.DraggedWorld;
 import net.carmgate.morph.uihandler.drag.DraggingWorld;
@@ -25,8 +26,6 @@ import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.glu.GLU;
-import org.newdawn.slick.opengl.Texture;
-import org.newdawn.slick.opengl.TextureLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,12 +41,9 @@ public class Main {
 		sample.start();
 	}
 
-	private final GlobalModel globalModel = GlobalModel.getModel();
+	private final Model globalModel = Model.getModel();
 
 	private final Vect3D holdWorldMousePos = null;
-
-	/** The texture under the morph image. */
-	public static Texture baseTexture;
 
 	private Vect3D oldFP;
 	private Vect3D oldMousePosInWindow;
@@ -154,6 +150,25 @@ public class Main {
 	}
 
 	/**
+	 * This method initializes UI handlers.
+	 * Some special case handlers can not be initialized dynamically at the moment.
+	 */
+	private void initUIHandlers() {
+		// Init dragging UI Handlers
+		DragContext dragContext = new DragContext();
+		DraggingWorld draggingWorld = new DraggingWorld(dragContext);
+		DraggedWorld draggedWorld = new DraggedWorld(dragContext);
+		LinkedList<UIEvent> confList = new LinkedList<>();
+		confList.add(new UIEvent(EventType.MOUSE_BUTTON_DOWN, 0, null, 0));
+		uiHandlerConfs.put(confList, new ArrayList<Runnable>());
+		uiHandlerConfs.get(confList).add(draggingWorld);
+		confList = new LinkedList<>(confList);
+		confList.add(new UIEvent(EventType.MOUSE_BUTTON_UP, 0, null, 0));
+		uiHandlerConfs.put(confList, new ArrayList<Runnable>());
+		uiHandlerConfs.get(confList).add(draggedWorld);
+	}
+
+	/**
 	 * draw a quad with the image on it
 	 */
 	public void render() {
@@ -169,32 +184,8 @@ public class Main {
 		// }
 		// worldRenderer.render(GL11.GL_RENDER, renderStyle, globalModel);
 
-		// load texture from PNG file
-		try {
-			if (baseTexture == null) {
-				baseTexture = TextureLoader.getTexture("PNG", new FileInputStream(ClassLoader.getSystemResource("spaceship.png").getPath()));
-			}
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		GL11.glColor3f(0.7f, 0.7f, 0.7f);
-		GL11.glEnable(GL11.GL_TEXTURE_2D);
-		baseTexture.bind();
-		GL11.glBegin(GL11.GL_QUADS);
-		GL11.glTexCoord2f(0, 0);
-		GL11.glVertex2f(-baseTexture.getTextureWidth() / 2, -baseTexture.getTextureWidth() / 2);
-		GL11.glTexCoord2f(1, 0);
-		GL11.glVertex2f(baseTexture.getTextureWidth() / 2, -baseTexture.getTextureWidth() / 2);
-		GL11.glTexCoord2f(1, 1);
-		GL11.glVertex2f(baseTexture.getTextureWidth() / 2, baseTexture.getTextureHeight() / 2);
-		GL11.glTexCoord2f(0, 1);
-		GL11.glVertex2f(-baseTexture.getTextureWidth() / 2, baseTexture.getTextureHeight() / 2);
-		GL11.glEnd();
+		// TODO render the world
+		new ShipRenderer().render(GL11.GL_RENDER, RenderingType.NORMAL, new Ship(0, 0, 0));
 
 		GL11.glRotatef(-globalModel.getViewport().getRotation(), 0, 0, 1);
 		GL11.glTranslatef(-focalPoint.x, -focalPoint.y, -focalPoint.z);
@@ -249,16 +240,7 @@ public class Main {
 
 		// Configure UI Handlers
 
-		DragContext dragContext = new DragContext();
-		DraggingWorld draggingWorld = new DraggingWorld(dragContext);
-		DraggedWorld draggedWorld = new DraggedWorld(dragContext);
-		ArrayList<UIEvent> confList = new ArrayList<>();
-		confList.add(new UIEvent(EventType.MOUSE_BUTTON_DOWN, 0, null, 0));
-		uiHandlerConfs.put(Collections.unmodifiableList(confList), new ArrayList<Runnable>());
-		uiHandlerConfs.get(Collections.unmodifiableList(confList)).add(draggingWorld);
-		confList.add(new UIEvent(EventType.MOUSE_BUTTON_UP, 0, null, 0));
-		uiHandlerConfs.put(Collections.unmodifiableList(confList), new ArrayList<Runnable>());
-		uiHandlerConfs.get(Collections.unmodifiableList(confList)).add(draggedWorld);
+		initUIHandlers();
 
 		// Rendering loop
 		while (true) {
@@ -319,13 +301,10 @@ public class Main {
 			}
 
 			if (!globalModel.getUIContext().getEventQueue().isEmpty()) {
-				LOGGER.debug("not empty queue : {}" + globalModel.getUIContext().getEventQueue());
 				List<Runnable> list = uiHandlerConfs.get(Collections.unmodifiableList(globalModel.getUIContext().getEventQueue()));
 				if (list != null) {
-					LOGGER.debug("match");
 					for (Runnable uiHandler : list) {
 						uiHandler.run();
-						LOGGER.debug("handler triggered");
 					}
 				}
 			}

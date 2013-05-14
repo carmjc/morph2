@@ -3,19 +3,19 @@ package net.carmgate.morph.model;
 import net.carmgate.morph.model.view.ViewPort;
 import net.carmgate.morph.ui.UIContext;
 
-public class GlobalModel {
+public class Model {
 
-	private static final GlobalModel _instance = new GlobalModel();
+	private static final Model _instance = new Model();
 
 	/** Singleton instance getter. */
-	public static GlobalModel getModel() {
+	public static Model getModel() {
 		return _instance;
 	}
 
 	private final ViewPort viewport = new ViewPort();
 	private final UIContext uiContext = new UIContext();
 
-	private GlobalModel() {
+	private Model() {
 	}
 
 	public UIContext getUIContext() {
