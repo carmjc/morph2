@@ -6,7 +6,8 @@ import java.util.List;
 import java.util.Map;
 
 import net.carmgate.morph.model.view.ViewPort;
-import net.carmgate.morph.ui.UIContext;
+import net.carmgate.morph.ui.Selectable;
+import net.carmgate.morph.ui.Context;
 
 public class Model {
 
@@ -18,8 +19,8 @@ public class Model {
 	}
 
 	private final ViewPort viewport = new ViewPort();
-	private final UIContext uiContext = new UIContext();
-	private final List selection = new ArrayList<>();
+	private final Context uiContext = new Context();
+	private final List<Selectable> selection = new ArrayList<>();
 
 	/** All the entities of the world can be searched by @entity uniqueId and entity instance uniqueId. */
 	private final Map<Integer, Map<Integer, Object>> entities = new HashMap<>();
@@ -35,11 +36,11 @@ public class Model {
 		return (Map<Integer, T>) entities.get(entityUniqueId);
 	}
 
-	public List getSelection() {
+	public List<Selectable> getSelection() {
 		return selection;
 	}
 
-	public UIContext getUIContext() {
+	public Context getUIContext() {
 		return uiContext;
 	}
 

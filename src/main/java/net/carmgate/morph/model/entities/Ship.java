@@ -1,7 +1,15 @@
 package net.carmgate.morph.model.entities;
 
-import net.carmgate.morph.model.common.Vect3D;
+import java.io.FileInputStream;
+import java.io.IOException;
 
+import net.carmgate.morph.model.common.Vect3D;
+import net.carmgate.morph.ui.Rendererable;
+import net.carmgate.morph.ui.Selectable;
+
+import org.lwjgl.opengl.GL11;
+import org.newdawn.slick.opengl.Texture;
+import org.newdawn.slick.opengl.TextureLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,7 +17,9 @@ import org.slf4j.LoggerFactory;
  * TODO : Il faut ajouter un centre d'inertie et modifier les calculs des forces pour g�rer le vrai centre d'inertie.
  */
 @Entity(uniqueId = 1)
-public class Ship {
+public class Ship implements Rendererable, Selectable {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(Ship.class);
 
 	// Management of the ship's ids.
 	private static Integer nextId = 1;
@@ -18,28 +28,60 @@ public class Ship {
 	@SuppressWarnings("unused")
 	private static final Logger lOGGER = LoggerFactory.getLogger(Ship.class);
 
+	/** The texture under the morph image. */
+	private static Texture baseTexture;
+
 	/** The ship max speed. */
-	public float maxSpeed = 200;
+	private static final float MAX_SPEED = 200;
+	private static final float SLOWING_DISTANCE = 400;
 
-	public float slowingDistance = 400;
 	/** The ship position in the world. */
-	public Vect3D pos;
+	private final Vect3D pos;
+	private final Vect3D posSpeed;
+	private final Vect3D posAccel;
 
-	public Vect3D posSpeed;
-	public Vect3D posAccel;
 	/** The ship orientation in the world. */
-	public float rot;
+	private final float rot;
+	private final float rotSpeed;
+	private final float rotAccel;
 
-	public float rotSpeed;
-	public float rotAccel;
 	/** The drag factor. The lower, the more it's dragged. */
-	public float dragFactor = 0.990f;
+	private final float dragFactor = 0.990f;
 
 	/** Under that speed, the ship stops completely. */
 	public static final float MIN_SPEED = 0.00001f;
 
 	/** Timestamp of last time the ship's position was calculated. */
 	private long lastUpdateTS;
+
+	private boolean selected;
+
+	/** The center of mass of the ship, in world coordinates */
+	// private final Vect3D centerOfMass = new Vect3D(Vect3D.NULL);
+
+	public Ship() {
+		this(0, 0, 0, 0);
+	}
+
+	public Ship(float x, float y, float z, float rot) {
+		synchronized (nextId) {
+			id = nextId++;
+		}
+
+		pos = new Vect3D(x, y, z);
+		posSpeed = new Vect3D(0, 0, 0);
+		posAccel = new Vect3D(0, 0, 0);
+		this.rot = rot;
+		rotSpeed = 0;
+		rotAccel = 0;
+
+		// Init lastUpdateTS
+		// lastUpdateTS = World.worldInstance.getCurrentTS();
+	}
+
+	public int getId() {
+		return id;
+	}
 
 	/**
 	 * The list of the forces attached to the ship or a constituant of the ship.
@@ -68,27 +110,62 @@ public class Ship {
 	/** List of ships IAs. */
 	// private final List<IA> iaList = new ArrayList<IA>();
 
-	/** The center of mass of the ship, in world coordinates */
-	// private final Vect3D centerOfMass = new Vect3D(Vect3D.NULL);
-
-	public Ship(float x, float y, float z) {
-		synchronized (nextId) {
-			id = nextId++;
+	@Override
+	public void initRenderer() {
+		// load texture from PNG file if needed
+		if (baseTexture == null) {
+			try (FileInputStream fileInputStream = new FileInputStream(ClassLoader.getSystemResource("spaceship.png").getPath())) {
+				baseTexture = TextureLoader.getTexture("PNG", fileInputStream);
+			} catch (IOException e) {
+				LOGGER.error("Exception raised while loading texture", e);
+			}
 		}
 
-		pos = new Vect3D(x, y, z);
-		posSpeed = new Vect3D(0, 0, 0);
-		posAccel = new Vect3D(0, 0, 0);
-		rot = 0;
-		rotSpeed = 0;
-		rotAccel = 0;
-
-		// Init lastUpdateTS
-		// lastUpdateTS = World.worldInstance.getCurrentTS();
 	}
 
-	public int getId() {
-		return id;
+	@Override
+	public void render(int glMode, Rendererable.RenderingType renderingType) {
+
+		GL11.glTranslatef(pos.x, pos.y, pos.z);
+		GL11.glRotatef(rot, 0, 0, 1);
+
+		if (glMode == GL11.GL_SELECT) {
+			// Render for selection
+			GL11.glPushName(Ship.class.getAnnotation(Entity.class).uniqueId());
+			GL11.glPushName(getId());
+
+			GL11.glBegin(GL11.GL_QUADS);
+			GL11.glVertex2f(-baseTexture.getTextureWidth() / 2, -baseTexture.getTextureWidth() / 2);
+			GL11.glVertex2f(baseTexture.getTextureWidth() / 2, -baseTexture.getTextureWidth() / 2);
+			GL11.glVertex2f(baseTexture.getTextureWidth() / 2, baseTexture.getTextureHeight() / 2);
+			GL11.glVertex2f(-baseTexture.getTextureWidth() / 2, baseTexture.getTextureHeight() / 2);
+			GL11.glEnd();
+
+			GL11.glPopName();
+			GL11.glPopName();
+		} else {
+			// Render for show
+			if (selected) {
+				GL11.glColor3f(1f, 1f, 1f);
+			} else {
+				GL11.glColor3f(0.5f, 0.5f, 0.5f);
+			}
+			GL11.glEnable(GL11.GL_TEXTURE_2D);
+			baseTexture.bind();
+			GL11.glBegin(GL11.GL_QUADS);
+			GL11.glTexCoord2f(0, 0);
+			GL11.glVertex2f(-baseTexture.getTextureWidth() / 2, -baseTexture.getTextureWidth() / 2);
+			GL11.glTexCoord2f(1, 0);
+			GL11.glVertex2f(baseTexture.getTextureWidth() / 2, -baseTexture.getTextureWidth() / 2);
+			GL11.glTexCoord2f(1, 1);
+			GL11.glVertex2f(baseTexture.getTextureWidth() / 2, baseTexture.getTextureHeight() / 2);
+			GL11.glTexCoord2f(0, 1);
+			GL11.glVertex2f(-baseTexture.getTextureWidth() / 2, baseTexture.getTextureHeight() / 2);
+			GL11.glEnd();
+		}
+
+		GL11.glRotatef(-rot, 0, 0, 1);
+		GL11.glTranslatef(-pos.x, -pos.y, -pos.z);
 	}
 
 	// public void addMorph(Morph morph) {
@@ -191,6 +268,20 @@ public class Ship {
 	// return null;
 	// }
 
+	@Override
+	public void setSelected(boolean selected) {
+		this.selected = selected;
+	}
+
+	/**
+	 * Transforms the provided vector from ship referential coordinates to world referential coordinates.
+	 * @param coords the coordinates in ship referential
+	 */
+	// public void transformShipToWorldCoords(Vect3D coords) {
+	// coords.rotate(rot);
+	// coords.add(pos);
+	// }
+
 	/**
 	 * Looks for the {@link Morph} at the specified position in the ship.
 	 * If there is no morph at the given position, it returns null.
@@ -239,15 +330,6 @@ public class Ship {
 	public String toString() {
 		return "ship:" + pos.toString();
 	}
-
-	/**
-	 * Transforms the provided vector from ship referential coordinates to world referential coordinates.
-	 * @param coords the coordinates in ship referential
-	 */
-	// public void transformShipToWorldCoords(Vect3D coords) {
-	// coords.rotate(rot);
-	// coords.add(pos);
-	// }
 
 	/**
 	 * Transforms the provided vector from world referential coordinates to ship referential coordinates.

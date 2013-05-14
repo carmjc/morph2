@@ -10,19 +10,19 @@ import java.util.TimeZone;
  * TODO We should split between the conf part (event type and button) and the execution part (mouse position and time of event).
  * TODO Some kind of model elements might be valid event members in terms of configuration.
  */
-public class UIEvent {
+public class Event {
 
 	public static enum EventType {
 		MOUSE_BUTTON_DOWN(HardwareType.MOUSE), MOUSE_BUTTON_UP(HardwareType.MOUSE);
 
-		private final UIEvent.HardwareType hardwareType;
+		private final Event.HardwareType hardwareType;
 
-		private EventType(UIEvent.HardwareType hardwareType) {
+		private EventType(Event.HardwareType hardwareType) {
 			this.hardwareType = hardwareType;
 
 		}
 
-		public UIEvent.HardwareType getHardwareType() {
+		public Event.HardwareType getHardwareType() {
 			return hardwareType;
 		}
 	}
@@ -33,22 +33,22 @@ public class UIEvent {
 
 	protected final int[] mousePositionInWindow;
 	protected final long timeOfEventInMillis;
-	protected final UIEvent.EventType eventType;
+	protected final Event.EventType eventType;
 	protected final int button;
 
-	public UIEvent(UIEvent.EventType eventType) {
+	public Event(Event.EventType eventType) {
 		this(eventType, -1);
 	}
 
-	public UIEvent(UIEvent.EventType eventType, int button) {
+	public Event(Event.EventType eventType, int button) {
 		this(eventType, button, null);
 	}
 
-	public UIEvent(UIEvent.EventType eventType, int button, int[] mousePositionInWindow) {
+	public Event(Event.EventType eventType, int button, int[] mousePositionInWindow) {
 		this(eventType, button, mousePositionInWindow, Calendar.getInstance(TimeZone.getTimeZone("GMT")).getTimeInMillis());
 	}
 
-	public UIEvent(UIEvent.EventType eventType, int button, int[] mousePositionInWindow, long timeOfEventInMillis) {
+	public Event(Event.EventType eventType, int button, int[] mousePositionInWindow, long timeOfEventInMillis) {
 		this.mousePositionInWindow = mousePositionInWindow;
 		this.timeOfEventInMillis = timeOfEventInMillis;
 		this.eventType = eventType;
@@ -66,7 +66,7 @@ public class UIEvent {
 		if (getClass() != obj.getClass()) {
 			return false;
 		}
-		UIEvent other = (UIEvent) obj;
+		Event other = (Event) obj;
 		if (button != other.button) {
 			return false;
 		}
@@ -86,7 +86,7 @@ public class UIEvent {
 	/**
 	 * @return the event type (button down, button up, mouse wheel, etc.)
 	 */
-	public UIEvent.EventType getEventType() {
+	public Event.EventType getEventType() {
 		return eventType;
 	}
 

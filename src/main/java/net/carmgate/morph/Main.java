@@ -1,7 +1,6 @@
 package net.carmgate.morph;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -14,12 +13,11 @@ import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Entity;
 import net.carmgate.morph.model.entities.Ship;
 import net.carmgate.morph.model.view.ViewPort;
-import net.carmgate.morph.ui.EntityServices;
-import net.carmgate.morph.ui.UIEvent;
-import net.carmgate.morph.ui.UIEvent.EventType;
-import net.carmgate.morph.ui.renderer.Renderer;
-import net.carmgate.morph.ui.renderer.Renderer.RenderingType;
-import net.carmgate.morph.ui.renderer.Renders;
+import net.carmgate.morph.ui.Rendererable;
+import net.carmgate.morph.ui.Rendererable.RenderingType;
+import net.carmgate.morph.ui.Event;
+import net.carmgate.morph.ui.Event.EventType;
+import net.carmgate.morph.uihandler.Action;
 import net.carmgate.morph.uihandler.Select;
 import net.carmgate.morph.uihandler.drag.DragContext;
 import net.carmgate.morph.uihandler.drag.DraggedWorld;
@@ -49,9 +47,7 @@ public class Main {
 
 	private final Model model = Model.getModel();
 
-	private final Map<List<UIEvent>, List<Runnable>> uiHandlerConfs = new HashMap<>();
-	@SuppressWarnings("rawtypes")
-	public static final Map<Class<?>, EntityServices> entityServicesMap = new HashMap<>();
+	private final Map<List<Event>, List<Action>> uiHandlerConfs = new HashMap<>();
 	/** This is used to retrieve picked entities. */
 	private final Map<Integer, Class<?>> entitiesMap = new HashMap<>();
 
@@ -116,13 +112,11 @@ public class Main {
 	}
 
 	private void initModel() {
-		Ship ship = new Ship(0, 0, 0);
-		ship.rot = 10;
+		Ship ship = new Ship(0, 0, 0, 10);
 		Map<Integer, Object> shipsMap = new HashMap<>();
 		Model.getModel().getEntities().put(Ship.class.getAnnotation(Entity.class).uniqueId(), shipsMap);
 		shipsMap.put(ship.getId(), ship);
-		ship = new Ship(100, 0, 0);
-		ship.rot = 40;
+		ship = new Ship(100, 0, 0, 40);
 		shipsMap.put(ship.getId(), ship);
 	}
 
@@ -135,53 +129,14 @@ public class Main {
 		Reflections reflections = new Reflections("net.carmgate.morph");
 
 		// Look for classes annotated with the @Renders annotation
-		Set<Class<?>> renderers = reflections.getTypesAnnotatedWith(Renders.class);
+		Set<Class<? extends Rendererable>> renderers = reflections.getSubTypesOf(Rendererable.class);
 
 		// Iterate over the result set to register the renderers with the model classes
-		for (Class<?> renderer : renderers) {
-
-			// Get the model classes (entities) for the renderer
-			Renders annotation = renderer.getAnnotation(Renders.class);
-			Class<?>[] entities = annotation.value();
-
-			// If the entities array is empty, there's nothing to do, but that is an error
-			if (entities.length == 0) {
-				LOGGER.error("The renderer {} does not render any model element !", renderer.getClass().getName());
-
-				// This renderer cannot be associated with any entity, stopping here
-				continue;
-			}
-
+		for (Class<? extends Rendererable> renderer : renderers) {
 			try {
-				// Instanciate the new renderer
-				Renderer<?> rendererInstance = (Renderer<?>) renderer.newInstance();
-				// Initialize the renderer (for instance, to initialize renderer assets)
-				rendererInstance.init();
-
-				// Iterate over the entities to associate the renderer with them
-				for (Class<?> entity : entities) {
-					EntityServices entityServices = entityServicesMap.get(entity);
-
-					// Create a new entityService instance if it does not exist
-					if (entityServices == null) {
-						entityServices = new EntityServices();
-						entityServicesMap.put(entity, entityServices);
-					}
-
-					// Check that there aren't any renderer associated yet with this entity
-					if (entityServices.getRenderer() != null) {
-						LOGGER.error("About to replace {} renderer {} with {}", new String[] {
-								entity.getClass().getName(),
-								entityServices.getRenderer().getClass().getName(),
-								renderer.getName()
-						});
-					}
-
-					// Associate
-					entityServices.setRenderer(rendererInstance);
-				}
+				renderer.newInstance().initRenderer();
 			} catch (InstantiationException | IllegalAccessException e) {
-				LOGGER.error("Exception raised while adding a renderer to the renderers map", e);
+				LOGGER.error("Exception raised while trying to init renderer " + renderer.getName(), e);
 			}
 		}
 	}
@@ -195,15 +150,15 @@ public class Main {
 		DragContext dragContext = new DragContext();
 		DraggingWorld draggingWorld = new DraggingWorld(dragContext);
 		DraggedWorld draggedWorld = new DraggedWorld(dragContext);
-		LinkedList<UIEvent> confList = new LinkedList<>();
-		confList.add(new UIEvent(EventType.MOUSE_BUTTON_DOWN, 0, null, 0));
-		uiHandlerConfs.put(confList, new ArrayList<Runnable>());
+		LinkedList<Event> confList = new LinkedList<>();
+		confList.add(new Event(EventType.MOUSE_BUTTON_DOWN, 0, null, 0));
+		uiHandlerConfs.put(confList, new ArrayList<Action>());
 		uiHandlerConfs.get(confList).add(draggingWorld);
-		uiHandlerConfs.get(confList).add(new Select());
 		confList = new LinkedList<>(confList);
-		confList.add(new UIEvent(EventType.MOUSE_BUTTON_UP, 0, null, 0));
-		uiHandlerConfs.put(confList, new ArrayList<Runnable>());
+		confList.add(new Event(EventType.MOUSE_BUTTON_UP, 0, null, 0));
+		uiHandlerConfs.put(confList, new ArrayList<Action>());
 		uiHandlerConfs.get(confList).add(draggedWorld);
+		uiHandlerConfs.get(confList).add(new Select());
 	}
 
 	/**
@@ -225,7 +180,7 @@ public class Main {
 		// TODO render the world
 		Map<Integer, Ship> shipsMap = Model.getModel().getEntityMap(Ship.class.getAnnotation(Entity.class).uniqueId());
 		for (Ship ship : shipsMap.values()) {
-			entityServicesMap.get(Ship.class).getRenderer().render(GL11.GL_RENDER, RenderingType.NORMAL, ship);
+			ship.render(GL11.GL_RENDER, RenderingType.NORMAL);
 		}
 
 		GL11.glRotatef(-model.getViewport().getRotation(), 0, 0, 1);
@@ -311,7 +266,7 @@ public class Main {
 					} else {
 						evtType = EventType.MOUSE_BUTTON_UP;
 					}
-					UIEvent evt = new UIEvent(evtType, Mouse.getEventButton(), new int[] { Mouse.getEventX(), Mouse.getEventY() });
+					Event evt = new Event(evtType, Mouse.getEventButton(), new int[] { Mouse.getEventX(), Mouse.getEventY() });
 					model.getUIContext().getEventQueue().add(evt);
 				}
 
@@ -339,10 +294,10 @@ public class Main {
 			}
 
 			if (!model.getUIContext().getEventQueue().isEmpty()) {
-				List<Runnable> list = uiHandlerConfs.get(Collections.unmodifiableList(model.getUIContext().getEventQueue()));
+				List<Action> list = uiHandlerConfs.get(model.getUIContext().getEventQueue());
 				if (list != null) {
-					for (Runnable uiHandler : list) {
-						uiHandler.run();
+					for (Action uiHandler : list) {
+						uiHandler.run(null);
 					}
 				}
 			}

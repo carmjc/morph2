@@ -1,15 +1,17 @@
 package net.carmgate.morph.uihandler;
 
 import java.nio.IntBuffer;
+import java.util.List;
 import java.util.Map;
 
-import net.carmgate.morph.Main;
 import net.carmgate.morph.conf.Conf;
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.entities.Entity;
 import net.carmgate.morph.model.entities.Ship;
 import net.carmgate.morph.ui.GameMouse;
-import net.carmgate.morph.ui.renderer.Renderer.RenderingType;
+import net.carmgate.morph.ui.Rendererable.RenderingType;
+import net.carmgate.morph.ui.Selectable;
+import net.carmgate.morph.ui.Event;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
@@ -17,7 +19,7 @@ import org.lwjgl.util.glu.GLU;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Select implements Runnable {
+public class Select implements Action {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(Select.class);
 
@@ -51,7 +53,7 @@ public class Select implements Runnable {
 		// TODO Replace this with more standard world rendering
 		Map<Integer, Ship> shipsMap = Model.getModel().getEntityMap(Ship.class.getAnnotation(Entity.class).uniqueId());
 		for (Ship ship : shipsMap.values()) {
-			Main.entityServicesMap.get(Ship.class).getRenderer().render(GL11.GL_SELECT, RenderingType.NORMAL, ship);
+			ship.render(GL11.GL_SELECT, RenderingType.NORMAL);
 		}
 
 		GL11.glMatrixMode(GL11.GL_PROJECTION);
@@ -85,7 +87,12 @@ public class Select implements Runnable {
 			selectBufIndex += 2;
 
 			// get the matching element in the model
-			Model.getModel().getSelection().add(Model.getModel().getEntities().get(selectBuf.get(selectBufIndex++)).get(selectBuf.get(selectBufIndex++)));
+			Object selectedObject = Model.getModel().getEntities().get(selectBuf.get(selectBufIndex++)).get(selectBuf.get(selectBufIndex++));
+			if (selectedObject instanceof Selectable) {
+				Selectable selectable = (Selectable) selectedObject;
+				Model.getModel().getSelection().add(selectable);
+				selectable.setSelected(true);
+			}
 
 			// Jump over the other ones if needed
 			for (int j = 2; j < nbNames; j++) {
@@ -104,10 +111,19 @@ public class Select implements Runnable {
 	}
 
 	@Override
-	public void run() {
-		Model.getModel().getSelection().clear();
+	public void run(Event event) {
+
+		// Clear the selection
+		// TODO find a way to do it more safely. We have to know that the clear must not be done alone, that's not safe.
+		List<Selectable> selection = Model.getModel().getSelection();
+		for (Selectable sel : selection) {
+			sel.setSelected(false);
+		}
+		selection.clear();
+
+		// pick
 		pick(GameMouse.getXInWorld(), GameMouse.getYInWorld());
-		LOGGER.debug(Model.getModel().getSelection().toString());
+		LOGGER.debug(selection.toString());
 	}
 
 }
