@@ -5,7 +5,7 @@ import org.lwjgl.opengl.GL11;
 /**
  * Classes inheriting this interface allow to draw themselves in the gl scene.
  */
-public interface Rendererable {
+public interface Renderable {
 
 	/**
 	 * Allows to switch between normal and debug rendering.

@@ -1,6 +1,6 @@
 package net.carmgate.morph.actions;
 
 
-public interface Activable {
+public interface Action {
 	void run();
 }

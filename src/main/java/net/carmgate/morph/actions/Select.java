@@ -4,12 +4,15 @@ import java.nio.IntBuffer;
 import java.util.List;
 import java.util.Map;
 
+import net.carmgate.morph.actions.drag.DragContext;
 import net.carmgate.morph.conf.Conf;
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.entities.Entity;
 import net.carmgate.morph.model.entities.Ship;
+import net.carmgate.morph.ui.Event;
+import net.carmgate.morph.ui.Event.EventType;
 import net.carmgate.morph.ui.GameMouse;
-import net.carmgate.morph.ui.Rendererable.RenderingType;
+import net.carmgate.morph.ui.Renderable.RenderingType;
 import net.carmgate.morph.ui.Selectable;
 
 import org.lwjgl.BufferUtils;
@@ -18,18 +21,47 @@ import org.lwjgl.util.glu.GLU;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Select implements Activable {
+public class Select implements Action {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(Select.class);
+	private final DragContext dragContext;
+
+	public Select(DragContext dragContext) {
+		this.dragContext = dragContext;
+	}
+
+	@Override
+	public void run() {
+		// TODO remove these sort of things by filling the stack at init with NOOP interactions
+		if (Model.getModel().getInteractionStack().size() < 2) {
+			return;
+		}
+
+		List<Event> lastEvents = Model.getModel().getInteractionStack().getLastEvents(2);
+		if (lastEvents.get(0).getEventType() != EventType.MOUSE_BUTTON_DOWN
+				|| lastEvents.get(0).getButton() != 0
+				|| lastEvents.get(1).getEventType() != EventType.MOUSE_BUTTON_UP) {
+			return;
+		}
+
+		// Clear the selection
+		// TODO find a way to do it more safely. We have to know that the clear must not be done alone, that's not safe.
+		Model.getModel().clearSelection();
+
+		// pick
+		select(GameMouse.getXInWorld(), GameMouse.getYInWorld(), true);
+		LOGGER.debug(Model.getModel().getSelection().toString());
+	}
 
 	/**
 	 * Picks model elements.
 	 * @param x
 	 * @param y
+	 * @param onlyOne true if the engine should select a unique model element (first encountered)
 	 */
-	public void pick(int x, int y) {
+	public void select(int x, int y, boolean onlyOne) {
 
-		LOGGER.debug("Picking at " + x + " " + y);
+		// LOGGER.debug("Picking at " + x + " " + y);
 
 		// get viewport
 		IntBuffer viewport = BufferUtils.createIntBuffer(16);
@@ -72,7 +104,7 @@ public class Select implements Activable {
 		{
 			result += selectBuf.get(i) + ", ";
 		}
-		LOGGER.debug("hits: " + hits + ", result : " + result + "]");
+		// LOGGER.debug("hits: " + hits + ", result : " + result + "]");
 
 		// Get the model elements picked
 		// The current index we are looking for in the select buffer
@@ -89,8 +121,15 @@ public class Select implements Activable {
 			Object selectedObject = Model.getModel().getEntities().get(selectBuf.get(selectBufIndex++)).get(selectBuf.get(selectBufIndex++));
 			if (selectedObject instanceof Selectable) {
 				Selectable selectable = (Selectable) selectedObject;
-				Model.getModel().getSelection().add(selectable);
 				selectable.setSelected(true);
+
+				// if we were asked a unique selection, clear the selection before adding the new selected element
+				if (onlyOne) {
+					Model.getModel().clearSelection();
+					Model.getModel().getSelection().add(selectable);
+				} else {
+					Model.getModel().getSelection().add(selectable);
+				}
 			}
 
 			// Jump over the other ones if needed
@@ -107,22 +146,6 @@ public class Select implements Activable {
 		// globalModel.getSelectedShip()) {
 		// globalModel.getSelectedShip().toggleSelectedMorph(selectBuf.get(j + 5));
 		// }
-	}
-
-	@Override
-	public void run() {
-
-		// Clear the selection
-		// TODO find a way to do it more safely. We have to know that the clear must not be done alone, that's not safe.
-		List<Selectable> selection = Model.getModel().getSelection();
-		for (Selectable sel : selection) {
-			sel.setSelected(false);
-		}
-		selection.clear();
-
-		// pick
-		pick(GameMouse.getXInWorld(), GameMouse.getYInWorld());
-		LOGGER.debug(selection.toString());
 	}
 
 }

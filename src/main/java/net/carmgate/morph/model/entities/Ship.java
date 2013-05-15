@@ -4,7 +4,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 
 import net.carmgate.morph.model.common.Vect3D;
-import net.carmgate.morph.ui.Rendererable;
+import net.carmgate.morph.ui.Renderable;
 import net.carmgate.morph.ui.Selectable;
 
 import org.lwjgl.opengl.GL11;
@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
  * TODO : Il faut ajouter un centre d'inertie et modifier les calculs des forces pour g�rer le vrai centre d'inertie.
  */
 @Entity(uniqueId = 1)
-public class Ship implements Rendererable, Selectable {
+public class Ship implements Renderable, Selectable {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(Ship.class);
 
@@ -124,7 +124,7 @@ public class Ship implements Rendererable, Selectable {
 	}
 
 	@Override
-	public void render(int glMode, Rendererable.RenderingType renderingType) {
+	public void render(int glMode, Renderable.RenderingType renderingType) {
 
 		GL11.glTranslatef(pos.x, pos.y, pos.z);
 		GL11.glRotatef(rot, 0, 0, 1);

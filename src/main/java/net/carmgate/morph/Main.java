@@ -1,13 +1,12 @@
 package net.carmgate.morph;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import net.carmgate.morph.actions.Activable;
+import net.carmgate.morph.actions.Action;
 import net.carmgate.morph.actions.Select;
 import net.carmgate.morph.actions.drag.DragContext;
 import net.carmgate.morph.actions.drag.DraggedWorld;
@@ -20,8 +19,8 @@ import net.carmgate.morph.model.entities.Ship;
 import net.carmgate.morph.model.view.ViewPort;
 import net.carmgate.morph.ui.Event;
 import net.carmgate.morph.ui.Event.EventType;
-import net.carmgate.morph.ui.Rendererable;
-import net.carmgate.morph.ui.Rendererable.RenderingType;
+import net.carmgate.morph.ui.Renderable;
+import net.carmgate.morph.ui.Renderable.RenderingType;
 
 import org.lwjgl.LWJGLException;
 import org.lwjgl.input.Mouse;
@@ -47,9 +46,21 @@ public class Main {
 
 	private final Model model = Model.getModel();
 
-	private final Map<List<Event>, List<Activable>> uiHandlerConfs = new HashMap<>();
 	/** This is used to retrieve picked entities. */
 	private final Map<Integer, Class<?>> entitiesMap = new HashMap<>();
+
+	private final List<Action> mouseActions = new LinkedList<>();
+
+	/**
+	 * This method initializes UI handlers.
+	 * Some special case handlers can not be initialized dynamically at the moment.
+	 */
+	private void initActions() {
+		DragContext dragContext = new DragContext();
+		mouseActions.add(new DraggingWorld(dragContext));
+		mouseActions.add(new Select(dragContext));
+		mouseActions.add(new DraggedWorld(dragContext));
+	}
 
 	/**
 	* Scan for entities and registers them in the entitiesMap.
@@ -116,7 +127,7 @@ public class Main {
 		Map<Integer, Object> shipsMap = new HashMap<>();
 		Model.getModel().getEntities().put(Ship.class.getAnnotation(Entity.class).uniqueId(), shipsMap);
 		shipsMap.put(ship.getId(), ship);
-		ship = new Ship(100, 0, 0, 40);
+		ship = new Ship(50, 0, 0, 40);
 		shipsMap.put(ship.getId(), ship);
 	}
 
@@ -129,36 +140,16 @@ public class Main {
 		Reflections reflections = new Reflections("net.carmgate.morph");
 
 		// Look for classes annotated with the @Renders annotation
-		Set<Class<? extends Rendererable>> renderers = reflections.getSubTypesOf(Rendererable.class);
+		Set<Class<? extends Renderable>> renderers = reflections.getSubTypesOf(Renderable.class);
 
 		// Iterate over the result set to register the renderers with the model classes
-		for (Class<? extends Rendererable> renderer : renderers) {
+		for (Class<? extends Renderable> renderer : renderers) {
 			try {
 				renderer.newInstance().initRenderer();
 			} catch (InstantiationException | IllegalAccessException e) {
 				LOGGER.error("Exception raised while trying to init renderer " + renderer.getName(), e);
 			}
 		}
-	}
-
-	/**
-	 * This method initializes UI handlers.
-	 * Some special case handlers can not be initialized dynamically at the moment.
-	 */
-	private void initUIHandlers() {
-		// Init dragging UI Handlers
-		DragContext dragContext = new DragContext();
-		DraggingWorld draggingWorld = new DraggingWorld(dragContext);
-		DraggedWorld draggedWorld = new DraggedWorld(dragContext);
-		LinkedList<Event> confList = new LinkedList<>();
-		confList.add(new Event(EventType.MOUSE_BUTTON_DOWN, 0, null, 0));
-		uiHandlerConfs.put(confList, new ArrayList<Activable>());
-		uiHandlerConfs.get(confList).add(draggingWorld);
-		confList = new LinkedList<>(confList);
-		confList.add(new Event(EventType.MOUSE_BUTTON_UP, 0, null, 0));
-		uiHandlerConfs.put(confList, new ArrayList<Activable>());
-		uiHandlerConfs.get(confList).add(draggedWorld);
-		uiHandlerConfs.get(confList).add(new Select());
 	}
 
 	/**
@@ -233,7 +224,7 @@ public class Main {
 		initModel();
 
 		// Configure UI Handlers
-		initUIHandlers();
+		initActions();
 
 		// Rendering loop
 		while (true) {
@@ -255,19 +246,23 @@ public class Main {
 					} else {
 						evtType = EventType.MOUSE_BUTTON_UP;
 					}
-					Event evt = new Event(evtType, Mouse.getEventButton(), new int[] { Mouse.getEventX(), Mouse.getEventY() });
-					model.getUIContext().getEventQueue().add(evt);
+					Event event = new Event(evtType, Mouse.getEventButton(), new int[] { Mouse.getEventX(), Mouse.getEventY() });
+					Model.getModel().getInteractionStack().addEvent(event);
+					for (Action action : mouseActions) {
+						action.run();
+					}
 				}
-
 			}
 
-			//
-			if (!model.getUIContext().getEventQueue().isEmpty()) {
-				List<Activable> list = uiHandlerConfs.get(model.getUIContext().getEventQueue());
-				if (list != null) {
-					for (Activable uiHandler : list) {
-						uiHandler.run();
+			int dx = Mouse.getDX();
+			int dy = Mouse.getDY();
+			if (dx != 0 || dy != 0) {
+				for (Action action : mouseActions) {
+					Event event = new Event(EventType.MOUSE_MOVE, Mouse.getEventButton(), new int[] { Mouse.getX(), Mouse.getY() });
+					if (Model.getModel().getInteractionStack().getLastEvent().getEventType() != EventType.MOUSE_MOVE) {
+						Model.getModel().getInteractionStack().addEvent(event);
 					}
+					action.run();
 				}
 			}
 

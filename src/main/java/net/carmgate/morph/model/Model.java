@@ -1,13 +1,16 @@
 package net.carmgate.morph.model;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
+import net.carmgate.morph.actions.InteractionStack;
 import net.carmgate.morph.model.view.ViewPort;
-import net.carmgate.morph.ui.Selectable;
 import net.carmgate.morph.ui.Context;
+import net.carmgate.morph.ui.Event;
+import net.carmgate.morph.ui.Event.EventType;
+import net.carmgate.morph.ui.Selectable;
 
 public class Model {
 
@@ -20,12 +23,25 @@ public class Model {
 
 	private final ViewPort viewport = new ViewPort();
 	private final Context uiContext = new Context();
-	private final List<Selectable> selection = new ArrayList<>();
+	private final Set<Selectable> selection = new HashSet<>();
+	private final InteractionStack interactionStack = new InteractionStack();
 
 	/** All the entities of the world can be searched by @entity uniqueId and entity instance uniqueId. */
 	private final Map<Integer, Map<Integer, Object>> entities = new HashMap<>();
 
 	private Model() {
+		// add some noop in the interaction queue to get rid of exceptions
+		interactionStack.addEvent(new Event(EventType.NOOP));
+		interactionStack.addEvent(new Event(EventType.NOOP));
+		interactionStack.addEvent(new Event(EventType.NOOP));
+		interactionStack.addEvent(new Event(EventType.NOOP));
+	}
+
+	public void clearSelection() {
+		for (Selectable selectable : selection) {
+			selectable.setSelected(false);
+		}
+		selection.clear();
 	}
 
 	public Map<Integer, Map<Integer, Object>> getEntities() {
@@ -36,7 +52,11 @@ public class Model {
 		return (Map<Integer, T>) entities.get(entityUniqueId);
 	}
 
-	public List<Selectable> getSelection() {
+	public InteractionStack getInteractionStack() {
+		return interactionStack;
+	}
+
+	public Set<Selectable> getSelection() {
 		return selection;
 	}
 

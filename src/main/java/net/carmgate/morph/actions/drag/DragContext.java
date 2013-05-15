@@ -1,6 +1,7 @@
 package net.carmgate.morph.actions.drag;
 
 import net.carmgate.morph.model.common.Vect3D;
+import net.carmgate.morph.ui.Event;
 
 public class DragContext {
 	private Vect3D oldFP;
@@ -12,6 +13,11 @@ public class DragContext {
 
 	public Vect3D getOldMousePosInWindow() {
 		return oldMousePosInWindow;
+	}
+
+	public boolean isDragging(Event event) {
+		return oldMousePosInWindow != null
+				&& (event.getPositionInWindow()[0] != oldMousePosInWindow.x || event.getPositionInWindow()[1] != oldMousePosInWindow.y);
 	}
 
 	public void reset() {

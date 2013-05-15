@@ -13,7 +13,10 @@ import java.util.TimeZone;
 public class Event {
 
 	public static enum EventType {
-		MOUSE_BUTTON_DOWN(HardwareType.MOUSE), MOUSE_BUTTON_UP(HardwareType.MOUSE);
+		MOUSE_BUTTON_DOWN(HardwareType.MOUSE),
+		MOUSE_BUTTON_UP(HardwareType.MOUSE),
+		MOUSE_MOVE(HardwareType.MOUSE),
+		NOOP(HardwareType.NONE);
 
 		private final Event.HardwareType hardwareType;
 
@@ -28,7 +31,7 @@ public class Event {
 	}
 
 	public static enum HardwareType {
-		MOUSE, KEYBOARD;
+		MOUSE, KEYBOARD, NONE;
 	}
 
 	protected final int[] mousePositionInWindow;
@@ -112,6 +115,11 @@ public class Event {
 		result = prime * result + button;
 		result = prime * result + (eventType == null ? 0 : eventType.hashCode());
 		return result;
+	}
+
+	@Override
+	public String toString() {
+		return "eventType: " + eventType + ", button: " + button;
 	}
 
 }
