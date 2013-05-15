@@ -58,7 +58,7 @@ public class Main {
 	private void initActions() {
 		DragContext dragContext = new DragContext();
 		mouseActions.add(new DraggingWorld(dragContext));
-		mouseActions.add(new Select(dragContext));
+		mouseActions.add(new Select());
 		mouseActions.add(new DraggedWorld(dragContext));
 	}
 
@@ -223,7 +223,7 @@ public class Main {
 		// init world model
 		initModel();
 
-		// Configure UI Handlers
+		// Configure Actions
 		initActions();
 
 		// Rendering loop
@@ -266,90 +266,6 @@ public class Main {
 				}
 			}
 
-			// If left button is down, we are currently dragging
-			// FIXME we might be dragging for something else than moving the
-			// scene around.
-			// TODO Transform this into an action processing thing
-			// if (Mouse.isButtonDown(0)) {
-			//
-			// // Update focus point
-			// if (oldFP != null) {
-			// ViewPort viewport = GlobalModel.getModel().getViewport();
-			// Vect3D fp = viewport.getFocalPoint();
-			// fp.x = oldFP.x + (Mouse.getX() - oldMousePosInWindow.x) / GlobalModel.getModel().getViewport().getZoomFactor();
-			// fp.y = oldFP.y - (Mouse.getY() - oldMousePosInWindow.y) / GlobalModel.getModel().getViewport().getZoomFactor();
-			// }
-			//
-			// }
-
-			// Handling world moving around by drag and dropping the world.
-			// This portion of code is meant to allow the engine to show the
-			// world while it's being dragged.
-			// TODO migrate this
-			// if (holdWorldMousePos != null) {
-			// if (Math.abs(holdWorldMousePos.x - MouseInWorld.getX()) >
-			// MIN_MOVE_FOR_DRAG || Math.abs(holdWorldMousePos.y -
-			// MouseInWorld.getY()) > MIN_MOVE_FOR_DRAG) {
-			// WorldRenderer.focalPoint.add(holdWorldMousePos);
-			// WorldRenderer.focalPoint.substract(worldMousePos);
-			// GL11.glMatrixMode(GL11.GL_PROJECTION);
-			// GL11.glLoadIdentity();
-			// GLU.gluOrtho2D(WorldRenderer.focalPoint.x - WIDTH *
-			// WorldRenderer.scale / 2,
-			// WorldRenderer.focalPoint.x + WIDTH * WorldRenderer.scale / 2,
-			// WorldRenderer.focalPoint.y + HEIGHT * WorldRenderer.scale / 2,
-			// WorldRenderer.focalPoint.y - HEIGHT * WorldRenderer.scale / 2);
-			// holdWorldMousePos.x = MouseInWorld.getX();
-			// holdWorldMousePos.y = MouseInWorld.getY();
-			//
-			// }
-			// }
-
-			// If a mouse event has fired, Mouse.next() returns true.
-			// TODO Migrate user interactions
-			// if (Mouse.next()) {
-			//
-			// // Event button == 0 : Left button related event
-			// if (Mouse.getEventButton() == 0) {
-			// // if event button state is false, the button is being released
-			// if (!Mouse.getEventButtonState()) {
-			// if (Math.abs(holdWorldMousePos.x - MouseInWorld.getX()) >
-			// MIN_MOVE_FOR_DRAG || Math.abs(holdWorldMousePos.y -
-			// MouseInWorld.getY()) > MIN_MOVE_FOR_DRAG) {
-			// WorldRenderer.focalPoint.add(holdWorldMousePos);
-			// WorldRenderer.focalPoint.substract(worldMousePos);
-			// GL11.glMatrixMode(GL11.GL_PROJECTION);
-			// GL11.glLoadIdentity();
-			// GLU.gluOrtho2D(WorldRenderer.focalPoint.x - WIDTH *
-			// WorldRenderer.scale / 2,
-			// WorldRenderer.focalPoint.x + WIDTH * WorldRenderer.scale / 2,
-			// WorldRenderer.focalPoint.y + HEIGHT * WorldRenderer.scale / 2,
-			// WorldRenderer.focalPoint.y - HEIGHT * WorldRenderer.scale / 2);
-			// } else {
-			// pick(MouseInWorld.getX(),MouseInWorld.getY());
-			// }
-			// holdWorldMousePos = null;
-			// } else {
-			// // the mouse left button is being pressed
-			// holdWorldMousePos = worldMousePos;
-			// }
-			// }
-			//
-			// // Event button == 0 : Right button related event
-			// if (Mouse.getEventButton() == 1 && !Mouse.getEventButtonState()
-			// && globalModel.getSelectedShip() != null && !World.combat) {
-			// // Right mouse button has been released and a ship is selected
-			// // Activate or deactivate the morph under mouse pointer.
-			// for (Morph morph :
-			// globalModel.getSelectedShip().getSelectedMorphList()) {
-			// if (morph.getShip().toggleActiveMorph(morph)) {
-			// if (!morph.disabled) {
-			// morph.activate();
-			// }
-			// } else {
-			// morph.deactivate();
-			// }
-			// }
 			//
 			// // If no morph is selected, the right click should be understood
 			// as a moveto order.

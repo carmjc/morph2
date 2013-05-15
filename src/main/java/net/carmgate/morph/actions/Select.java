@@ -4,7 +4,6 @@ import java.nio.IntBuffer;
 import java.util.List;
 import java.util.Map;
 
-import net.carmgate.morph.actions.drag.DragContext;
 import net.carmgate.morph.conf.Conf;
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.entities.Entity;
@@ -24,10 +23,8 @@ import org.slf4j.LoggerFactory;
 public class Select implements Action {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(Select.class);
-	private final DragContext dragContext;
 
-	public Select(DragContext dragContext) {
-		this.dragContext = dragContext;
+	public Select() {
 	}
 
 	@Override
@@ -104,7 +101,7 @@ public class Select implements Action {
 		{
 			result += selectBuf.get(i) + ", ";
 		}
-		// LOGGER.debug("hits: " + hits + ", result : " + result + "]");
+		LOGGER.info("hits: " + hits + ", result : " + result + "]");
 
 		// Get the model elements picked
 		// The current index we are looking for in the select buffer

@@ -36,7 +36,6 @@ public class DraggingWorld implements Action {
 		if (lastEvents.get(1).getEventType() != EventType.MOUSE_BUTTON_DOWN
 				|| lastEvents.get(1).getButton() != 0
 				|| lastEvents.get(0).getEventType() != EventType.MOUSE_MOVE) {
-			LOGGER.debug(lastEvents.toString());
 			return;
 		}
 
