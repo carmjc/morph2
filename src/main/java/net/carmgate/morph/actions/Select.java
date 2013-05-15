@@ -38,9 +38,9 @@ public class Select implements Action {
 		}
 
 		List<Event> lastEvents = Model.getModel().getInteractionStack().getLastEvents(2);
-		if (lastEvents.get(0).getEventType() != EventType.MOUSE_BUTTON_DOWN
-				|| lastEvents.get(0).getButton() != 0
-				|| lastEvents.get(1).getEventType() != EventType.MOUSE_BUTTON_UP) {
+		if (lastEvents.get(1).getEventType() != EventType.MOUSE_BUTTON_DOWN
+				|| lastEvents.get(1).getButton() != 0
+				|| lastEvents.get(0).getEventType() != EventType.MOUSE_BUTTON_UP) {
 			return;
 		}
 

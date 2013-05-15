@@ -23,10 +23,10 @@ public class DraggedWorld implements Action {
 		}
 
 		List<Event> lastEvents = Model.getModel().getInteractionStack().getLastEvents(3);
-		if (lastEvents.get(0).getEventType() != EventType.MOUSE_BUTTON_DOWN
-				|| lastEvents.get(0).getButton() != 0
+		if (lastEvents.get(2).getEventType() != EventType.MOUSE_BUTTON_DOWN
+				|| lastEvents.get(2).getButton() != 0
 				|| lastEvents.get(1).getEventType() != EventType.MOUSE_MOVE
-				|| lastEvents.get(2).getEventType() != EventType.MOUSE_BUTTON_UP) {
+				|| lastEvents.get(0).getEventType() != EventType.MOUSE_BUTTON_UP) {
 			return;
 		}
 
