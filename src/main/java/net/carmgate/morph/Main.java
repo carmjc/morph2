@@ -170,7 +170,6 @@ public class Main {
 		GL11.glLoadIdentity();
 
 		// set viewport
-		// TODO: compute the viewport from the windows size and zoom/scale
 		ViewPort viewport = model.getViewport();
 		Vect3D focalPoint = viewport.getFocalPoint();
 

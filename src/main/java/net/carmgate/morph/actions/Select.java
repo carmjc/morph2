@@ -48,7 +48,6 @@ public class Select implements Action {
 
 	@Override
 	public void run() {
-		// TODO remove these sort of things by filling the stack at init with NOOP interactions
 		List<Event> lastEvents = Model.getModel().getInteractionStack().getLastEvents(2);
 		if (lastEvents.get(1).getEventType() != EventType.MOUSE_BUTTON_DOWN
 				|| lastEvents.get(1).getButton() != 0
