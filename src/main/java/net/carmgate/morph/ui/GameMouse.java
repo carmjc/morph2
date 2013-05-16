@@ -1,6 +1,5 @@
 package net.carmgate.morph.ui;
 
-import net.carmgate.morph.conf.Conf;
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.view.ViewPort;
 
@@ -23,8 +22,7 @@ public class GameMouse {
 	 */
 	public static int getXInWorld() {
 		ViewPort viewport = Model.getModel().getViewport();
-		// TODO move the width to the model
-		return (int) ((Mouse.getX() - Conf.getIntProperty("window.initialWidth") / 2) / viewport.getZoomFactor() - viewport.getFocalPoint().x);
+		return (int) ((Mouse.getX() - Model.getModel().getWindow().getWidth() / 2) / viewport.getZoomFactor() - viewport.getFocalPoint().x);
 	}
 
 	/**
@@ -39,8 +37,7 @@ public class GameMouse {
 	 */
 	public static int getYInWorld() {
 		ViewPort viewport = Model.getModel().getViewport();
-		// TODO move the height to the model
-		return (int) ((Mouse.getY() - Conf.getIntProperty("window.initialHeight") / 2) / viewport.getZoomFactor() + viewport.getFocalPoint().y);
+		return (int) ((Mouse.getY() - Model.getModel().getWindow().getHeight() / 2) / viewport.getZoomFactor() - viewport.getFocalPoint().y);
 	}
 
 }

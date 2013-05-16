@@ -28,10 +28,6 @@ public class DraggingWorld implements Action {
 
 	@Override
 	public void run() {
-		if (Model.getModel().getInteractionStack().size() < 2) {
-			return;
-		}
-
 		List<Event> lastEvents = Model.getModel().getInteractionStack().getLastEvents(2);
 		if (lastEvents.get(1).getEventType() != EventType.MOUSE_BUTTON_DOWN
 				|| lastEvents.get(1).getButton() != 0
@@ -49,8 +45,8 @@ public class DraggingWorld implements Action {
 		if (oldFP != null) {
 			ViewPort viewport = Model.getModel().getViewport();
 			Vect3D fp = viewport.getFocalPoint();
-			fp.x = oldFP.x + (Mouse.getX() - oldMousePosInWindow.x) / Model.getModel().getViewport().getZoomFactor();
-			fp.y = oldFP.y - (Mouse.getY() - oldMousePosInWindow.y) / Model.getModel().getViewport().getZoomFactor();
+			fp.x = oldFP.x + (Mouse.getX() - oldMousePosInWindow.x);// / Model.getModel().getViewport().getZoomFactor();
+			fp.y = oldFP.y + (Mouse.getY() - oldMousePosInWindow.y);// / Model.getModel().getViewport().getZoomFactor();
 		}
 	}
 }

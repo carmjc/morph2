@@ -7,9 +7,8 @@ import java.util.Set;
 
 import net.carmgate.morph.actions.InteractionStack;
 import net.carmgate.morph.model.view.ViewPort;
+import net.carmgate.morph.model.view.Window;
 import net.carmgate.morph.ui.Context;
-import net.carmgate.morph.ui.Event;
-import net.carmgate.morph.ui.Event.EventType;
 import net.carmgate.morph.ui.Selectable;
 
 public class Model {
@@ -21,22 +20,21 @@ public class Model {
 		return _instance;
 	}
 
+	private final Window window = new Window();
 	private final ViewPort viewport = new ViewPort();
+
 	private final Context uiContext = new Context();
+
 	private final Set<Selectable> selection = new HashSet<>();
 	private final InteractionStack interactionStack = new InteractionStack();
-
 	/** All the entities of the world can be searched by @entity uniqueId and entity instance uniqueId. */
 	private final Map<Integer, Map<Integer, Object>> entities = new HashMap<>();
 
 	private Model() {
 		// add some noop in the interaction queue to get rid of exceptions
-		interactionStack.addEvent(new Event(EventType.NOOP));
-		interactionStack.addEvent(new Event(EventType.NOOP));
-		interactionStack.addEvent(new Event(EventType.NOOP));
-		interactionStack.addEvent(new Event(EventType.NOOP));
 	}
 
+	// TODO We must fix the temptation to use getSelection.clear() instead
 	public void clearSelection() {
 		for (Selectable selectable : selection) {
 			selectable.setSelected(false);
@@ -67,4 +65,9 @@ public class Model {
 	public ViewPort getViewport() {
 		return viewport;
 	}
+
+	public Window getWindow() {
+		return window;
+	}
+
 }

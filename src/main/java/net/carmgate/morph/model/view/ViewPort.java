@@ -12,10 +12,10 @@ public class ViewPort {
 	private final Vect3D focalPoint = new Vect3D();
 
 	/** The rotation of the scene around the focal point (in radians). */
-	private float rotation;
+	private final float rotation = 0;
 
 	/** The zoom factor. > 1 means what you see is bigger. */
-	private final float zoomFactor = 0.5f;
+	private float zoomFactor = 0.5f;
 
 	/** The intersection of the diagonals of the viewport (in <b>world coordinates</b>).*/
 	public Vect3D getFocalPoint() {
@@ -30,6 +30,10 @@ public class ViewPort {
 	/** The zoom factor. > 1 means what you see is bigger. */
 	public float getZoomFactor() {
 		return zoomFactor;
+	}
+
+	public void setZoomFactor(float zoomFactor) {
+		this.zoomFactor = zoomFactor;
 	}
 
 }

@@ -18,10 +18,6 @@ public class DraggedWorld implements Action {
 
 	@Override
 	public void run() {
-		if (Model.getModel().getInteractionStack().size() < 3) {
-			return;
-		}
-
 		List<Event> lastEvents = Model.getModel().getInteractionStack().getLastEvents(3);
 		if (lastEvents.get(2).getEventType() != EventType.MOUSE_BUTTON_DOWN
 				|| lastEvents.get(2).getButton() != 0

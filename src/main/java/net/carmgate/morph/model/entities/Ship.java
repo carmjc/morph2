@@ -134,6 +134,7 @@ public class Ship implements Renderable, Selectable {
 			GL11.glPushName(Ship.class.getAnnotation(Entity.class).uniqueId());
 			GL11.glPushName(getId());
 
+			GL11.glDisable(GL11.GL_TEXTURE_2D);
 			GL11.glBegin(GL11.GL_QUADS);
 			GL11.glVertex2f(-baseTexture.getTextureWidth() / 2, -baseTexture.getTextureWidth() / 2);
 			GL11.glVertex2f(baseTexture.getTextureWidth() / 2, -baseTexture.getTextureWidth() / 2);

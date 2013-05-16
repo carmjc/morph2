@@ -11,6 +11,8 @@ import net.carmgate.morph.actions.Select;
 import net.carmgate.morph.actions.drag.DragContext;
 import net.carmgate.morph.actions.drag.DraggedWorld;
 import net.carmgate.morph.actions.drag.DraggingWorld;
+import net.carmgate.morph.actions.zoom.ZoomIn;
+import net.carmgate.morph.actions.zoom.ZoomOut;
 import net.carmgate.morph.conf.Conf;
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.common.Vect3D;
@@ -23,11 +25,11 @@ import net.carmgate.morph.ui.Renderable;
 import net.carmgate.morph.ui.Renderable.RenderingType;
 
 import org.lwjgl.LWJGLException;
+import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.util.glu.GLU;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,6 +52,7 @@ public class Main {
 	private final Map<Integer, Class<?>> entitiesMap = new HashMap<>();
 
 	private final List<Action> mouseActions = new LinkedList<>();
+	private final List<Action> keyboardActions = new LinkedList<>();
 
 	/**
 	 * This method initializes UI handlers.
@@ -60,6 +63,9 @@ public class Main {
 		mouseActions.add(new DraggingWorld(dragContext));
 		mouseActions.add(new Select());
 		mouseActions.add(new DraggedWorld(dragContext));
+
+		keyboardActions.add(new ZoomIn());
+		keyboardActions.add(new ZoomOut());
 	}
 
 	/**
@@ -90,36 +96,19 @@ public class Main {
 			Display.create();
 			Display.setTitle("Morph");
 			Display.setVSyncEnabled(true);
+			Display.setResizable(true);
 		} catch (LWJGLException e) {
 			e.printStackTrace();
 			System.exit(0);
 		}
 
+		LOGGER.debug("init view: " + width + "x" + height);
+
 		// enable texturing
 		// GL11.glEnable(GL11.GL_TEXTURE_2D);
 		// It seems it's not needed, but I do not understand why ...
 
-		// set clear color - Wont be needed once we have a background
-		GL11.glClearColor(0f, 0f, 0f, 0);
-
-		// enable alpha blending
-		GL11.glEnable(GL11.GL_BLEND);
-		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-
-		GL11.glMatrixMode(GL11.GL_PROJECTION);
-		GL11.glLoadIdentity();
-
-		// set viewport
-		// TODO: compute the viewport from the windows size and zoom/scale
-		ViewPort viewport = model.getViewport();
-		Vect3D focalPoint = viewport.getFocalPoint();
-
-		// TODO : test the zoom factor
-		GLU.gluOrtho2D(focalPoint.x - width / viewport.getZoomFactor() / 2, focalPoint.x + width / viewport.getZoomFactor() / 2, focalPoint.y + height
-				/ viewport.getZoomFactor() / 2, focalPoint.y - height / viewport.getZoomFactor() / 2);
-
-		GL11.glMatrixMode(GL11.GL_MODELVIEW);
-		GL11.glLoadIdentity();
+		initView();
 	}
 
 	private void initModel() {
@@ -127,7 +116,13 @@ public class Main {
 		Map<Integer, Object> shipsMap = new HashMap<>();
 		Model.getModel().getEntities().put(Ship.class.getAnnotation(Entity.class).uniqueId(), shipsMap);
 		shipsMap.put(ship.getId(), ship);
-		ship = new Ship(50, 0, 0, 40);
+		ship = new Ship(128, 0, 0, 40);
+		shipsMap.put(ship.getId(), ship);
+		ship = new Ship(128, 128, 0, 80);
+		shipsMap.put(ship.getId(), ship);
+		ship = new Ship(0, 128, 0, 120);
+		shipsMap.put(ship.getId(), ship);
+		ship = new Ship(-128, 0, 0, 160);
 		shipsMap.put(ship.getId(), ship);
 	}
 
@@ -152,14 +147,52 @@ public class Main {
 		}
 	}
 
+	private void initView() {
+
+		int width = Display.getWidth();
+		int height = Display.getHeight();
+		LOGGER.debug("init view: " + width + "x" + height);
+
+		// init the window
+		Model.getModel().getWindow().setWidth(width);
+		Model.getModel().getWindow().setHeight(height);
+
+		// set clear color - Wont be needed once we have a background
+		GL11.glClearColor(0f, 0f, 0f, 0);
+
+		// enable alpha blending
+		GL11.glEnable(GL11.GL_BLEND);
+		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+
+		GL11.glDisable(GL11.GL_DEPTH_TEST);
+
+		GL11.glMatrixMode(GL11.GL_PROJECTION);
+		GL11.glLoadIdentity();
+
+		// set viewport
+		// TODO: compute the viewport from the windows size and zoom/scale
+		ViewPort viewport = model.getViewport();
+		Vect3D focalPoint = viewport.getFocalPoint();
+
+		// GLU.gluOrtho2D(focalPoint.x - width / 2, focalPoint.x + width / 2
+		// , focalPoint.y + height / 2, focalPoint.y - height / 2);
+		GL11.glOrtho(-width / 2, width / 2, -height / 2, height / 2, 1, -1);
+		GL11.glViewport(0, 0, width, height);
+
+		GL11.glMatrixMode(GL11.GL_MODELVIEW);
+		GL11.glLoadIdentity();
+	}
+
 	/**
 	 * draw a quad with the image on it
 	 */
 	public void render() {
 
 		Vect3D focalPoint = model.getViewport().getFocalPoint();
+		float scale = model.getViewport().getZoomFactor();
 		GL11.glTranslatef(focalPoint.x, focalPoint.y, focalPoint.z);
 		GL11.glRotatef(model.getViewport().getRotation(), 0, 0, 1);
+		GL11.glScalef(scale, scale, 1);
 
 		// TODO draw world
 		// RenderStyle renderStyle = RenderStyle.NORMAL;
@@ -174,6 +207,7 @@ public class Main {
 			ship.render(GL11.GL_RENDER, RenderingType.NORMAL);
 		}
 
+		GL11.glScalef(1 / scale, 1 / scale, 1);
 		GL11.glRotatef(-model.getViewport().getRotation(), 0, 0, 1);
 		GL11.glTranslatef(-focalPoint.x, -focalPoint.y, -focalPoint.z);
 
@@ -230,11 +264,20 @@ public class Main {
 		while (true) {
 			// Renders everything
 			GL11.glClear(GL11.GL_COLOR_BUFFER_BIT);
-			render();
+			if (!Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) {
+				render();
+			} else {
+				new Select().render(Model.getModel().getViewport().getZoomFactor(), GL11.GL_SELECT);
+			}
 
 			// updates display and sets frame rate
 			Display.update();
 			Display.sync(100);
+
+			// handle window resize
+			if (Display.wasResized()) {
+				initView();
+			}
 
 			// Fire events accordingly
 			if (Mouse.next()) {
@@ -251,6 +294,21 @@ public class Main {
 					for (Action action : mouseActions) {
 						action.run();
 					}
+				}
+			}
+
+			if (Keyboard.next()) {
+				EventType evtType = null;
+				if (Keyboard.getEventKeyState()) {
+					evtType = EventType.KEYBOARD_DOWN;
+				} else {
+					evtType = EventType.KEYBOARD_UP;
+				}
+				Event event = new Event(evtType, Keyboard.getEventKey(), new int[] { Mouse.getEventX(), Mouse.getEventY() });
+				Model.getModel().getInteractionStack().addEvent(event);
+				LOGGER.debug("Sending keyboard event");
+				for (Action action : keyboardActions) {
+					action.run();
 				}
 			}
 

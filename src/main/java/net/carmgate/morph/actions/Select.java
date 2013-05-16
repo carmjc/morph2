@@ -4,17 +4,18 @@ import java.nio.IntBuffer;
 import java.util.List;
 import java.util.Map;
 
-import net.carmgate.morph.conf.Conf;
 import net.carmgate.morph.model.Model;
+import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Entity;
 import net.carmgate.morph.model.entities.Ship;
+import net.carmgate.morph.model.view.Window;
 import net.carmgate.morph.ui.Event;
 import net.carmgate.morph.ui.Event.EventType;
-import net.carmgate.morph.ui.GameMouse;
 import net.carmgate.morph.ui.Renderable.RenderingType;
 import net.carmgate.morph.ui.Selectable;
 
 import org.lwjgl.BufferUtils;
+import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.glu.GLU;
 import org.slf4j.Logger;
@@ -27,13 +28,27 @@ public class Select implements Action {
 	public Select() {
 	}
 
+	public void render(float zoomFactor, int glMode) {
+
+		Vect3D focalPoint = Model.getModel().getViewport().getFocalPoint();
+		GL11.glTranslatef(focalPoint.x, focalPoint.y, focalPoint.z);
+		GL11.glRotatef(Model.getModel().getViewport().getRotation(), 0, 0, 1);
+		GL11.glScalef(zoomFactor, zoomFactor, 1);
+
+		// TODO Replace this with more standard world rendering
+		Map<Integer, Ship> shipsMap = Model.getModel().getEntityMap(Ship.class.getAnnotation(Entity.class).uniqueId());
+		for (Ship ship : shipsMap.values()) {
+			ship.render(glMode, RenderingType.NORMAL);
+		}
+
+		GL11.glScalef(1 / zoomFactor, 1 / zoomFactor, 1);
+		GL11.glRotatef(-Model.getModel().getViewport().getRotation(), 0, 0, 1);
+		GL11.glTranslatef(-focalPoint.x, -focalPoint.y, -focalPoint.z);
+	}
+
 	@Override
 	public void run() {
 		// TODO remove these sort of things by filling the stack at init with NOOP interactions
-		if (Model.getModel().getInteractionStack().size() < 2) {
-			return;
-		}
-
 		List<Event> lastEvents = Model.getModel().getInteractionStack().getLastEvents(2);
 		if (lastEvents.get(1).getEventType() != EventType.MOUSE_BUTTON_DOWN
 				|| lastEvents.get(1).getButton() != 0
@@ -42,11 +57,10 @@ public class Select implements Action {
 		}
 
 		// Clear the selection
-		// TODO find a way to do it more safely. We have to know that the clear must not be done alone, that's not safe.
 		Model.getModel().clearSelection();
 
 		// pick
-		select(GameMouse.getXInWorld(), GameMouse.getYInWorld(), true);
+		select(Mouse.getX() - Model.getModel().getWindow().getWidth() / 2, Mouse.getY() - Model.getModel().getWindow().getHeight() / 2, true);
 		LOGGER.debug(Model.getModel().getSelection().toString());
 	}
 
@@ -58,7 +72,9 @@ public class Select implements Action {
 	 */
 	public void select(int x, int y, boolean onlyOne) {
 
-		// LOGGER.debug("Picking at " + x + " " + y);
+		LOGGER.debug("Picking at " + x + " " + y);
+
+		float zoomFactor = Model.getModel().getViewport().getZoomFactor();
 
 		// get viewport
 		IntBuffer viewport = BufferUtils.createIntBuffer(16);
@@ -75,24 +91,18 @@ public class Select implements Action {
 		GL11.glLoadIdentity();
 
 		GLU.gluPickMatrix(x, y, 6.0f, 6.0f, viewport);
-		// TODO use model window width and height instead of conf values
-		GLU.gluOrtho2D(0, Conf.getIntProperty("window.initialWidth"), 0, Conf.getIntProperty("window.initialHeight"));
+		Window window = Model.getModel().getWindow();
+		// GLU.gluOrtho2D(0, Conf.getIntProperty("window.initialWidth"), 0, Conf.getIntProperty("window.initialHeight"));
+		GL11.glOrtho(0, window.getWidth(), 0, window.getHeight(), 1, -1);
+		GL11.glViewport(0, 0, window.getWidth(), window.getHeight());
 
-		// TODO Replace this with more standard world rendering
-		Map<Integer, Ship> shipsMap = Model.getModel().getEntityMap(Ship.class.getAnnotation(Entity.class).uniqueId());
-		for (Ship ship : shipsMap.values()) {
-			ship.render(GL11.GL_SELECT, RenderingType.NORMAL);
-		}
+		render(zoomFactor, GL11.GL_SELECT);
 
 		GL11.glMatrixMode(GL11.GL_PROJECTION);
 		GL11.glPopMatrix();
 		GL11.glFlush();
 
 		int hits = GL11.glRenderMode(GL11.GL_RENDER);
-
-		if (hits == 0) {
-			// TODO Unselect if needed
-		}
 
 		// For debugging purpose only ...
 		// This allows to see the select buffer
@@ -101,7 +111,7 @@ public class Select implements Action {
 		{
 			result += selectBuf.get(i) + ", ";
 		}
-		LOGGER.info("hits: " + hits + ", result : " + result + "]");
+		LOGGER.trace("hits: " + hits + ", result : " + result + "]");
 
 		// Get the model elements picked
 		// The current index we are looking for in the select buffer
@@ -135,6 +145,7 @@ public class Select implements Action {
 			}
 
 		}
+
 		// int j = 0;
 		// Ship lastSelectedShip = globalModel.getSelectedShip();
 		// int index = selectBuf.get(j + 4);
