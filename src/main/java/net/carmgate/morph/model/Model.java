@@ -7,12 +7,12 @@ import java.util.Set;
 
 import net.carmgate.morph.actions.InteractionStack;
 import net.carmgate.morph.model.entities.Entity;
+import net.carmgate.morph.model.entities.EntityHints;
 import net.carmgate.morph.model.entities.EntityType;
+import net.carmgate.morph.model.entities.Selectable;
 import net.carmgate.morph.model.view.ViewPort;
 import net.carmgate.morph.model.view.Window;
 import net.carmgate.morph.ui.Context;
-import net.carmgate.morph.ui.Renderable;
-import net.carmgate.morph.ui.Selectable;
 import net.carmgate.morph.ui.rendering.RenderingHints;
 import net.carmgate.morph.ui.rendering.RenderingSteps;
 
@@ -46,13 +46,13 @@ public class Model {
 		// add some noop in the interaction queue to get rid of exceptions
 	}
 
-	public void addEntity(Selectable entity) {
+	public void addEntity(Entity entity) {
 		// Add it the selection model
-		EntityType entityType = entity.getClass().getAnnotation(Entity.class).entityType();
+		EntityType entityType = entity.getClass().getAnnotation(EntityHints.class).entityType();
 		RenderingSteps renderingStep = entity.getClass().getAnnotation(RenderingHints.class).renderingStep();
 		EntityMap entityMap = getEntitiesByType(entityType);
 		if (entityMap == null) {
-			entityMap = new EntityMap<>();
+			entityMap = new EntityMap();
 			entitiesByEntityType.put(entityType, entityMap);
 			entitiesByRenderingStep.put(renderingStep, entityMap);
 		}
@@ -67,15 +67,15 @@ public class Model {
 		selection.clear();
 	}
 
-	public <T extends Selectable & Renderable> EntityMap<T> getEntitiesByRenderingType(RenderingSteps renderingStep) {
+	public EntityMap getEntitiesByRenderingType(RenderingSteps renderingStep) {
 		return entitiesByRenderingStep.get(renderingStep);
 	}
 
-	public <T extends Selectable & Renderable> EntityMap<T> getEntitiesByType(EntityType entityType) {
+	public EntityMap getEntitiesByType(EntityType entityType) {
 		return entitiesByEntityType.get(entityType);
 	}
 
-	public <T extends Selectable & Renderable> EntityMap<T> getEntitiesByType(int ordinal) {
+	public EntityMap getEntitiesByType(int ordinal) {
 		return entitiesByEntityType.get(EntityType.values()[ordinal]);
 	}
 

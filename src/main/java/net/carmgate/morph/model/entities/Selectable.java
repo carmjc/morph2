@@ -1,4 +1,4 @@
-package net.carmgate.morph.ui;
+package net.carmgate.morph.model.entities;
 
 public interface Selectable {
 	int getSelectionId();

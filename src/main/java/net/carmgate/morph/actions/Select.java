@@ -6,12 +6,11 @@ import java.util.List;
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Entity;
+import net.carmgate.morph.model.entities.EntityHints;
+import net.carmgate.morph.model.entities.Renderable.RenderingType;
 import net.carmgate.morph.model.view.Window;
 import net.carmgate.morph.ui.Event;
 import net.carmgate.morph.ui.Event.EventType;
-import net.carmgate.morph.ui.Renderable;
-import net.carmgate.morph.ui.Renderable.RenderingType;
-import net.carmgate.morph.ui.Selectable;
 import net.carmgate.morph.ui.rendering.RenderingSteps;
 
 import org.lwjgl.BufferUtils;
@@ -45,10 +44,10 @@ public class Select implements Action {
 		// In select mode, we render the model elements in reverse order, because, the first items drawn will
 		// be the first picked
 		for (RenderingSteps renderingStep : RenderingSteps.reverseValues()) {
-			for (Renderable renderable : Model.getModel().getEntitiesByRenderingType(renderingStep).values()) {
-				GL11.glPushName(renderable.getClass().getAnnotation(Entity.class).entityType().ordinal());
-				GL11.glPushName(((Selectable) renderable).getSelectionId());
-				renderable.render(GL11.GL_SELECT, RenderingType.NORMAL);
+			for (Entity entity : Model.getModel().getEntitiesByRenderingType(renderingStep).values()) {
+				GL11.glPushName(entity.getClass().getAnnotation(EntityHints.class).entityType().ordinal());
+				GL11.glPushName(entity.getSelectionId());
+				entity.render(GL11.GL_SELECT, RenderingType.NORMAL);
 				GL11.glPopName();
 				GL11.glPopName();
 			}
@@ -86,8 +85,6 @@ public class Select implements Action {
 
 		LOGGER.debug("Picking at " + x + " " + y);
 
-		float zoomFactor = Model.getModel().getViewport().getZoomFactor();
-
 		// get viewport
 		IntBuffer viewport = BufferUtils.createIntBuffer(16);
 		GL11.glGetInteger(GL11.GL_VIEWPORT, viewport);
@@ -103,8 +100,8 @@ public class Select implements Action {
 		GL11.glLoadIdentity();
 
 		GLU.gluPickMatrix(x, y, 6.0f, 6.0f, viewport);
+
 		Window window = Model.getModel().getWindow();
-		// GLU.gluOrtho2D(0, Conf.getIntProperty("window.initialWidth"), 0, Conf.getIntProperty("window.initialHeight"));
 		GL11.glOrtho(0, window.getWidth(), 0, window.getHeight(), 1, -1);
 		GL11.glViewport(0, 0, window.getWidth(), window.getHeight());
 
@@ -137,18 +134,15 @@ public class Select implements Action {
 			selectBufIndex += 2;
 
 			// get the matching element in the model
-			Object selectedObject = Model.getModel().getEntitiesByType(selectBuf.get(selectBufIndex++)).get(selectBuf.get(selectBufIndex++));
-			if (selectedObject instanceof Selectable) {
-				Selectable selectable = (Selectable) selectedObject;
-				selectable.setSelected(true);
+			Entity entity = Model.getModel().getEntitiesByType(selectBuf.get(selectBufIndex++)).get(selectBuf.get(selectBufIndex++));
+			entity.setSelected(true);
 
-				// if we were asked a unique selection, clear the selection before adding the new selected element
-				if (onlyOne) {
-					Model.getModel().clearSelection();
-					Model.getModel().getSelection().add(selectable);
-				} else {
-					Model.getModel().getSelection().add(selectable);
-				}
+			// if we were asked a unique selection, clear the selection before adding the new selected element
+			if (onlyOne) {
+				Model.getModel().clearSelection();
+				Model.getModel().getSelection().add(entity);
+			} else {
+				Model.getModel().getSelection().add(entity);
 			}
 
 			// Jump over the other ones if needed

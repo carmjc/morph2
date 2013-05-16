@@ -14,11 +14,12 @@ import net.carmgate.morph.actions.zoom.ZoomOut;
 import net.carmgate.morph.conf.Conf;
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.common.Vect3D;
+import net.carmgate.morph.model.entities.Entity;
+import net.carmgate.morph.model.entities.Renderable;
+import net.carmgate.morph.model.entities.Renderable.RenderingType;
 import net.carmgate.morph.model.entities.Ship;
 import net.carmgate.morph.ui.Event;
 import net.carmgate.morph.ui.Event.EventType;
-import net.carmgate.morph.ui.Renderable;
-import net.carmgate.morph.ui.Renderable.RenderingType;
 import net.carmgate.morph.ui.rendering.RenderingSteps;
 
 import org.lwjgl.LWJGLException;
@@ -168,7 +169,7 @@ public class Main {
 
 		// TODO render the world
 		for (RenderingSteps renderingStep : RenderingSteps.values()) {
-			for (Renderable renderable : Model.getModel().getEntitiesByRenderingType(renderingStep).values()) {
+			for (Entity renderable : Model.getModel().getEntitiesByRenderingType(renderingStep).values()) {
 				renderable.render(GL11.GL_RENDER, RenderingType.NORMAL);
 			}
 		}

@@ -4,8 +4,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 
 import net.carmgate.morph.model.common.Vect3D;
-import net.carmgate.morph.ui.Renderable;
-import net.carmgate.morph.ui.Selectable;
 import net.carmgate.morph.ui.rendering.RenderingHints;
 import net.carmgate.morph.ui.rendering.RenderingSteps;
 
@@ -18,9 +16,9 @@ import org.slf4j.LoggerFactory;
 /**
  * TODO : Il faut ajouter un centre d'inertie et modifier les calculs des forces pour g�rer le vrai centre d'inertie.
  */
-@Entity(entityType = EntityType.SHIP)
+@EntityHints(entityType = EntityType.SHIP)
 @RenderingHints(renderingStep = RenderingSteps.SHIP)
-public class Ship implements Renderable, Selectable {
+public class Ship extends Entity {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(Ship.class);
 
@@ -317,15 +315,6 @@ public class Ship implements Renderable, Selectable {
 	@Override
 	public String toString() {
 		return "ship:" + pos.toString();
-	}
-
-	/**
-	 * Transforms the provided vector from world referential coordinates to ship referential coordinates.
-	 * @param coords the coordinates in world referential
-	 */
-	public void transformWorldToShipCoords(Vect3D coords) {
-		coords.substract(pos);
-		coords.rotate(-rot);
 	}
 
 	public void update() {

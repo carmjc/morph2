@@ -3,21 +3,20 @@ package net.carmgate.morph.model;
 import java.util.Collection;
 import java.util.HashMap;
 
-import net.carmgate.morph.ui.Renderable;
-import net.carmgate.morph.ui.Selectable;
+import net.carmgate.morph.model.entities.Entity;
 
-public class EntityMap<T extends Selectable & Renderable> {
-	private final HashMap<Integer, T> backingMap = new HashMap<>();
+public class EntityMap {
+	private final HashMap<Integer, Entity> backingMap = new HashMap<>();
 
-	public T get(Object key) {
+	public Entity get(Object key) {
 		return backingMap.get(key);
 	}
 
-	protected T put(Integer key, T value) {
+	protected Entity put(Integer key, Entity value) {
 		return backingMap.put(key, value);
 	}
 
-	public Collection<T> values() {
+	public Collection<Entity> values() {
 		return backingMap.values();
 	}
 
