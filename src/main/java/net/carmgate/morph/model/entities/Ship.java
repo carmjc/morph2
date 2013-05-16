@@ -6,6 +6,8 @@ import java.io.IOException;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.ui.Renderable;
 import net.carmgate.morph.ui.Selectable;
+import net.carmgate.morph.ui.rendering.RenderingHints;
+import net.carmgate.morph.ui.rendering.RenderingSteps;
 
 import org.lwjgl.opengl.GL11;
 import org.newdawn.slick.opengl.Texture;
@@ -16,7 +18,8 @@ import org.slf4j.LoggerFactory;
 /**
  * TODO : Il faut ajouter un centre d'inertie et modifier les calculs des forces pour g�rer le vrai centre d'inertie.
  */
-@Entity(uniqueId = 1)
+@Entity(entityType = EntityType.SHIP)
+@RenderingHints(renderingStep = RenderingSteps.SHIP)
 public class Ship implements Renderable, Selectable {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(Ship.class);
@@ -79,7 +82,8 @@ public class Ship implements Renderable, Selectable {
 		// lastUpdateTS = World.worldInstance.getCurrentTS();
 	}
 
-	public int getId() {
+	@Override
+	public int getSelectionId() {
 		return id;
 	}
 
@@ -129,41 +133,24 @@ public class Ship implements Renderable, Selectable {
 		GL11.glTranslatef(pos.x, pos.y, pos.z);
 		GL11.glRotatef(rot, 0, 0, 1);
 
-		if (glMode == GL11.GL_SELECT) {
-			// Render for selection
-			GL11.glPushName(Ship.class.getAnnotation(Entity.class).uniqueId());
-			GL11.glPushName(getId());
-
-			GL11.glDisable(GL11.GL_TEXTURE_2D);
-			GL11.glBegin(GL11.GL_QUADS);
-			GL11.glVertex2f(-baseTexture.getTextureWidth() / 2, -baseTexture.getTextureWidth() / 2);
-			GL11.glVertex2f(baseTexture.getTextureWidth() / 2, -baseTexture.getTextureWidth() / 2);
-			GL11.glVertex2f(baseTexture.getTextureWidth() / 2, baseTexture.getTextureHeight() / 2);
-			GL11.glVertex2f(-baseTexture.getTextureWidth() / 2, baseTexture.getTextureHeight() / 2);
-			GL11.glEnd();
-
-			GL11.glPopName();
-			GL11.glPopName();
+		// Render for show
+		if (selected) {
+			GL11.glColor3f(1f, 1f, 1f);
 		} else {
-			// Render for show
-			if (selected) {
-				GL11.glColor3f(1f, 1f, 1f);
-			} else {
-				GL11.glColor3f(0.5f, 0.5f, 0.5f);
-			}
-			GL11.glEnable(GL11.GL_TEXTURE_2D);
-			baseTexture.bind();
-			GL11.glBegin(GL11.GL_QUADS);
-			GL11.glTexCoord2f(0, 0);
-			GL11.glVertex2f(-baseTexture.getTextureWidth() / 2, -baseTexture.getTextureWidth() / 2);
-			GL11.glTexCoord2f(1, 0);
-			GL11.glVertex2f(baseTexture.getTextureWidth() / 2, -baseTexture.getTextureWidth() / 2);
-			GL11.glTexCoord2f(1, 1);
-			GL11.glVertex2f(baseTexture.getTextureWidth() / 2, baseTexture.getTextureHeight() / 2);
-			GL11.glTexCoord2f(0, 1);
-			GL11.glVertex2f(-baseTexture.getTextureWidth() / 2, baseTexture.getTextureHeight() / 2);
-			GL11.glEnd();
+			GL11.glColor3f(0.5f, 0.5f, 0.5f);
 		}
+		GL11.glEnable(GL11.GL_TEXTURE_2D);
+		baseTexture.bind();
+		GL11.glBegin(GL11.GL_QUADS);
+		GL11.glTexCoord2f(0, 0);
+		GL11.glVertex2f(-baseTexture.getTextureWidth() / 2, -baseTexture.getTextureWidth() / 2);
+		GL11.glTexCoord2f(1, 0);
+		GL11.glVertex2f(baseTexture.getTextureWidth() / 2, -baseTexture.getTextureWidth() / 2);
+		GL11.glTexCoord2f(1, 1);
+		GL11.glVertex2f(baseTexture.getTextureWidth() / 2, baseTexture.getTextureHeight() / 2);
+		GL11.glTexCoord2f(0, 1);
+		GL11.glVertex2f(-baseTexture.getTextureWidth() / 2, baseTexture.getTextureHeight() / 2);
+		GL11.glEnd();
 
 		GL11.glRotatef(-rot, 0, 0, 1);
 		GL11.glTranslatef(-pos.x, -pos.y, -pos.z);

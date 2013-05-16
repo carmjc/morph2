@@ -1,9 +1,7 @@
 package net.carmgate.morph;
 
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import net.carmgate.morph.actions.Action;
@@ -16,13 +14,12 @@ import net.carmgate.morph.actions.zoom.ZoomOut;
 import net.carmgate.morph.conf.Conf;
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.common.Vect3D;
-import net.carmgate.morph.model.entities.Entity;
 import net.carmgate.morph.model.entities.Ship;
-import net.carmgate.morph.model.view.ViewPort;
 import net.carmgate.morph.ui.Event;
 import net.carmgate.morph.ui.Event.EventType;
 import net.carmgate.morph.ui.Renderable;
 import net.carmgate.morph.ui.Renderable.RenderingType;
+import net.carmgate.morph.ui.rendering.RenderingSteps;
 
 import org.lwjgl.LWJGLException;
 import org.lwjgl.input.Keyboard;
@@ -48,9 +45,6 @@ public class Main {
 
 	private final Model model = Model.getModel();
 
-	/** This is used to retrieve picked entities. */
-	private final Map<Integer, Class<?>> entitiesMap = new HashMap<>();
-
 	private final List<Action> mouseActions = new LinkedList<>();
 	private final List<Action> keyboardActions = new LinkedList<>();
 
@@ -66,22 +60,6 @@ public class Main {
 
 		keyboardActions.add(new ZoomIn());
 		keyboardActions.add(new ZoomOut());
-	}
-
-	/**
-	* Scan for entities and registers them in the entitiesMap.
-	* that allows for fast retrieval of the Class<?> of the entity with its uniqueId.
-	*/
-	private void initEntities() {
-		// Init the reflection API
-		Reflections reflections = new Reflections("net.carmgate.morph");
-
-		// Look for classes annotated with the @Entity annotation
-		Set<Class<?>> entities = reflections.getTypesAnnotatedWith(Entity.class);
-
-		for (Class<?> entity : entities) {
-			entitiesMap.put(entity.getAnnotation(Entity.class).uniqueId(), entity);
-		}
 	}
 
 	/**
@@ -112,37 +90,31 @@ public class Main {
 	}
 
 	private void initModel() {
-		Ship ship = new Ship(0, 0, 0, 10);
-		Map<Integer, Object> shipsMap = new HashMap<>();
-		Model.getModel().getEntities().put(Ship.class.getAnnotation(Entity.class).uniqueId(), shipsMap);
-		shipsMap.put(ship.getId(), ship);
-		ship = new Ship(128, 0, 0, 40);
-		shipsMap.put(ship.getId(), ship);
-		ship = new Ship(128, 128, 0, 80);
-		shipsMap.put(ship.getId(), ship);
-		ship = new Ship(0, 128, 0, 120);
-		shipsMap.put(ship.getId(), ship);
-		ship = new Ship(-128, 0, 0, 160);
-		shipsMap.put(ship.getId(), ship);
+		Model.getModel().addEntity(new Ship(0, 0, 0, 10));
+		Model.getModel().addEntity(new Ship(128, 0, 0, 40));
+		Model.getModel().addEntity(new Ship(128, 128, 0, 80));
+		Model.getModel().addEntity(new Ship(0, 128, 0, 120));
+		Model.getModel().addEntity(new Ship(-128, 0, 0, 160));
 	}
 
 	/**
 	 * Scans the classpath looking for renderers (classes annotated with @{@link Renders})
 	 * initializes them and add them to the maps of the renderers
 	 */
-	private void initRenderers() {
+	private void initRenderables() {
 		// Init the reflection API
 		Reflections reflections = new Reflections("net.carmgate.morph");
 
-		// Look for classes annotated with the @Renders annotation
-		Set<Class<? extends Renderable>> renderers = reflections.getSubTypesOf(Renderable.class);
+		// Look for classes implementing the Renderable interface
+		Set<Class<? extends Renderable>> renderables = reflections.getSubTypesOf(Renderable.class);
 
-		// Iterate over the result set to register the renderers with the model classes
-		for (Class<? extends Renderable> renderer : renderers) {
+		// Iterate over the result set to initialize each renderable
+		for (Class<? extends Renderable> renderable : renderables) {
 			try {
-				renderer.newInstance().initRenderer();
+				renderable.newInstance().initRenderer();
+
 			} catch (InstantiationException | IllegalAccessException e) {
-				LOGGER.error("Exception raised while trying to init renderer " + renderer.getName(), e);
+				LOGGER.error("Exception raised while trying to init renderer " + renderable.getName(), e);
 			}
 		}
 	}
@@ -169,12 +141,6 @@ public class Main {
 		GL11.glMatrixMode(GL11.GL_PROJECTION);
 		GL11.glLoadIdentity();
 
-		// set viewport
-		ViewPort viewport = model.getViewport();
-		Vect3D focalPoint = viewport.getFocalPoint();
-
-		// GLU.gluOrtho2D(focalPoint.x - width / 2, focalPoint.x + width / 2
-		// , focalPoint.y + height / 2, focalPoint.y - height / 2);
 		GL11.glOrtho(-width / 2, width / 2, -height / 2, height / 2, 1, -1);
 		GL11.glViewport(0, 0, width, height);
 
@@ -201,9 +167,10 @@ public class Main {
 		// worldRenderer.render(GL11.GL_RENDER, renderStyle, globalModel);
 
 		// TODO render the world
-		Map<Integer, Ship> shipsMap = Model.getModel().getEntityMap(Ship.class.getAnnotation(Entity.class).uniqueId());
-		for (Ship ship : shipsMap.values()) {
-			ship.render(GL11.GL_RENDER, RenderingType.NORMAL);
+		for (RenderingSteps renderingStep : RenderingSteps.values()) {
+			for (Renderable renderable : Model.getModel().getEntitiesByRenderingType(renderingStep).values()) {
+				renderable.render(GL11.GL_RENDER, RenderingType.NORMAL);
+			}
 		}
 
 		GL11.glScalef(1 / scale, 1 / scale, 1);
@@ -249,10 +216,8 @@ public class Main {
 		// init OpenGL context
 		initGL(Conf.getIntProperty("window.initialWidth"), Conf.getIntProperty("window.initialHeight"));
 
-		// scan for entities
-		initEntities();
 		// scan for renderers
-		initRenderers();
+		initRenderables();
 		// init world model
 		initModel();
 
@@ -266,7 +231,7 @@ public class Main {
 			if (!Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) {
 				render();
 			} else {
-				new Select().render(Model.getModel().getViewport().getZoomFactor(), GL11.GL_SELECT);
+				new Select().render(GL11.GL_SELECT);
 			}
 
 			// updates display and sets frame rate

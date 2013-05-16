@@ -1,12 +1,9 @@
-package net.carmgate.morph.model.entities;
+package net.carmgate.morph.ui.rendering;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Entity {
-
-	EntityType entityType();
-
+public @interface RenderingHints {
+	RenderingSteps renderingStep();
 }

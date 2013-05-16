@@ -6,13 +6,22 @@ import java.util.Map;
 import java.util.Set;
 
 import net.carmgate.morph.actions.InteractionStack;
+import net.carmgate.morph.model.entities.Entity;
+import net.carmgate.morph.model.entities.EntityType;
 import net.carmgate.morph.model.view.ViewPort;
 import net.carmgate.morph.model.view.Window;
 import net.carmgate.morph.ui.Context;
+import net.carmgate.morph.ui.Renderable;
 import net.carmgate.morph.ui.Selectable;
+import net.carmgate.morph.ui.rendering.RenderingHints;
+import net.carmgate.morph.ui.rendering.RenderingSteps;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Model {
 
+	private static final Logger LOGGER = LoggerFactory.getLogger(Model.class);
 	private static final Model _instance = new Model();
 
 	/** Singleton instance getter. */
@@ -27,11 +36,27 @@ public class Model {
 
 	private final Set<Selectable> selection = new HashSet<>();
 	private final InteractionStack interactionStack = new InteractionStack();
+
 	/** All the entities of the world can be searched by @entity uniqueId and entity instance uniqueId. */
-	private final Map<Integer, Map<Integer, Object>> entities = new HashMap<>();
+	// TODO we should rework this structure, it's not clean.
+	private final Map<EntityType, EntityMap> entitiesByEntityType = new HashMap<>();
+	private final Map<RenderingSteps, EntityMap> entitiesByRenderingStep = new HashMap<>();
 
 	private Model() {
 		// add some noop in the interaction queue to get rid of exceptions
+	}
+
+	public void addEntity(Selectable entity) {
+		// Add it the selection model
+		EntityType entityType = entity.getClass().getAnnotation(Entity.class).entityType();
+		RenderingSteps renderingStep = entity.getClass().getAnnotation(RenderingHints.class).renderingStep();
+		EntityMap entityMap = getEntitiesByType(entityType);
+		if (entityMap == null) {
+			entityMap = new EntityMap<>();
+			entitiesByEntityType.put(entityType, entityMap);
+			entitiesByRenderingStep.put(renderingStep, entityMap);
+		}
+		entityMap.put(entity.getSelectionId(), entity);
 	}
 
 	// TODO We must fix the temptation to use getSelection.clear() instead
@@ -42,12 +67,16 @@ public class Model {
 		selection.clear();
 	}
 
-	public Map<Integer, Map<Integer, Object>> getEntities() {
-		return entities;
+	public <T extends Selectable & Renderable> EntityMap<T> getEntitiesByRenderingType(RenderingSteps renderingStep) {
+		return entitiesByRenderingStep.get(renderingStep);
 	}
 
-	public <T> Map<Integer, T> getEntityMap(int entityUniqueId) {
-		return (Map<Integer, T>) entities.get(entityUniqueId);
+	public <T extends Selectable & Renderable> EntityMap<T> getEntitiesByType(EntityType entityType) {
+		return entitiesByEntityType.get(entityType);
+	}
+
+	public <T extends Selectable & Renderable> EntityMap<T> getEntitiesByType(int ordinal) {
+		return entitiesByEntityType.get(EntityType.values()[ordinal]);
 	}
 
 	public InteractionStack getInteractionStack() {

@@ -2,17 +2,17 @@ package net.carmgate.morph.actions;
 
 import java.nio.IntBuffer;
 import java.util.List;
-import java.util.Map;
 
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Entity;
-import net.carmgate.morph.model.entities.Ship;
 import net.carmgate.morph.model.view.Window;
 import net.carmgate.morph.ui.Event;
 import net.carmgate.morph.ui.Event.EventType;
+import net.carmgate.morph.ui.Renderable;
 import net.carmgate.morph.ui.Renderable.RenderingType;
 import net.carmgate.morph.ui.Selectable;
+import net.carmgate.morph.ui.rendering.RenderingSteps;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.input.Mouse;
@@ -28,17 +28,30 @@ public class Select implements Action {
 	public Select() {
 	}
 
-	public void render(float zoomFactor, int glMode) {
+	/** 
+	 * Renders the scene for selection.
+	 * Can be used directly for debugging purposes to show the pickable areas.
+	 * @param zoomFactor
+	 * @param glMode
+	 */
+	public void render(int glMode) {
 
 		Vect3D focalPoint = Model.getModel().getViewport().getFocalPoint();
+		float zoomFactor = Model.getModel().getViewport().getZoomFactor();
 		GL11.glTranslatef(focalPoint.x, focalPoint.y, focalPoint.z);
 		GL11.glRotatef(Model.getModel().getViewport().getRotation(), 0, 0, 1);
 		GL11.glScalef(zoomFactor, zoomFactor, 1);
 
-		// TODO Replace this with more standard world rendering
-		Map<Integer, Ship> shipsMap = Model.getModel().getEntityMap(Ship.class.getAnnotation(Entity.class).uniqueId());
-		for (Ship ship : shipsMap.values()) {
-			ship.render(glMode, RenderingType.NORMAL);
+		// In select mode, we render the model elements in reverse order, because, the first items drawn will
+		// be the first picked
+		for (RenderingSteps renderingStep : RenderingSteps.reverseValues()) {
+			for (Renderable renderable : Model.getModel().getEntitiesByRenderingType(renderingStep).values()) {
+				GL11.glPushName(renderable.getClass().getAnnotation(Entity.class).entityType().ordinal());
+				GL11.glPushName(((Selectable) renderable).getSelectionId());
+				renderable.render(GL11.GL_SELECT, RenderingType.NORMAL);
+				GL11.glPopName();
+				GL11.glPopName();
+			}
 		}
 
 		GL11.glScalef(1 / zoomFactor, 1 / zoomFactor, 1);
@@ -95,7 +108,7 @@ public class Select implements Action {
 		GL11.glOrtho(0, window.getWidth(), 0, window.getHeight(), 1, -1);
 		GL11.glViewport(0, 0, window.getWidth(), window.getHeight());
 
-		render(zoomFactor, GL11.GL_SELECT);
+		render(GL11.GL_SELECT);
 
 		GL11.glMatrixMode(GL11.GL_PROJECTION);
 		GL11.glPopMatrix();
@@ -124,7 +137,7 @@ public class Select implements Action {
 			selectBufIndex += 2;
 
 			// get the matching element in the model
-			Object selectedObject = Model.getModel().getEntities().get(selectBuf.get(selectBufIndex++)).get(selectBuf.get(selectBufIndex++));
+			Object selectedObject = Model.getModel().getEntitiesByType(selectBuf.get(selectBufIndex++)).get(selectBuf.get(selectBufIndex++));
 			if (selectedObject instanceof Selectable) {
 				Selectable selectable = (Selectable) selectedObject;
 				selectable.setSelected(true);
