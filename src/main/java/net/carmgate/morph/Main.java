@@ -5,7 +5,9 @@ import java.util.List;
 import java.util.Set;
 
 import net.carmgate.morph.actions.Action;
+import net.carmgate.morph.actions.MoveTo;
 import net.carmgate.morph.actions.Select;
+import net.carmgate.morph.actions.ToggleDebugMode;
 import net.carmgate.morph.actions.drag.DragContext;
 import net.carmgate.morph.actions.drag.DraggedWorld;
 import net.carmgate.morph.actions.drag.DraggingWorld;
@@ -54,13 +56,17 @@ public class Main {
 	 * Some special case handlers can not be initialized dynamically at the moment.
 	 */
 	private void initActions() {
+		// TODO use HardwareType to auto fill actions
+
 		DragContext dragContext = new DragContext();
 		mouseActions.add(new DraggingWorld(dragContext));
 		mouseActions.add(new Select());
+		mouseActions.add(new MoveTo());
 		mouseActions.add(new DraggedWorld(dragContext));
 
 		keyboardActions.add(new ZoomIn());
 		keyboardActions.add(new ZoomOut());
+		keyboardActions.add(new ToggleDebugMode());
 	}
 
 	/**
@@ -111,6 +117,10 @@ public class Main {
 
 		// Iterate over the result set to initialize each renderable
 		for (Class<? extends Renderable> renderable : renderables) {
+			if (renderable.equals(Entity.class)) {
+				continue;
+			}
+
 			try {
 				renderable.newInstance().initRenderer();
 
@@ -239,6 +249,9 @@ public class Main {
 			Display.update();
 			Display.sync(100);
 
+			// update model
+			Model.getModel().update();
+
 			// handle window resize
 			if (Display.wasResized()) {
 				initView();
@@ -271,7 +284,7 @@ public class Main {
 				}
 				Event event = new Event(evtType, Keyboard.getEventKey(), new int[] { Mouse.getEventX(), Mouse.getEventY() });
 				Model.getModel().getInteractionStack().addEvent(event);
-				LOGGER.debug("Sending keyboard event");
+				LOGGER.debug("Sending keyboard event " + Keyboard.getEventKey());
 				for (Action action : keyboardActions) {
 					action.run();
 				}

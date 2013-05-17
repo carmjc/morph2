@@ -3,6 +3,7 @@ package net.carmgate.morph.model.entities;
 import java.io.FileInputStream;
 import java.io.IOException;
 
+import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.ui.rendering.RenderingHints;
 import net.carmgate.morph.ui.rendering.RenderingSteps;
@@ -13,77 +14,168 @@ import org.newdawn.slick.opengl.TextureLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * TODO : Il faut ajouter un centre d'inertie et modifier les calculs des forces pour g�rer le vrai centre d'inertie.
- */
 @EntityHints(entityType = EntityType.SHIP)
 @RenderingHints(renderingStep = RenderingSteps.SHIP)
 public class Ship extends Entity {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(Ship.class);
+	private class Movement {
+		protected Vect3D target;
+		protected Vect3D desiredVelocity = new Vect3D();
+		protected Vect3D steeringDirection = new Vect3D();
+		protected Vect3D steeringForce = new Vect3D();
 
+		protected Movement() {
+		}
+
+		protected void arrive() {
+			// LOGGER.debug("Moving " + this);
+			float slowingDistance = MAX_SPEED * MAX_SPEED / (2 * MAX_FORCE / mass);
+
+			// new calculations (from http://www.red3d.com/cwr/steer/gdc99/) for arrival
+			// target_offset = target - position
+			Vect3D targetOffset = new Vect3D(target).substract(pos);
+			// distance = length (target_offset)
+			float distance = targetOffset.modulus();
+
+			// TODO This test is a sloppy way to avoid heading flickering. Besides, it does not solve everything ...
+			if (distance < slowingDistance || speed.modulus() < MAX_SPEED * 0.99 || Math.abs(speed.angleWith(targetOffset)) > 5) {
+				// ramped_speed = max_speed * (distance / slowing_distance)
+				float rampedSpeed = MAX_SPEED * (distance / slowingDistance);
+				// clipped_speed = minimum (ramped_speed, max_speed)
+				float clippedSpeed = Math.min(rampedSpeed, MAX_SPEED);
+				// desired_velocity = (clipped_speed / distance) * target_offset
+				desiredVelocity = new Vect3D(targetOffset).mult(clippedSpeed / distance);
+				// steering = desired_velocity - velocity
+				steeringDirection = new Vect3D(desiredVelocity).substract(new Vect3D(speed));
+				// steering_force = truncate (steering_direction, max_force)
+				if (distance > 50) {
+					steeringForce = new Vect3D(steeringDirection).normalize(MAX_FORCE / mass);
+				} else {
+					steeringForce = new Vect3D(steeringDirection).truncate(MAX_FORCE / mass);
+				}
+				// acceleration = steering_force / mass
+				accel = new Vect3D(steeringForce);
+				// velocity = truncate (velocity + acceleration, max_speed)
+				speed.add(new Vect3D(accel).mult(secondsSinceLastUpdate)).truncate(MAX_SPEED);
+			}
+			// position = position + velocity
+			pos.add(new Vect3D(speed).mult(secondsSinceLastUpdate));
+
+			// rotate properly
+			float newHeading = new Vect3D(0, 1, 0).angleWith(steeringForce);
+			// heading = newHeading;
+			float angleDiff = (newHeading - heading + 360) % 360;
+			if (angleDiff < MAX_ANGLE_SPEED * secondsSinceLastUpdate) {
+				heading = newHeading;
+			} else if (angleDiff < 180) {
+				heading += MAX_ANGLE_SPEED * Math.max(1, angleDiff / 180) * secondsSinceLastUpdate;
+			} else if (angleDiff >= 360 - MAX_ANGLE_SPEED * secondsSinceLastUpdate) {
+				heading = newHeading;
+			} else {
+				heading -= MAX_ANGLE_SPEED * Math.max(1, angleDiff / 180) * secondsSinceLastUpdate;
+			}
+
+			// stop condition
+			if (new Vect3D(target).substract(pos).modulus() < 2) {
+				target = null;
+				accel.copy(Vect3D.NULL);
+				speed.copy(Vect3D.NULL);
+			}
+
+		}
+
+	}
+
+	private final Movement movement = new Movement();
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(Ship.class);
 	// Management of the ship's ids.
 	private static Integer nextId = 1;
-	private final int id;
 
-	@SuppressWarnings("unused")
-	private static final Logger lOGGER = LoggerFactory.getLogger(Ship.class);
+	private final int id;
 
 	/** The texture under the morph image. */
 	private static Texture baseTexture;
-
 	/** The ship max speed. */
-	private static final float MAX_SPEED = 200;
-	private static final float SLOWING_DISTANCE = 400;
+	// TODO All these values should depend on the ship's fitting.
+	private static final float MAX_SPEED = 250;
+	private static final float MAX_FORCE = 1000f;
+	private static final float MAX_ANGLE_SPEED = 200f;
 
+	// private static final float SLOWING_DISTANCE = 100;
 	/** The ship position in the world. */
-	private final Vect3D pos;
-	private final Vect3D posSpeed;
-	private final Vect3D posAccel;
+	protected final Vect3D pos;
+
+	protected final Vect3D speed;
+	// probably not needed
+	// private final Vect3D posAccel;
 
 	/** The ship orientation in the world. */
-	private final float rot;
-	private final float rotSpeed;
-	private final float rotAccel;
+	protected float heading;
+	// TODO probably not needed
+	// private float rotSpeed;
 
 	/** The drag factor. The lower, the more it's dragged. */
-	private final float dragFactor = 0.990f;
+	// private final float dragFactor = 0.990f;
 
 	/** Under that speed, the ship stops completely. */
-	public static final float MIN_SPEED = 0.00001f;
+	// public static final float MIN_SPEED = 0.00001f;
+
+	private final float mass = 10;
 
 	/** Timestamp of last time the ship's position was calculated. */
 	private long lastUpdateTS;
 
 	private boolean selected;
 
-	/** The center of mass of the ship, in world coordinates */
-	// private final Vect3D centerOfMass = new Vect3D(Vect3D.NULL);
+	protected Vect3D accel;
+
+	protected float secondsSinceLastUpdate;
 
 	public Ship() {
 		this(0, 0, 0, 0);
 	}
 
-	public Ship(float x, float y, float z, float rot) {
+	public Ship(float x, float y, float z, float heading) {
 		synchronized (nextId) {
 			id = nextId++;
 		}
 
 		pos = new Vect3D(x, y, z);
-		posSpeed = new Vect3D(0, 0, 0);
-		posAccel = new Vect3D(0, 0, 0);
-		this.rot = rot;
-		rotSpeed = 0;
-		rotAccel = 0;
+		speed = new Vect3D(0, 0, 0);
+		// posAccel = new Vect3D(0, 0, 0);
+		this.heading = heading;
+		// rotSpeed = 0;
 
 		// Init lastUpdateTS
-		// lastUpdateTS = World.worldInstance.getCurrentTS();
+		lastUpdateTS = Model.getModel().getCurrentTS();
 	}
+
+	/** List of active morphs. */
+	// private final List<Morph> activeMorphList = new ArrayList<Morph>();
 
 	@Override
 	public int getSelectionId() {
 		return id;
 	}
+
+	// TODO not needed in first approximation
+	// public void applyForces() {
+	// // posAccel.copy(Vect3D.NULL);
+	//
+	// // Initialize forceTarget vector
+	// Vect3D forceTarget = new Vect3D();
+	//
+	// for (Force f : ownForces) {
+	//
+	// // the acceleration caused by the force is applied to the ship's center.
+	// Vect3D forceVector = new Vect3D(f.vector);
+	// forceVector.rotate(rot); // remove the effect of morph and ship rotation. TODO : check this
+	// posAccel.add(forceVector);
+	//
+	// }
+	//
+	// }
 
 	/**
 	 * The list of the forces attached to the ship or a constituant of the ship.
@@ -106,9 +198,6 @@ public class Ship extends Entity {
 	/** The selected morph. */
 	// private final List<Morph> selectedMorphList = new ArrayList<Morph>();
 
-	/** List of active morphs. */
-	// private final List<Morph> activeMorphList = new ArrayList<Morph>();
-
 	/** List of ships IAs. */
 	// private final List<IA> iaList = new ArrayList<IA>();
 
@@ -129,7 +218,7 @@ public class Ship extends Entity {
 	public void render(int glMode, Renderable.RenderingType renderingType) {
 
 		GL11.glTranslatef(pos.x, pos.y, pos.z);
-		GL11.glRotatef(rot, 0, 0, 1);
+		GL11.glRotatef(heading, 0, 0, 1);
 
 		// Render for show
 		if (selected) {
@@ -150,74 +239,40 @@ public class Ship extends Entity {
 		GL11.glVertex2f(-baseTexture.getTextureWidth() / 2, baseTexture.getTextureHeight() / 2);
 		GL11.glEnd();
 
-		GL11.glRotatef(-rot, 0, 0, 1);
+		GL11.glRotatef(-heading, 0, 0, 1);
+
+		if (Model.getModel().isDebugMode()) {
+			speed.render(glMode, renderingType, 1);
+			GL11.glColor3f(1, 0, 0);
+			movement.desiredVelocity.render(glMode, renderingType, 1);
+			GL11.glTranslated(movement.desiredVelocity.x, movement.desiredVelocity.y, 0);
+			GL11.glColor3f(0, 0, 1);
+			movement.steeringForce.render(glMode, renderingType, 1);
+			GL11.glTranslated(-movement.desiredVelocity.x, -movement.desiredVelocity.y, 0);
+		}
+
 		GL11.glTranslatef(-pos.x, -pos.y, -pos.z);
+
+		if (movement.target != null && selected) {
+			GL11.glTranslatef(movement.target.x, movement.target.y, 0);
+
+			GL11.glDisable(GL11.GL_TEXTURE_2D);
+			GL11.glBegin(GL11.GL_QUADS);
+			GL11.glVertex2f(-16, -16);
+			GL11.glVertex2f(16, -16);
+			GL11.glVertex2f(16, 16);
+			GL11.glVertex2f(-16, 16);
+			GL11.glEnd();
+
+			GL11.glTranslatef(-movement.target.x, -movement.target.y, 0);
+		}
+
 	}
 
 	// public void addMorph(Morph morph) {
 	// morph.setShip(this);
 	// morphList.add(morph);
 	// calculateCOM();
-	// }
-
-	// public void applyForces() {
-	// posAccel.copy(Vect3D.NULL);
-	// rotAccel = 0;
-	//
-	// // Calculate com in world
-	// Vect3D comInWorld = new Vect3D(getCenterOfMassInShip());
-	// transformShipToWorldCoords(comInWorld);
-	//
-	// // Initialize forceTarget vector
-	// Vect3D forceTarget = new Vect3D();
-	//
-	// for (Force f : ownForceList) {
-	//
-	// // the acceleration caused by the force is applied to the ship's inertia center.
-	// Vect3D forceVector = new Vect3D(f.vector);
-	// forceVector.rotate(f.target.getRotInShip() + rot); // remove the effect of morph and ship rotation. TODO : check this
-	// posAccel.add(forceVector);
-	//
-	// // the tangential element of the force generates a rotation of the ship
-	// // with intensity proportional to the force moment
-	// forceTarget.copy(f.target.getPosInWorld());
-	// forceTarget.substract(pos);
-	// rotAccel += forceTarget.prodVectOnZ(forceVector) / morphList.size() * 0.05f;
-	//
-	// }
-	//
-	// // Then we clean the list
-	// ownForceList.clear();
-	// }
-
-	/**
-	 * Calculates the COM (center of mass).
-	 * The COM vector origin is the morph with shipgrid coordinates (0,0)
-	 * The current computation is an approximation and assumes that each and every morph in
-	 * the ship is at full mass.
-	 */
-	// private void calculateCOM() {
-	// centerOfMass.copy(Vect3D.NULL);
-	// for (Morph m : getMorphList()) {
-	// centerOfMass.add(m.getPosInShip());
-	// }
-	// centerOfMass.normalize(centerOfMass.modulus() / getMorphList().size());
-	// }
-
-	// public List<Morph> getActiveMorphList() {
-	// return activeMorphList;
-	// }
-
-	// public Vect3D getCenterOfMassInShip() {
-	// return centerOfMass;
-	// }
-
-	// public List<IA> getIAList() {
-	// return iaList;
-	// }
-
-	// public List<Morph> getMorphList() {
-	// return morphList;
 	// }
 
 	/**
@@ -260,13 +315,38 @@ public class Ship extends Entity {
 	}
 
 	/**
-	 * Transforms the provided vector from ship referential coordinates to world referential coordinates.
-	 * @param coords the coordinates in ship referential
+	 * Calculates the COM (center of mass).
+	 * The COM vector origin is the morph with shipgrid coordinates (0,0)
+	 * The current computation is an approximation and assumes that each and every morph in
+	 * the ship is at full mass.
 	 */
-	// public void transformShipToWorldCoords(Vect3D coords) {
-	// coords.rotate(rot);
-	// coords.add(pos);
+	// private void calculateCOM() {
+	// centerOfMass.copy(Vect3D.NULL);
+	// for (Morph m : getMorphList()) {
+	// centerOfMass.add(m.getPosInShip());
 	// }
+	// centerOfMass.normalize(centerOfMass.modulus() / getMorphList().size());
+	// }
+
+	// public List<Morph> getActiveMorphList() {
+	// return activeMorphList;
+	// }
+
+	// public Vect3D getCenterOfMassInShip() {
+	// return centerOfMass;
+	// }
+
+	// public List<IA> getIAList() {
+	// return iaList;
+	// }
+
+	// public List<Morph> getMorphList() {
+	// return morphList;
+	// }
+
+	public void setTarget(Vect3D target) {
+		movement.target = target;
+	}
 
 	/**
 	 * Looks for the {@link Morph} at the specified position in the ship.
@@ -280,10 +360,6 @@ public class Ship extends Entity {
 	//
 	// public void removeActiveMorph(Morph morph) {
 	// activeMorphList.remove(morph);
-	// }
-	//
-	// public void setCenterOfMassInWorld(Vect3D centerOfMass) {
-	// this.centerOfMass = centerOfMass;
 	// }
 	//
 	// public void setSelectedMorph(int index) {
@@ -317,23 +393,28 @@ public class Ship extends Entity {
 		return "ship:" + pos.toString();
 	}
 
+	@Override
 	public void update() {
-		// timestamp of last update
-		// float secondsSinceLastUpdate = ((float) World.worldInstance.getCurrentTS() - lastUpdateTS) / 1000;
-		// lastUpdateTS = World.worldInstance.getCurrentTS();
-		// if (secondsSinceLastUpdate == 0f) {
-		// return;
-		// }
+		secondsSinceLastUpdate = ((float) Model.getModel().getCurrentTS() - lastUpdateTS) / 1000;
+		lastUpdateTS = Model.getModel().getCurrentTS();
+		if (secondsSinceLastUpdate == 0f) {
+			return;
+		}
+
+		// if no movement needed, no update needed
+		if (movement.target != null) {
+			movement.arrive();
+		}
 
 		// applyForces();
 
 		// logger.debug(posAccel.modulus());
-		//
+
 		// posSpeed.x += posAccel.x * secondsSinceLastUpdate;
 		// posSpeed.y += posAccel.y * secondsSinceLastUpdate;
 		// posSpeed.z += posAccel.z * secondsSinceLastUpdate;
-		//
-		// // The drag factor is reduced to take into account the fact that we update the position since last TS and not from a full second ago.
+
+		// The drag factor is reduced to take into account the fact that we update the position since last TS and not from a full second ago.
 		// float reducedDragFactor = 1 - (1 - dragFactor) * secondsSinceLastUpdate;
 		// posSpeed.x = Math.abs(posSpeed.x * reducedDragFactor) > MIN_SPEED ? posSpeed.x * reducedDragFactor : 0;
 		// posSpeed.y = Math.abs(posSpeed.y * reducedDragFactor) > MIN_SPEED ? posSpeed.y * reducedDragFactor : 0;
@@ -342,16 +423,15 @@ public class Ship extends Entity {
 		// pos.x += posSpeed.x * secondsSinceLastUpdate;
 		// pos.y += posSpeed.y * secondsSinceLastUpdate;
 		// pos.z += posSpeed.z * secondsSinceLastUpdate;
-		//
+
 		// rotSpeed += rotAccel * secondsSinceLastUpdate;
-		//
+
 		// rotSpeed = Math.abs(rotSpeed * reducedDragFactor) > MIN_SPEED ? rotSpeed * reducedDragFactor : 0;
 		//
 		// rot = (rot + rotSpeed * secondsSinceLastUpdate) % 360;
-		//
+
 		// updateMorphs();
 	}
-
 	// private void updateMorphs() {
 	// for (Morph m : morphList) {
 	// // Position of the morph in the referential centered on the ship (the central one has coords (0, 0).

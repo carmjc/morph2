@@ -1,5 +1,6 @@
 package net.carmgate.morph.model;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -12,7 +13,6 @@ import net.carmgate.morph.model.entities.EntityType;
 import net.carmgate.morph.model.entities.Selectable;
 import net.carmgate.morph.model.view.ViewPort;
 import net.carmgate.morph.model.view.Window;
-import net.carmgate.morph.ui.Context;
 import net.carmgate.morph.ui.rendering.RenderingHints;
 import net.carmgate.morph.ui.rendering.RenderingSteps;
 
@@ -29,17 +29,25 @@ public class Model {
 		return _instance;
 	}
 
+	private boolean debugMode = false;
+
+	/** number of millis since game start. */
+	private long msec = 0;
+
+	/** timestamp of game start. */
+	private final long gameStartMsec = new Date().getTime();
+
 	private final Window window = new Window();
+
 	private final ViewPort viewport = new ViewPort();
 
-	private final Context uiContext = new Context();
-
 	private final Set<Selectable> selection = new HashSet<>();
-	private final InteractionStack interactionStack = new InteractionStack();
 
+	private final InteractionStack interactionStack = new InteractionStack();
 	/** All the entities of the world can be searched by @entity uniqueId and entity instance uniqueId. */
 	// TODO we should rework this structure, it's not clean.
 	private final Map<EntityType, EntityMap> entitiesByEntityType = new HashMap<>();
+
 	private final Map<RenderingSteps, EntityMap> entitiesByRenderingStep = new HashMap<>();
 
 	private Model() {
@@ -67,6 +75,13 @@ public class Model {
 		selection.clear();
 	}
 
+	/**
+	 * @return number of millis since game start.
+	 */
+	public long getCurrentTS() {
+		return msec;
+	}
+
 	public EntityMap getEntitiesByRenderingType(RenderingSteps renderingStep) {
 		return entitiesByRenderingStep.get(renderingStep);
 	}
@@ -87,16 +102,33 @@ public class Model {
 		return selection;
 	}
 
-	public Context getUIContext() {
-		return uiContext;
-	}
-
 	public ViewPort getViewport() {
 		return viewport;
 	}
 
 	public Window getWindow() {
 		return window;
+	}
+
+	public boolean isDebugMode() {
+		return debugMode;
+	}
+
+	public void toggleDebugMode() {
+		debugMode = !debugMode;
+	}
+
+	public void update() {
+		// update the number of millis since game start
+		msec = new Date().getTime() - gameStartMsec;
+
+		// Update all entities
+		// TODO Find a way to filter the entities needing an update
+		for (EntityMap entityMap : entitiesByEntityType.values()) {
+			for (Entity entity : entityMap.values()) {
+				entity.update();
+			}
+		}
 	}
 
 }
