@@ -13,6 +13,7 @@ import net.carmgate.morph.model.entities.EntityType;
 import net.carmgate.morph.model.entities.Selectable;
 import net.carmgate.morph.model.view.ViewPort;
 import net.carmgate.morph.model.view.Window;
+import net.carmgate.morph.ui.ParticleEngine;
 import net.carmgate.morph.ui.rendering.RenderingHints;
 import net.carmgate.morph.ui.rendering.RenderingSteps;
 
@@ -49,6 +50,9 @@ public class Model {
 	private final Map<EntityType, EntityMap> entitiesByEntityType = new HashMap<>();
 
 	private final Map<RenderingSteps, EntityMap> entitiesByRenderingStep = new HashMap<>();
+
+	private final ParticleEngine particleEngine = new ParticleEngine();
+	private boolean pause;
 
 	private Model() {
 		// add some noop in the interaction queue to get rid of exceptions
@@ -98,6 +102,10 @@ public class Model {
 		return interactionStack;
 	}
 
+	public ParticleEngine getParticleEngine() {
+		return particleEngine;
+	}
+
 	public Set<Selectable> getSelection() {
 		return selection;
 	}
@@ -114,13 +122,19 @@ public class Model {
 		return debugMode;
 	}
 
+	public void setPause() {
+		pause = true;
+	}
+
 	public void toggleDebugMode() {
 		debugMode = !debugMode;
 	}
 
 	public void update() {
 		// update the number of millis since game start
-		msec = new Date().getTime() - gameStartMsec;
+		if (!pause) {
+			msec = new Date().getTime() - gameStartMsec;
+		}
 
 		// Update all entities
 		// TODO Find a way to filter the entities needing an update
@@ -129,6 +143,8 @@ public class Model {
 				entity.update();
 			}
 		}
-	}
 
+		// particle engin
+		particleEngine.update();
+	}
 }

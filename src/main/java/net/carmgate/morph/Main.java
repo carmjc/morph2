@@ -6,6 +6,7 @@ import java.util.Set;
 
 import net.carmgate.morph.actions.Action;
 import net.carmgate.morph.actions.MoveTo;
+import net.carmgate.morph.actions.MultiSelect;
 import net.carmgate.morph.actions.Select;
 import net.carmgate.morph.actions.ToggleDebugMode;
 import net.carmgate.morph.actions.drag.DragContext;
@@ -18,7 +19,6 @@ import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Entity;
 import net.carmgate.morph.model.entities.Renderable;
-import net.carmgate.morph.model.entities.Renderable.RenderingType;
 import net.carmgate.morph.model.entities.Ship;
 import net.carmgate.morph.ui.Event;
 import net.carmgate.morph.ui.Event.EventType;
@@ -61,6 +61,7 @@ public class Main {
 		DragContext dragContext = new DragContext();
 		mouseActions.add(new DraggingWorld(dragContext));
 		mouseActions.add(new Select());
+		mouseActions.add(new MultiSelect());
 		mouseActions.add(new MoveTo());
 		mouseActions.add(new DraggedWorld(dragContext));
 
@@ -80,7 +81,7 @@ public class Main {
 			Display.setDisplayMode(new DisplayMode(width, height));
 			Display.create();
 			Display.setTitle("Morph");
-			Display.setVSyncEnabled(true);
+			Display.setVSyncEnabled(false);
 			Display.setResizable(true);
 		} catch (LWJGLException e) {
 			e.printStackTrace();
@@ -97,11 +98,11 @@ public class Main {
 	}
 
 	private void initModel() {
-		Model.getModel().addEntity(new Ship(0, 0, 0, 10));
-		Model.getModel().addEntity(new Ship(128, 0, 0, 40));
-		Model.getModel().addEntity(new Ship(128, 128, 0, 80));
-		Model.getModel().addEntity(new Ship(0, 128, 0, 120));
-		Model.getModel().addEntity(new Ship(-128, 0, 0, 160));
+		Model.getModel().addEntity(new Ship(0, 0, 0, 10, 10));
+		Model.getModel().addEntity(new Ship(128, 0, 0, 40, 12));
+		Model.getModel().addEntity(new Ship(128, 128, 0, 80, 15));
+		Model.getModel().addEntity(new Ship(0, 128, 0, 120, 10));
+		Model.getModel().addEntity(new Ship(-128, 0, 0, 160, 8));
 	}
 
 	/**
@@ -177,10 +178,13 @@ public class Main {
 		// }
 		// worldRenderer.render(GL11.GL_RENDER, renderStyle, globalModel);
 
+		// Render particles
+		model.getParticleEngine().render(GL11.GL_RENDER);
+
 		// TODO render the world
 		for (RenderingSteps renderingStep : RenderingSteps.values()) {
 			for (Entity renderable : Model.getModel().getEntitiesByRenderingType(renderingStep).values()) {
-				renderable.render(GL11.GL_RENDER, RenderingType.NORMAL);
+				renderable.render(GL11.GL_RENDER);
 			}
 		}
 
@@ -247,7 +251,7 @@ public class Main {
 
 			// updates display and sets frame rate
 			Display.update();
-			Display.sync(100);
+			Display.sync(150);
 
 			// update model
 			Model.getModel().update();

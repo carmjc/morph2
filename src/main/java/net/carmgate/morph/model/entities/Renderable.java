@@ -8,14 +8,6 @@ import org.lwjgl.opengl.GL11;
 public interface Renderable {
 
 	/**
-	 * Allows to switch between normal and debug rendering.
-	 */
-	public static enum RenderingType {
-		NORMAL,
-		DEBUG
-	}
-
-	/**
 	 * Initialize resources if needed.
 	 * This method is called only once during all game execution.
 	 */
@@ -26,5 +18,5 @@ public interface Renderable {
 	 * @param glMode {@link GL11#GL_RENDER} or {@link GL11#GL_SELECT}
 	 * @param renderingType {@link RenderingType}
 	 */
-	void render(int glMode, RenderingType renderingType);
+	void render(int glMode);
 }

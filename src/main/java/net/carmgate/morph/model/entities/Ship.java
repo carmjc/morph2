@@ -29,35 +29,44 @@ public class Ship extends Entity {
 
 		protected void arrive() {
 			// LOGGER.debug("Moving " + this);
-			float slowingDistance = MAX_SPEED * MAX_SPEED / (2 * MAX_FORCE / mass);
 
 			// new calculations (from http://www.red3d.com/cwr/steer/gdc99/) for arrival
 			// target_offset = target - position
 			Vect3D targetOffset = new Vect3D(target).substract(pos);
+			Vect3D normalizedTargetOffset = new Vect3D(targetOffset).normalize(1);
 			// distance = length (target_offset)
 			float distance = targetOffset.modulus();
 
-			// TODO This test is a sloppy way to avoid heading flickering. Besides, it does not solve everything ...
-			if (distance < slowingDistance || speed.modulus() < MAX_SPEED * 0.99 || Math.abs(speed.angleWith(targetOffset)) > 5) {
-				// ramped_speed = max_speed * (distance / slowing_distance)
-				float rampedSpeed = MAX_SPEED * (distance / slowingDistance);
-				// clipped_speed = minimum (ramped_speed, max_speed)
-				float clippedSpeed = Math.min(rampedSpeed, MAX_SPEED);
-				// desired_velocity = (clipped_speed / distance) * target_offset
-				desiredVelocity = new Vect3D(targetOffset).mult(clippedSpeed / distance);
-				// steering = desired_velocity - velocity
-				steeringDirection = new Vect3D(desiredVelocity).substract(new Vect3D(speed));
-				// steering_force = truncate (steering_direction, max_force)
-				if (distance > 50) {
-					steeringForce = new Vect3D(steeringDirection).normalize(MAX_FORCE / mass);
-				} else {
-					steeringForce = new Vect3D(steeringDirection).truncate(MAX_FORCE / mass);
-				}
-				// acceleration = steering_force / mass
-				accel = new Vect3D(steeringForce);
-				// velocity = truncate (velocity + acceleration, max_speed)
-				speed.add(new Vect3D(accel).mult(secondsSinceLastUpdate)).truncate(MAX_SPEED);
+			// Optimal slowing distance when cruising at MAX_SPEED before entering the slowing radius
+			float slowingDistance = 0.00001f + (float) (Math.pow(speed.modulus(), 2) / (2 * MAX_FORCE / mass));
+			LOGGER.debug("distance: " + distance + ", slowingDistance: " + slowingDistance);
+
+			// TEST
+			// Lorsqu'on entre dans le slowing radius, on doit avoir speed et desired speed alignées.
+			if (distance > slowingDistance) {
+				distance = distance - slowingDistance;
 			}
+
+			// ramped_speed = max_speed * (distance / slowing_distance)
+			float rampedSpeed = (float) Math.sqrt(2 * MAX_FORCE / mass * distance);// MAX_SPEED;
+			// clipped_speed = minimum (ramped_speed, max_speed)
+			float clippedSpeed = Math.min(rampedSpeed, MAX_SPEED);
+			// desired_velocity = (clipped_speed / distance) * target_offset
+			desiredVelocity = new Vect3D(targetOffset).mult(clippedSpeed / distance);
+			// steering = desired_velocity - velocity
+			steeringDirection = new Vect3D(desiredVelocity).substract(speed);
+			// steering_force = truncate (steering_direction, max_force)
+			Vect3D bigSteeringForce = new Vect3D(steeringDirection).normalize(MAX_FORCE / mass);
+			Vect3D smallSteeringForce = new Vect3D(steeringDirection).truncate(MAX_FORCE / mass);
+			// if (smallSteeringForce.modulus() > MAX_FORCE / 500) {
+			steeringForce = new Vect3D(bigSteeringForce);
+			// } else {
+			// steeringForce = new Vect3D(smallSteeringForce);
+			// }
+			// acceleration = steering_force / mass
+			accel = new Vect3D(steeringDirection);
+			// velocity = truncate (velocity + acceleration, max_speed)
+			speed.add(new Vect3D(accel).mult(secondsSinceLastUpdate)).truncate(MAX_SPEED);
 			// position = position + velocity
 			pos.add(new Vect3D(speed).mult(secondsSinceLastUpdate));
 
@@ -76,14 +85,22 @@ public class Ship extends Entity {
 			}
 
 			// stop condition
-			if (new Vect3D(target).substract(pos).modulus() < 2) {
+			if (new Vect3D(target).substract(pos).modulus() < 10 && speed.modulus() < 10) {
 				target = null;
-				accel.copy(Vect3D.NULL);
-				speed.copy(Vect3D.NULL);
+				accel.nullify();
+				speed.nullify();
+				desiredVelocity.nullify();
+				steeringDirection.nullify();
+				steeringForce.nullify();
+			}
+
+			// TODO remove this once the particle engine is used somewhere else
+			// TODO Find something to draw to show the engine is active.
+			if (steeringForce.modulus() > MAX_FORCE * 0.02) {
+				Model.getModel().getParticleEngine().addParticle(new Vect3D(pos), new Vect3D().substract(new Vect3D(steeringForce).mult(1.5f)), 3);
 			}
 
 		}
-
 	}
 
 	private final Movement movement = new Movement();
@@ -96,10 +113,11 @@ public class Ship extends Entity {
 
 	/** The texture under the morph image. */
 	private static Texture baseTexture;
+
 	/** The ship max speed. */
 	// TODO All these values should depend on the ship's fitting.
-	private static final float MAX_SPEED = 250;
-	private static final float MAX_FORCE = 1000f;
+	private static final float MAX_SPEED = 1000;
+	private static final float MAX_FORCE = 3000f;
 	private static final float MAX_ANGLE_SPEED = 200f;
 
 	// private static final float SLOWING_DISTANCE = 100;
@@ -121,9 +139,10 @@ public class Ship extends Entity {
 	/** Under that speed, the ship stops completely. */
 	// public static final float MIN_SPEED = 0.00001f;
 
-	private final float mass = 10;
+	private float mass = 10;
 
 	/** Timestamp of last time the ship's position was calculated. */
+	// TODO We should move this in a class that can handle this behavior for any Updatable
 	private long lastUpdateTS;
 
 	private boolean selected;
@@ -133,18 +152,20 @@ public class Ship extends Entity {
 	protected float secondsSinceLastUpdate;
 
 	public Ship() {
-		this(0, 0, 0, 0);
+		this(0, 0, 0, 0, 10);
 	}
 
-	public Ship(float x, float y, float z, float heading) {
+	public Ship(float x, float y, float z, float heading, float mass) {
 		synchronized (nextId) {
 			id = nextId++;
 		}
 
 		pos = new Vect3D(x, y, z);
 		speed = new Vect3D(0, 0, 0);
+		accel = new Vect3D();
 		// posAccel = new Vect3D(0, 0, 0);
 		this.heading = heading;
+		this.mass = mass;
 		// rotSpeed = 0;
 
 		// Init lastUpdateTS
@@ -215,10 +236,12 @@ public class Ship extends Entity {
 	}
 
 	@Override
-	public void render(int glMode, Renderable.RenderingType renderingType) {
+	public void render(int glMode) {
 
 		GL11.glTranslatef(pos.x, pos.y, pos.z);
 		GL11.glRotatef(heading, 0, 0, 1);
+		float massScale = mass / 10;
+		GL11.glScalef(massScale, massScale, 0);
 
 		// Render for show
 		if (selected) {
@@ -239,32 +262,38 @@ public class Ship extends Entity {
 		GL11.glVertex2f(-baseTexture.getTextureWidth() / 2, baseTexture.getTextureHeight() / 2);
 		GL11.glEnd();
 
+		GL11.glScalef(1 / massScale, 1 / massScale, 0);
 		GL11.glRotatef(-heading, 0, 0, 1);
 
 		if (Model.getModel().isDebugMode()) {
-			speed.render(glMode, renderingType, 1);
+			speed.render(glMode, 1);
 			GL11.glColor3f(1, 0, 0);
-			movement.desiredVelocity.render(glMode, renderingType, 1);
+			movement.desiredVelocity.render(glMode, 1);
 			GL11.glTranslated(movement.desiredVelocity.x, movement.desiredVelocity.y, 0);
 			GL11.glColor3f(0, 0, 1);
-			movement.steeringForce.render(glMode, renderingType, 1);
+			movement.steeringForce.render(glMode, 1);
 			GL11.glTranslated(-movement.desiredVelocity.x, -movement.desiredVelocity.y, 0);
 		}
 
 		GL11.glTranslatef(-pos.x, -pos.y, -pos.z);
 
-		if (movement.target != null && selected) {
-			GL11.glTranslatef(movement.target.x, movement.target.y, 0);
+		if (movement.target != null) {
+			// Add new particle
 
-			GL11.glDisable(GL11.GL_TEXTURE_2D);
-			GL11.glBegin(GL11.GL_QUADS);
-			GL11.glVertex2f(-16, -16);
-			GL11.glVertex2f(16, -16);
-			GL11.glVertex2f(16, 16);
-			GL11.glVertex2f(-16, 16);
-			GL11.glEnd();
+			if (selected) {
+				// Show target
+				GL11.glTranslatef(movement.target.x, movement.target.y, 0);
 
-			GL11.glTranslatef(-movement.target.x, -movement.target.y, 0);
+				GL11.glDisable(GL11.GL_TEXTURE_2D);
+				GL11.glBegin(GL11.GL_QUADS);
+				GL11.glVertex2f(-16, -16);
+				GL11.glVertex2f(16, -16);
+				GL11.glVertex2f(16, 16);
+				GL11.glVertex2f(-16, 16);
+				GL11.glEnd();
+
+				GL11.glTranslatef(-movement.target.x, -movement.target.y, 0);
+			}
 		}
 
 	}

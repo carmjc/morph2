@@ -158,6 +158,13 @@ public class Vect3D implements Renderable {
 		return this;
 	}
 
+	public Vect3D nullify() {
+		x = 0;
+		y = 0;
+		z = 0;
+		return this;
+	}
+
 	/**
 	 * @param vector
 	 * @return the scalar product of the current vector and the provided one.
@@ -175,11 +182,11 @@ public class Vect3D implements Renderable {
 	}
 
 	@Override
-	public void render(int glMode, RenderingType renderingType) {
-		render(glMode, renderingType, 1);
+	public void render(int glMode) {
+		render(glMode, 1);
 	}
 
-	public void render(int glMode, RenderingType renderingType, int exagerate) {
+	public void render(int glMode, int exagerate) {
 		Vect3D vector = new Vect3D(this).mult(exagerate);
 		Vect3D origin = new Vect3D(vector);
 

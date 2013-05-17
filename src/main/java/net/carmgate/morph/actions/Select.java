@@ -7,13 +7,13 @@ import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Entity;
 import net.carmgate.morph.model.entities.EntityHints;
-import net.carmgate.morph.model.entities.Renderable.RenderingType;
 import net.carmgate.morph.model.view.Window;
 import net.carmgate.morph.ui.Event;
 import net.carmgate.morph.ui.Event.EventType;
 import net.carmgate.morph.ui.rendering.RenderingSteps;
 
 import org.lwjgl.BufferUtils;
+import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.glu.GLU;
@@ -47,7 +47,7 @@ public class Select implements Action {
 			for (Entity entity : Model.getModel().getEntitiesByRenderingType(renderingStep).values()) {
 				GL11.glPushName(entity.getClass().getAnnotation(EntityHints.class).entityType().ordinal());
 				GL11.glPushName(entity.getSelectionId());
-				entity.render(GL11.GL_SELECT, RenderingType.NORMAL);
+				entity.render(GL11.GL_SELECT);
 				GL11.glPopName();
 				GL11.glPopName();
 			}
@@ -63,7 +63,8 @@ public class Select implements Action {
 		List<Event> lastEvents = Model.getModel().getInteractionStack().getLastEvents(2);
 		if (lastEvents.get(1).getEventType() != EventType.MOUSE_BUTTON_DOWN
 				|| lastEvents.get(1).getButton() != 0
-				|| lastEvents.get(0).getEventType() != EventType.MOUSE_BUTTON_UP) {
+				|| lastEvents.get(0).getEventType() != EventType.MOUSE_BUTTON_UP
+				|| Keyboard.isKeyDown(Keyboard.KEY_LCONTROL)) {
 			return;
 		}
 
@@ -81,7 +82,7 @@ public class Select implements Action {
 	 * @param y
 	 * @param onlyOne true if the engine should select a unique model element (first encountered)
 	 */
-	public void select(int x, int y, boolean onlyOne) {
+	protected void select(int x, int y, boolean onlyOne) {
 
 		LOGGER.debug("Picking at " + x + " " + y);
 
@@ -125,6 +126,10 @@ public class Select implements Action {
 		// Get the model elements picked
 		// The current index we are looking for in the select buffer
 		int selectBufIndex = 0;
+
+		// The picked entity if any
+		Entity pickedEntity = null;
+
 		// Iterate over the hits
 		for (int i = 0; i < hits; i++) {
 			// get the number of names on this part of the stack
@@ -135,21 +140,24 @@ public class Select implements Action {
 
 			// get the matching element in the model
 			Entity entity = Model.getModel().getEntitiesByType(selectBuf.get(selectBufIndex++)).get(selectBuf.get(selectBufIndex++));
-			entity.setSelected(true);
 
 			// if we were asked a unique selection, clear the selection before adding the new selected element
 			if (onlyOne) {
-				Model.getModel().clearSelection();
-				Model.getModel().getSelection().add(entity);
+				pickedEntity = entity;
 			} else {
 				Model.getModel().getSelection().add(entity);
+				entity.setSelected(true);
 			}
 
 			// Jump over the other ones if needed
 			for (int j = 2; j < nbNames; j++) {
 				selectBufIndex++;
 			}
+		}
 
+		if (onlyOne && pickedEntity != null) {
+			Model.getModel().getSelection().add(pickedEntity);
+			pickedEntity.setSelected(true);
 		}
 
 		// int j = 0;
