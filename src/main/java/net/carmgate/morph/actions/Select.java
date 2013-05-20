@@ -61,18 +61,31 @@ public class Select implements Action {
 	@Override
 	public void run() {
 		List<Event> lastEvents = Model.getModel().getInteractionStack().getLastEvents(2);
-		if (lastEvents.get(1).getEventType() != EventType.MOUSE_BUTTON_DOWN
-				|| lastEvents.get(1).getButton() != 0
-				|| lastEvents.get(0).getEventType() != EventType.MOUSE_BUTTON_UP) {
-			return;
+		if (lastEvents.get(1).getEventType() == EventType.MOUSE_BUTTON_DOWN
+				&& lastEvents.get(1).getButton() == 0
+				&& lastEvents.get(0).getEventType() == EventType.MOUSE_BUTTON_UP) {
+
+			// Clear the selection
+			Model.getModel().clearSimpleSelection();
+
+			// pick
+			select(Mouse.getX() - Model.getModel().getWindow().getWidth() / 2, Mouse.getY() - Model.getModel().getWindow().getHeight() / 2,
+					SelectionType.SIMPLE, true);
+			LOGGER.debug(Model.getModel().getSimpleSelection().toString());
 		}
 
-		// Clear the selection
-		Model.getModel().clearSelection();
+		if (lastEvents.get(1).getEventType() == EventType.MOUSE_BUTTON_DOWN
+				&& lastEvents.get(1).getButton() == 1
+				&& lastEvents.get(0).getEventType() == EventType.MOUSE_BUTTON_UP) {
 
-		// pick
-		select(Mouse.getX() - Model.getModel().getWindow().getWidth() / 2, Mouse.getY() - Model.getModel().getWindow().getHeight() / 2, true);
-		LOGGER.debug(Model.getModel().getSelection().toString());
+			// Clear the selection
+			Model.getModel().clearActionSelection();
+
+			// pick
+			select(Mouse.getX() - Model.getModel().getWindow().getWidth() / 2, Mouse.getY() - Model.getModel().getWindow().getHeight() / 2,
+					SelectionType.ACTION, true);
+			LOGGER.debug(Model.getModel().getActionSelection().toString());
+		}
 	}
 
 	/**
@@ -81,7 +94,7 @@ public class Select implements Action {
 	 * @param y
 	 * @param onlyOne true if the engine should select a unique model element (first encountered)
 	 */
-	public void select(int x, int y, boolean onlyOne) {
+	public void select(int x, int y, SelectionType selectionType, boolean onlyOne) {
 
 		LOGGER.debug("Picking at " + x + " " + y);
 
@@ -135,14 +148,25 @@ public class Select implements Action {
 
 			// get the matching element in the model
 			Entity entity = Model.getModel().getEntitiesByType(selectBuf.get(selectBufIndex++)).get(selectBuf.get(selectBufIndex++));
-			entity.setSelected(true);
 
-			// if we were asked a unique selection, clear the selection before adding the new selected element
-			if (onlyOne) {
-				Model.getModel().clearSelection();
-				Model.getModel().getSelection().add(entity);
+			if (selectionType == SelectionType.SIMPLE) {
+				entity.setSelected(true);
+
+				// if we were asked a unique selection, clear the selection before adding the new selected element
+				if (onlyOne) {
+					Model.getModel().clearSimpleSelection();
+					Model.getModel().getSimpleSelection().add(entity);
+				} else {
+					Model.getModel().getSimpleSelection().add(entity);
+				}
 			} else {
-				Model.getModel().getSelection().add(entity);
+				// if we were asked a unique selection, clear the selection before adding the new selected element
+				if (onlyOne) {
+					Model.getModel().clearActionSelection();
+					Model.getModel().getActionSelection().add(entity);
+				} else {
+					Model.getModel().getActionSelection().add(entity);
+				}
 			}
 
 			// Jump over the other ones if needed

@@ -1,19 +1,17 @@
 package net.carmgate.morph.actions;
 
 import net.carmgate.morph.model.Model;
-import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Selectable;
 import net.carmgate.morph.model.entities.Ship;
 import net.carmgate.morph.ui.Event;
 import net.carmgate.morph.ui.Event.EventType;
-import net.carmgate.morph.ui.GameMouse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MoveTo implements Action {
+public class Attack implements Action {
 
-	private static Logger LOGGER = LoggerFactory.getLogger(MoveTo.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(Attack.class);
 
 	@Override
 	public void run() {
@@ -22,17 +20,19 @@ public class MoveTo implements Action {
 		Event lastEvent = Model.getModel().getInteractionStack().getLastEvent();
 		if (lastEvent.getEventType() != EventType.MOUSE_BUTTON_UP
 				|| lastEvent.getButton() != 1
-				|| !Model.getModel().getActionSelection().isEmpty()) {
+				|| Model.getModel().getActionSelection().isEmpty()
+				|| Model.getModel().getSimpleSelection().isEmpty()) {
 			return;
 		}
 
+		// TODO Clean this : we use a Selectable, when we would need a Ship.
+		// Therefore, we have an extraneous cast.
+		// TODO We should prevent a ship from attacking itself
+		Selectable targetShip = Model.getModel().getActionSelection().getFirst();
 		for (Selectable selectable : Model.getModel().getSimpleSelection()) {
 			if (selectable instanceof Ship) {
-				Vect3D target = new Vect3D(GameMouse.getXInWorld(), GameMouse.getYInWorld(), 0);
-				((Ship) selectable).movement.setTarget(target);
-				LOGGER.debug("target set to " + target);
+				((Ship) selectable).combat.setTarget((Ship) targetShip);
 			}
 		}
 	}
-
 }

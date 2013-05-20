@@ -17,8 +17,10 @@ public class ZoomIn implements Action {
 	@Override
 	public void run() {
 		Event lastEvent = Model.getModel().getInteractionStack().getLastEvent();
-		if (lastEvent.getButton() != Keyboard.KEY_UP
-				|| lastEvent.getEventType() != EventType.KEYBOARD_UP) {
+		if ((lastEvent.getButton() != Keyboard.KEY_UP
+				|| lastEvent.getEventType() != EventType.KEYBOARD_UP)
+				&& (lastEvent.getEventType() != EventType.MOUSE_WHEEL
+				|| lastEvent.getButton() > 0)) {
 			return;
 		}
 

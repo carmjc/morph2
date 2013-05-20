@@ -16,6 +16,10 @@ public class EntityMap {
 		return backingMap.put(key, value);
 	}
 
+	public Entity remove(Object arg0) {
+		return backingMap.remove(arg0);
+	}
+
 	public Collection<Entity> values() {
 		return backingMap.values();
 	}

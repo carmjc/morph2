@@ -22,6 +22,7 @@ public class ToggleDebugMode implements Action {
 
 		LOGGER.debug("Toggle debug rendering mode");
 		Model.getModel().toggleDebugMode();
+
 	}
 
 }
