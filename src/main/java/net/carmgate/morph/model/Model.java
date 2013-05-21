@@ -9,10 +9,13 @@ import java.util.Map;
 import java.util.Set;
 
 import net.carmgate.morph.actions.common.InteractionStack;
-import net.carmgate.morph.model.entities.Entity;
-import net.carmgate.morph.model.entities.EntityHints;
-import net.carmgate.morph.model.entities.EntityType;
-import net.carmgate.morph.model.entities.Selectable;
+import net.carmgate.morph.model.entities.common.Entity;
+import net.carmgate.morph.model.entities.common.EntityHints;
+import net.carmgate.morph.model.entities.common.EntityType;
+import net.carmgate.morph.model.entities.common.Selectable;
+import net.carmgate.morph.model.player.Player;
+import net.carmgate.morph.model.player.Player.FOF;
+import net.carmgate.morph.model.player.Player.PlayerType;
 import net.carmgate.morph.model.view.ViewPort;
 import net.carmgate.morph.model.view.Window;
 import net.carmgate.morph.ui.ParticleEngine;
@@ -58,9 +61,11 @@ public class Model {
 	private boolean pause;
 
 	private final Set<Entity> entitiesToRemove = new HashSet<>();
+	private final Player self;
+	private final Set<Player> players = new HashSet<>();
 
 	private Model() {
-		// add some noop in the interaction queue to get rid of exceptions
+		self = new Player(PlayerType.HUMAN, "Carm", FOF.SELF);
 	}
 
 	public void addEntity(Entity entity) {
@@ -76,12 +81,12 @@ public class Model {
 		entityMap.put(entity.getSelectionId(), entity);
 	}
 
-	// TODO We must fix the temptation to use getSelection.clear() instead
+	// IMPROVE We must fix the temptation to use getSelection.clear() instead
 	public void clearActionSelection() {
 		actionSelection.clear();
 	}
 
-	// TODO We must fix the temptation to use getSelection.clear() instead
+	// IMPROVE We must fix the temptation to use getSelection.clear() instead
 	public void clearSimpleSelection() {
 		for (Selectable selectable : simpleSelection) {
 			selectable.setSelected(false);
@@ -118,6 +123,14 @@ public class Model {
 
 	public ParticleEngine getParticleEngine() {
 		return particleEngine;
+	}
+
+	public Set<Player> getPlayers() {
+		return players;
+	}
+
+	public Player getSelf() {
+		return self;
 	}
 
 	public Set<Selectable> getSimpleSelection() {

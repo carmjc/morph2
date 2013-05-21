@@ -5,8 +5,8 @@ import java.util.List;
 import net.carmgate.morph.actions.common.Action;
 import net.carmgate.morph.actions.common.ActionHints;
 import net.carmgate.morph.model.Model;
-import net.carmgate.morph.model.entities.Selectable;
 import net.carmgate.morph.model.entities.Ship;
+import net.carmgate.morph.model.entities.common.Selectable;
 import net.carmgate.morph.ui.Event;
 import net.carmgate.morph.ui.Event.EventType;
 
@@ -35,6 +35,7 @@ public class Attack implements Action {
 		Selectable targetShip = Model.getModel().getActionSelection().getFirst();
 		for (Selectable selectable : Model.getModel().getSimpleSelection()) {
 			if (selectable instanceof Ship && selectable != targetShip) {
+				((Ship) selectable).movement.setArriveTarget((Ship) targetShip);
 				((Ship) selectable).combat.setTarget((Ship) targetShip);
 			}
 		}

@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import net.carmgate.morph.model.common.Vect3D;
+import net.carmgate.morph.model.entities.common.Renderable;
+import net.carmgate.morph.model.entities.common.Selectable;
 
 import org.lwjgl.opengl.GL11;
 import org.newdawn.slick.opengl.Texture;

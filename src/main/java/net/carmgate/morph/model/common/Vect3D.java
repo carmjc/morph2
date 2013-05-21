@@ -1,6 +1,6 @@
 package net.carmgate.morph.model.common;
 
-import net.carmgate.morph.model.entities.Renderable;
+import net.carmgate.morph.model.entities.common.Renderable;
 
 import org.lwjgl.opengl.GL11;
 

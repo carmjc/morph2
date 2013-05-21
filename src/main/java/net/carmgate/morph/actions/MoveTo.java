@@ -6,8 +6,8 @@ import net.carmgate.morph.actions.common.Action;
 import net.carmgate.morph.actions.common.ActionHints;
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.common.Vect3D;
-import net.carmgate.morph.model.entities.Selectable;
 import net.carmgate.morph.model.entities.Ship;
+import net.carmgate.morph.model.entities.common.Selectable;
 import net.carmgate.morph.ui.Event;
 import net.carmgate.morph.ui.Event.EventType;
 import net.carmgate.morph.ui.GameMouse;
@@ -34,7 +34,7 @@ public class MoveTo implements Action {
 		for (Selectable selectable : Model.getModel().getSimpleSelection()) {
 			if (selectable instanceof Ship) {
 				Vect3D target = new Vect3D(GameMouse.getXInWorld(), GameMouse.getYInWorld(), 0);
-				((Ship) selectable).movement.setTarget(target);
+				((Ship) selectable).movement.setArriveTarget(target);
 				LOGGER.debug("target set to " + target);
 			}
 		}

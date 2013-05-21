@@ -7,8 +7,13 @@ import java.util.List;
 
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.common.Vect3D;
+import net.carmgate.morph.model.entities.common.Entity;
+import net.carmgate.morph.model.entities.common.EntityHints;
+import net.carmgate.morph.model.entities.common.EntityType;
 import net.carmgate.morph.model.entities.orders.Order;
 import net.carmgate.morph.model.entities.orders.TakeDamageOrder;
+import net.carmgate.morph.model.player.Player;
+import net.carmgate.morph.model.player.Player.PlayerType;
 import net.carmgate.morph.ui.rendering.RenderingHints;
 import net.carmgate.morph.ui.rendering.RenderingSteps;
 
@@ -37,7 +42,7 @@ public class Ship extends Entity {
 			// TODO This should also be updated to cope with the improbable possibility that the refresh rate is insufficient to handle
 			// the orders one by one. (currentTs - timeOfLastAction / rateOfFire > 2)
 			if (timeOfLastAction == 0 || (Model.getModel().getCurrentTS() - timeOfLastAction) * rateOfFire > 1) {
-				target.fireOrder(new TakeDamageOrder(1));
+				target.fireOrder(new TakeDamageOrder(0.1f));
 				timeOfLastAction += 1 / rateOfFire;
 			}
 		}
@@ -49,21 +54,40 @@ public class Ship extends Entity {
 		}
 	}
 
+	// TODO make several movement classes to implement the different behaviors instead of mixing them.
 	public class Movement {
-		protected Vect3D target;
+		protected Vect3D arriveTarget;
 		protected final Vect3D desiredVelocity = new Vect3D();
 		protected final Vect3D steeringForce = new Vect3D();
 		private float slowingDistance;
 		private final Vect3D speedOpposition = new Vect3D();
 		private final Vect3D targetOffset = new Vect3D();
 		private final Vect3D normalizedTargetOffset = new Vect3D();
+		private float wanderFocusDistance;
+		private float wanderRadius;
+		private final Vect3D wanderTarget = new Vect3D();
 
 		protected Movement() {
 		}
 
+		private void addTrail() {
+			if (steeringForce.modulus() > MAX_FORCE * 0.02) {
+				Model.getModel().getParticleEngine().addParticle(new Vect3D(pos), new Vect3D().substract(new Vect3D(steeringForce)), 3);
+			}
+		}
+
+		private void applySteeringForce() {
+			// acceleration = steering_force / mass
+			accel.copy(steeringForce);
+			// velocity = truncate (velocity + acceleration, max_speed)
+			speed.add(new Vect3D(accel).mult(secondsSinceLastUpdate)).truncate(MAX_SPEED);
+			// position = position + velocity
+			pos.add(new Vect3D(speed).mult(secondsSinceLastUpdate));
+		}
+
 		protected void arrive() {
 
-			targetOffset.copy(target).substract(pos);
+			targetOffset.copy(arriveTarget).substract(pos);
 
 			normalizedTargetOffset.copy(targetOffset).normalize(1);
 			speedOpposition.copy(normalizedTargetOffset).rotate(90).mult(speed.prodVectOnZ(normalizedTargetOffset));
@@ -96,13 +120,30 @@ public class Ship extends Entity {
 				steeringForce.mult(1.01f);
 			}
 
-			// acceleration = steering_force / mass
-			accel.copy(steeringForce);
-			// velocity = truncate (velocity + acceleration, max_speed)
-			speed.add(new Vect3D(accel).mult(secondsSinceLastUpdate)).truncate(MAX_SPEED);
-			// position = position + velocity
-			pos.add(new Vect3D(speed).mult(secondsSinceLastUpdate));
+			applySteeringForce();
+			rotateProperly();
 
+			// stop condition
+			if (new Vect3D(arriveTarget).substract(pos).modulus() < 10 && speed.modulus() < 10) {
+				clearMovementVariables();
+			}
+
+			addTrail();
+		}
+
+		private void clearMovementVariables() {
+			arriveTarget = null;
+			accel.nullify();
+			speed.nullify();
+			desiredVelocity.nullify();
+			steeringForce.nullify();
+			slowingDistance = 0;
+			speedOpposition.nullify();
+			targetOffset.nullify();
+			normalizedTargetOffset.nullify();
+		}
+
+		private void rotateProperly() {
 			// rotate properly
 			float newHeading = new Vect3D(0, 1, 0).angleWith(steeringForce);
 			// heading = newHeading;
@@ -117,30 +158,46 @@ public class Ship extends Entity {
 			} else {
 				heading -= maxAngleSpeed * Math.max(1, angleDiff / 180) * secondsSinceLastUpdate;
 			}
-
-			// stop condition
-			if (new Vect3D(target).substract(pos).modulus() < 10 && speed.modulus() < 10) {
-				target = null;
-				accel.nullify();
-				speed.nullify();
-				desiredVelocity.nullify();
-				steeringForce.nullify();
-				slowingDistance = 0;
-				speedOpposition.nullify();
-				targetOffset.nullify();
-				normalizedTargetOffset.nullify();
-			}
-
-			if (steeringForce.modulus() > MAX_FORCE * 0.02) {
-				Model.getModel().getParticleEngine().addParticle(new Vect3D(pos), new Vect3D().substract(new Vect3D(steeringForce)), 3);
-			}
-
 		}
 
-		public void setTarget(Vect3D target) {
-			this.target = target;
+		public void setArriveTarget(Ship targetShip) {
+			arriveTarget = targetShip.pos;
 		}
 
+		public void setArriveTarget(Vect3D target) {
+			arriveTarget = target;
+		}
+
+		public void setWanderFocusDistance(float wanderFocusDistance) {
+			this.wanderFocusDistance = wanderFocusDistance;
+		}
+
+		public void setWanderRadius(float wanderRadius) {
+			this.wanderRadius = wanderRadius;
+		}
+
+		protected void wander() {
+			if (wanderRadius == 0) {
+				clearMovementVariables();
+				return;
+			}
+
+			// Update target within the given constraints
+			Vect3D wanderFocus = new Vect3D(pos).add(new Vect3D(0, 1, 0).rotate(heading).normalize(wanderFocusDistance));
+
+			// Determine a target at acceptable distance from the wander focus point
+			wanderTarget.x += Math.random() * 4 - 2;
+			wanderTarget.y += Math.random() * 4 - 2;
+			if (new Vect3D(wanderFocus).add(wanderTarget).distance(wanderFocus) > wanderRadius) {
+				wanderTarget.copy(Vect3D.NULL);
+			}
+
+			steeringForce.copy(new Vect3D(wanderFocus).substract(pos).add(wanderTarget)).truncate(MAX_FORCE / mass);
+
+			applySteeringForce();
+			rotateProperly();
+			addTrail();
+		}
 	}
 
 	public final Movement movement = new Movement();
@@ -180,7 +237,7 @@ public class Ship extends Entity {
 	private float mass = 10;
 
 	/** Timestamp of last time the ship's position was calculated. */
-	// TODO We should move this in a class that can handle this behavior for any Updatable
+	// IMPROVE We should move this in a class that can handle this behavior for any Updatable
 	private long lastUpdateTS;
 
 	private boolean selected;
@@ -188,12 +245,19 @@ public class Ship extends Entity {
 	protected Vect3D accel;
 
 	protected float secondsSinceLastUpdate;
+	private final Player player;
 
+	/***
+	 * Creates a new ship with position (0, 0, 0), mass = 10 assigned to player "self".
+	 */
 	public Ship() {
-		this(0, 0, 0, 0, 10);
+		this(0, 0, 0, 0, 10, Model.getModel().getSelf());
 	}
 
-	public Ship(float x, float y, float z, float heading, float mass) {
+	public Ship(float x, float y, float z, float heading, float mass, Player player) {
+		this.player = player;
+		Model.getModel().getPlayers().add(player);
+
 		synchronized (nextId) {
 			id = nextId++;
 		}
@@ -236,6 +300,12 @@ public class Ship extends Entity {
 				LOGGER.error("Exception raised while loading texture", e);
 			}
 		}
+
+	}
+
+	private void processAI() {
+		// TODO Outsource this AI to allow several kinds of AIs
+		// Very simple AI : wander and attack
 
 	}
 
@@ -291,12 +361,12 @@ public class Ship extends Entity {
 
 		GL11.glTranslatef(-pos.x, -pos.y, -pos.z);
 
-		if (movement.target != null) {
+		if (movement.arriveTarget != null) {
 			// Add new particle
 
 			if (selected) {
 				// Show target
-				GL11.glTranslatef(movement.target.x, movement.target.y, 0);
+				GL11.glTranslatef(movement.arriveTarget.x, movement.arriveTarget.y, 0);
 
 				GL11.glDisable(GL11.GL_TEXTURE_2D);
 				GL11.glBegin(GL11.GL_QUADS);
@@ -306,12 +376,12 @@ public class Ship extends Entity {
 				GL11.glVertex2f(-16, 16);
 				GL11.glEnd();
 
-				GL11.glTranslatef(-movement.target.x, -movement.target.y, 0);
+				GL11.glTranslatef(-movement.arriveTarget.x, -movement.arriveTarget.y, 0);
 			}
 		}
 
-		if (movement.target != null) {
-			GL11.glTranslatef(movement.target.x, movement.target.y, 0);
+		if (movement.arriveTarget != null) {
+			GL11.glTranslatef(movement.arriveTarget.x, movement.arriveTarget.y, 0);
 			// render limit of effect zone
 			GL11.glBegin(GL11.GL_LINES);
 			float t = 0; // temporary data holder
@@ -328,7 +398,7 @@ public class Ship extends Entity {
 				GL11.glVertex2d(x, y);
 			}
 			GL11.glEnd();
-			GL11.glTranslatef(-movement.target.x, -movement.target.y, 0);
+			GL11.glTranslatef(-movement.arriveTarget.x, -movement.arriveTarget.y, 0);
 
 		}
 	}
@@ -425,9 +495,17 @@ public class Ship extends Entity {
 			return;
 		}
 
+		// handle AI assignements if appropriate
+		if (player.getPlayerType() == PlayerType.AI) {
+			processAI();
+		}
+
 		// if no movement needed, no update needed
-		if (movement.target != null) {
+		if (movement.arriveTarget != null) {
 			movement.arrive();
+		}
+		if (movement.wanderFocusDistance != 0) {
+			movement.wander();
 		}
 
 		if (combat.target != null) {

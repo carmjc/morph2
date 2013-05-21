@@ -1,4 +1,4 @@
-package net.carmgate.morph.model.entities;
+package net.carmgate.morph.model.entities.common;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

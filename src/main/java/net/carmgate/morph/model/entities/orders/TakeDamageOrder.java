@@ -2,13 +2,13 @@ package net.carmgate.morph.model.entities.orders;
 
 public class TakeDamageOrder implements Order {
 
-	private final int damageAmount;
+	private final float damageAmount;
 
-	public TakeDamageOrder(int damageAmount) {
+	public TakeDamageOrder(float damageAmount) {
 		this.damageAmount = damageAmount;
 	}
 
-	public int getDamageAmount() {
+	public float getDamageAmount() {
 		return damageAmount;
 	}
 

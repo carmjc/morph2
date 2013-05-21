@@ -13,11 +13,14 @@ import net.carmgate.morph.actions.drag.DragContext;
 import net.carmgate.morph.conf.Conf;
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.common.Vect3D;
-import net.carmgate.morph.model.entities.Entity;
 import net.carmgate.morph.model.entities.Morph;
 import net.carmgate.morph.model.entities.Morph.MorphType;
-import net.carmgate.morph.model.entities.Renderable;
 import net.carmgate.morph.model.entities.Ship;
+import net.carmgate.morph.model.entities.common.Entity;
+import net.carmgate.morph.model.entities.common.Renderable;
+import net.carmgate.morph.model.player.Player;
+import net.carmgate.morph.model.player.Player.FOF;
+import net.carmgate.morph.model.player.Player.PlayerType;
 import net.carmgate.morph.ui.Event;
 import net.carmgate.morph.ui.Event.EventType;
 import net.carmgate.morph.ui.rendering.RenderingSteps;
@@ -56,9 +59,13 @@ public class Main {
 	private void initActions() {
 		// The drag context shared by all actions needing to handle drag
 		DragContext dragContext = new DragContext();
+
+		// select actions have to be handled before anything else
+		// because some other actions (like MoveTo or Attack) need the result of the action selection
 		mouseActions.add(new Select());
 		mouseActions.add(new MultiSelect());
 
+		// Look for the action classes
 		Set<Class<? extends Action>> actions = new Reflections("net.carmgate.morph.actions").getSubTypesOf(Action.class);
 		for (Class<? extends Action> action : actions) {
 			try {
@@ -116,7 +123,7 @@ public class Main {
 	}
 
 	private void initModel() {
-		Ship ship = new Ship(0, 0, 0, 10, 10);
+		Ship ship = new Ship(0, 0, 0, 10, 10, Model.getModel().getSelf());
 		Morph newMorph = new Morph(MorphType.OVERMIND, 0, 0, 0);
 		ship.getMorphs().add(newMorph);
 		newMorph = new Morph(MorphType.SHIELD, 1, 0, 0);
@@ -130,10 +137,11 @@ public class Main {
 		ship.getMorphs().add(newMorph);
 		Model.getModel().addEntity(ship);
 
-		Model.getModel().addEntity(new Ship(128, 0, 0, 40, 12));
-		Model.getModel().addEntity(new Ship(128, 128, 0, 80, 15));
-		Model.getModel().addEntity(new Ship(0, 128, 0, 120, 10));
-		Model.getModel().addEntity(new Ship(-128, 0, 0, 160, 8));
+		Player player = new Player(PlayerType.AI, "Nemesis", FOF.FOE);
+		Ship enemyShip = new Ship(128, 0, 0, 0, 12, player);
+		Model.getModel().addEntity(enemyShip);
+		enemyShip.movement.setWanderRadius(10);
+		enemyShip.movement.setWanderFocusDistance(200);
 	}
 
 	/**

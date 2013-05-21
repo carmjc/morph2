@@ -9,8 +9,8 @@ import java.util.Random;
 
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.common.Vect3D;
-import net.carmgate.morph.model.entities.Renderable;
-import net.carmgate.morph.model.entities.Updatable;
+import net.carmgate.morph.model.entities.common.Renderable;
+import net.carmgate.morph.model.entities.common.Updatable;
 
 import org.lwjgl.opengl.GL11;
 import org.newdawn.slick.opengl.Texture;
@@ -75,7 +75,7 @@ public class ParticleEngine implements Renderable, Updatable {
 	private final List<Particle> particles = new LinkedList<>();
 
 	/** Timestamp of last time the ship's position was calculated. */
-	// TODO We should move this in a class that can handle this behavior for any Updatable
+	// IMPROVE We should move this in a class that can handle this behavior for any Updatable
 	private long lastUpdateTS;
 
 	protected float secondsSinceLastUpdate;

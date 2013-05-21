@@ -3,7 +3,7 @@ package net.carmgate.morph.model;
 import java.util.Collection;
 import java.util.HashMap;
 
-import net.carmgate.morph.model.entities.Entity;
+import net.carmgate.morph.model.entities.common.Entity;
 
 public class EntityMap {
 	private final HashMap<Integer, Entity> backingMap = new HashMap<>();
