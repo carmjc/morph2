@@ -65,11 +65,14 @@ public class Ship extends Entity {
 			// target_offset = target - position
 			Vect3D targetOffset = new Vect3D(target).substract(pos);
 			Vect3D normalizedTargetOffset = new Vect3D(targetOffset).normalize(1);
+
+			float cosSpeedToTO = Math.abs(new Vect3D(speed).normalize(1).prodScal(normalizedTargetOffset));
+
 			// distance = length (target_offset)
 			float distance = targetOffset.modulus();
 
 			// Optimal slowing distance when cruising at MAX_SPEED before entering the slowing radius
-			float slowingDistance = 0.00001f + (float) (Math.pow(speed.modulus(), 2) / (2 * MAX_FORCE / mass));
+			float slowingDistance = 0.00001f + (float) (Math.pow(speed.modulus(), 2) / (2 * MAX_FORCE / mass * cosSpeedToTO));
 			LOGGER.debug("distance: " + distance + ", slowingDistance: " + slowingDistance);
 
 			// TEST
@@ -95,7 +98,7 @@ public class Ship extends Entity {
 			// steeringForce = new Vect3D(smallSteeringForce);
 			// }
 			// acceleration = steering_force / mass
-			accel = new Vect3D(steeringDirection);
+			accel = new Vect3D(steeringForce);
 			// velocity = truncate (velocity + acceleration, max_speed)
 			speed.add(new Vect3D(accel).mult(secondsSinceLastUpdate)).truncate(MAX_SPEED);
 			// position = position + velocity
@@ -132,6 +135,7 @@ public class Ship extends Entity {
 			}
 
 		}
+
 		public void setTarget(Vect3D target) {
 			this.target = target;
 		}

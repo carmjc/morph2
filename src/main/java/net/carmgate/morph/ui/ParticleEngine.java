@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.common.Vect3D;
@@ -79,8 +80,10 @@ public class ParticleEngine implements Renderable, Updatable {
 
 	protected float secondsSinceLastUpdate;
 
+	private final Random random = new Random();
+
 	public void addParticle(Vect3D pos, Vect3D speed, float halfLife) {
-		speed.rotate((float) (Math.random() * 20 - 10));
+		speed.rotate((float) random.nextGaussian() * 2);
 		particles.add(new Particle(pos, speed, halfLife));
 	}
 
