@@ -38,7 +38,7 @@ public class Model {
 	private long msec = 0;
 
 	/** timestamp of game start. */
-	private final long gameStartMsec = new Date().getTime();
+	private long gameStartMsec = new Date().getTime();
 
 	private final Window window = new Window();
 
@@ -140,18 +140,21 @@ public class Model {
 		entitiesToRemove.add(entity);
 	}
 
-	public void setPause() {
-		pause = true;
-	}
-
 	public void toggleDebugMode() {
 		debugMode = !debugMode;
 	}
 
+	public void togglePause() {
+		pause = !pause;
+	}
+
 	public void update() {
 		// update the number of millis since game start
-		if (!pause) {
-			msec = new Date().getTime() - gameStartMsec;
+		long tmpMsec = new Date().getTime() - gameStartMsec;
+		if (pause) {
+			gameStartMsec += tmpMsec - msec;
+		} else {
+			msec = tmpMsec;
 		}
 
 		// Update all entities

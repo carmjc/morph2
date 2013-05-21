@@ -8,6 +8,7 @@ import net.carmgate.morph.actions.Action;
 import net.carmgate.morph.actions.Attack;
 import net.carmgate.morph.actions.MoveTo;
 import net.carmgate.morph.actions.MultiSelect;
+import net.carmgate.morph.actions.Pause;
 import net.carmgate.morph.actions.Select;
 import net.carmgate.morph.actions.ToggleDebugMode;
 import net.carmgate.morph.actions.drag.DragContext;
@@ -74,6 +75,7 @@ public class Main {
 		keyboardActions.add(new ZoomIn());
 		keyboardActions.add(new ZoomOut());
 		keyboardActions.add(new ToggleDebugMode());
+		keyboardActions.add(new Pause());
 	}
 
 	/**

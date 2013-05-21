@@ -25,8 +25,7 @@ public class ZoomOut implements Action {
 		}
 
 		ViewPort viewport = Model.getModel().getViewport();
-		// viewport.setZoomFactor(viewport.getZoomFactor() / 2);
-		Model.getModel().setPause();
+		viewport.setZoomFactor(viewport.getZoomFactor() / 2);
 
 		LOGGER.debug("Zoom factor: " + viewport.getZoomFactor());
 	}

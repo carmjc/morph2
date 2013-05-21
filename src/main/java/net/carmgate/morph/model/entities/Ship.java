@@ -51,54 +51,53 @@ public class Ship extends Entity {
 
 	public class Movement {
 		protected Vect3D target;
-		protected Vect3D desiredVelocity = new Vect3D();
-		protected Vect3D steeringDirection = new Vect3D();
-		protected Vect3D steeringForce = new Vect3D();
+		protected final Vect3D desiredVelocity = new Vect3D();
+		protected final Vect3D steeringForce = new Vect3D();
+		private float slowingDistance;
+		private final Vect3D speedOpposition = new Vect3D();
+		private final Vect3D targetOffset = new Vect3D();
+		private final Vect3D normalizedTargetOffset = new Vect3D();
 
 		protected Movement() {
 		}
 
 		protected void arrive() {
-			// LOGGER.debug("Moving " + this);
 
-			// new calculations (from http://www.red3d.com/cwr/steer/gdc99/) for arrival
-			// target_offset = target - position
-			Vect3D targetOffset = new Vect3D(target).substract(pos);
-			Vect3D normalizedTargetOffset = new Vect3D(targetOffset).normalize(1);
+			targetOffset.copy(target).substract(pos);
 
-			float cosSpeedToTO = Math.abs(new Vect3D(speed).normalize(1).prodScal(normalizedTargetOffset));
+			normalizedTargetOffset.copy(targetOffset).normalize(1);
+			speedOpposition.copy(normalizedTargetOffset).rotate(90).mult(speed.prodVectOnZ(normalizedTargetOffset));
+
+			float cosSpeedToTO = 1;
+			if (speed.modulus() != 0) {
+				cosSpeedToTO = Math.abs(new Vect3D(speed).normalize(1).prodScal(normalizedTargetOffset));
+			}
 
 			// distance = length (target_offset)
 			float distance = targetOffset.modulus();
 
 			// Optimal slowing distance when cruising at MAX_SPEED before entering the slowing radius
-			float slowingDistance = 0.00001f + (float) (Math.pow(speed.modulus(), 2) / (2 * MAX_FORCE / mass * cosSpeedToTO));
-			LOGGER.debug("distance: " + distance + ", slowingDistance: " + slowingDistance);
-
-			// TEST
-			// Lorsqu'on entre dans le slowing radius, on doit avoir speed et desired speed alignées.
-			if (distance > slowingDistance) {
-				distance = distance - slowingDistance;
+			// Optimal slowing distance is computed for debugging purposes only
+			if (Model.getModel().isDebugMode()) {
+				slowingDistance = 0.00001f + (float) (Math.pow(speed.modulus(), 2) / (2 * MAX_FORCE / mass * cosSpeedToTO));
 			}
 
-			// ramped_speed = max_speed * (distance / slowing_distance)
-			float rampedSpeed = (float) Math.sqrt(2 * MAX_FORCE / mass * distance);// MAX_SPEED;
-			// clipped_speed = minimum (ramped_speed, max_speed)
+			// Ramped speed is the optimal target speed modulus
+			float rampedSpeed = (float) Math.sqrt(2 * MAX_FORCE / mass * distance);
+			// clipped_speed clips the speed to max speed
 			float clippedSpeed = Math.min(rampedSpeed, MAX_SPEED);
-			// desired_velocity = (clipped_speed / distance) * target_offset
-			desiredVelocity = new Vect3D(targetOffset).mult(clippedSpeed / distance);
-			// steering = desired_velocity - velocity
-			steeringDirection = new Vect3D(desiredVelocity).substract(speed);
-			// steering_force = truncate (steering_direction, max_force)
-			Vect3D bigSteeringForce = new Vect3D(steeringDirection).normalize(MAX_FORCE / mass);
-			Vect3D smallSteeringForce = new Vect3D(steeringDirection).truncate(MAX_FORCE / mass);
-			// if (smallSteeringForce.modulus() > MAX_FORCE / 500) {
-			steeringForce = new Vect3D(bigSteeringForce);
-			// } else {
-			// steeringForce = new Vect3D(smallSteeringForce);
-			// }
+			// desired_velocity would be the optimal speed vector if we has unlimited thrust
+			desiredVelocity.copy(targetOffset).add(speedOpposition).mult(clippedSpeed / distance);
+
+			// steering_force is the force we will apply
+			steeringForce.copy(desiredVelocity).substract(speed).normalize(MAX_FORCE / mass);
+			// the following code helps to have a nice effect if the eulierian integration is not precise enough
+			if (slowingDistance > distance + 10) {
+				steeringForce.mult(1.01f);
+			}
+
 			// acceleration = steering_force / mass
-			accel = new Vect3D(steeringForce);
+			accel.copy(steeringForce);
 			// velocity = truncate (velocity + acceleration, max_speed)
 			speed.add(new Vect3D(accel).mult(secondsSinceLastUpdate)).truncate(MAX_SPEED);
 			// position = position + velocity
@@ -108,14 +107,15 @@ public class Ship extends Entity {
 			float newHeading = new Vect3D(0, 1, 0).angleWith(steeringForce);
 			// heading = newHeading;
 			float angleDiff = (newHeading - heading + 360) % 360;
-			if (angleDiff < MAX_ANGLE_SPEED * secondsSinceLastUpdate) {
+			float maxAngleSpeed = MAX_ANGLE_SPEED_PER_MASS_UNIT / mass;
+			if (angleDiff < maxAngleSpeed * secondsSinceLastUpdate) {
 				heading = newHeading;
 			} else if (angleDiff < 180) {
-				heading += MAX_ANGLE_SPEED * Math.max(1, angleDiff / 180) * secondsSinceLastUpdate;
-			} else if (angleDiff >= 360 - MAX_ANGLE_SPEED * secondsSinceLastUpdate) {
+				heading += maxAngleSpeed * Math.max(1, angleDiff / 180) * secondsSinceLastUpdate;
+			} else if (angleDiff >= 360 - maxAngleSpeed * secondsSinceLastUpdate) {
 				heading = newHeading;
 			} else {
-				heading -= MAX_ANGLE_SPEED * Math.max(1, angleDiff / 180) * secondsSinceLastUpdate;
+				heading -= maxAngleSpeed * Math.max(1, angleDiff / 180) * secondsSinceLastUpdate;
 			}
 
 			// stop condition
@@ -124,8 +124,11 @@ public class Ship extends Entity {
 				accel.nullify();
 				speed.nullify();
 				desiredVelocity.nullify();
-				steeringDirection.nullify();
 				steeringForce.nullify();
+				slowingDistance = 0;
+				speedOpposition.nullify();
+				targetOffset.nullify();
+				normalizedTargetOffset.nullify();
 			}
 
 			// TODO remove this once the particle engine is used somewhere else
@@ -145,6 +148,11 @@ public class Ship extends Entity {
 	public final Movement movement = new Movement();
 	public final Combat combat = new Combat();
 
+	private static final int nbSegments = 200;
+	private static final double deltaAngle = (float) (2 * Math.PI / nbSegments);
+	private static final float cos = (float) Math.cos(deltaAngle);
+	private static final float sin = (float) Math.sin(deltaAngle);
+
 	private static final Logger LOGGER = LoggerFactory.getLogger(Ship.class);
 	// Management of the ship's ids.
 	private static Integer nextId = 1;
@@ -158,7 +166,7 @@ public class Ship extends Entity {
 	// TODO All these values should depend on the ship's fitting.
 	private static final float MAX_SPEED = 1000;
 	private static final float MAX_FORCE = 3000f;
-	private static final float MAX_ANGLE_SPEED = 200f;
+	private static final float MAX_ANGLE_SPEED_PER_MASS_UNIT = 3600f;
 	private final List<Morph> morphs = new ArrayList<>();
 
 	/** The ship position in the world. */
@@ -279,6 +287,8 @@ public class Ship extends Entity {
 			GL11.glColor3f(0, 0, 1);
 			movement.steeringForce.render(glMode, 1);
 			GL11.glTranslated(-movement.desiredVelocity.x, -movement.desiredVelocity.y, 0);
+			GL11.glColor3f(0, 1, 0);
+			movement.speedOpposition.render(glMode, 1);
 		}
 
 		GL11.glTranslatef(-pos.x, -pos.y, -pos.z);
@@ -302,6 +312,27 @@ public class Ship extends Entity {
 			}
 		}
 
+		if (movement.target != null) {
+			GL11.glTranslatef(movement.target.x, movement.target.y, 0);
+			// render limit of effect zone
+			GL11.glBegin(GL11.GL_LINES);
+			float t = 0; // temporary data holder
+			float x = movement.slowingDistance; // radius = 1
+			float y = 0;
+			for (int i = 0; i < nbSegments; i++) {
+				GL11.glColor4d(1, 1, 1, 0.15);
+				GL11.glVertex2d(x, y);
+
+				t = x;
+				x = cos * x - sin * y;
+				y = sin * t + cos * y;
+
+				GL11.glVertex2d(x, y);
+			}
+			GL11.glEnd();
+			GL11.glTranslatef(-movement.target.x, -movement.target.y, 0);
+
+		}
 	}
 
 	/**
