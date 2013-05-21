@@ -2,7 +2,8 @@ package net.carmgate.morph.actions.drag;
 
 import java.util.List;
 
-import net.carmgate.morph.actions.Action;
+import net.carmgate.morph.actions.common.Action;
+import net.carmgate.morph.actions.common.ActionHints;
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.view.ViewPort;
@@ -14,12 +15,17 @@ import org.lwjgl.input.Mouse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@ActionHints(dragAction = true, mouseActionAutoload = true)
 public class DraggingWorld implements Action {
 
 	@SuppressWarnings("unused")
 	private static final Logger LOGGER = LoggerFactory.getLogger(DraggingWorld.class);
 
 	private final DragContext dragContext;
+
+	public DraggingWorld() {
+		dragContext = null;
+	}
 
 	public DraggingWorld(DragContext dragContext) {
 		this.dragContext = dragContext;

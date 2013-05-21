@@ -131,10 +131,8 @@ public class Ship extends Entity {
 				normalizedTargetOffset.nullify();
 			}
 
-			// TODO remove this once the particle engine is used somewhere else
-			// TODO Find something to draw to show the engine is active.
 			if (steeringForce.modulus() > MAX_FORCE * 0.02) {
-				Model.getModel().getParticleEngine().addParticle(new Vect3D(pos), new Vect3D().substract(new Vect3D(steeringForce).mult(1.5f)), 3);
+				Model.getModel().getParticleEngine().addParticle(new Vect3D(pos), new Vect3D().substract(new Vect3D(steeringForce)), 3);
 			}
 
 		}
@@ -163,7 +161,7 @@ public class Ship extends Entity {
 	private static Texture baseTexture;
 
 	/** The ship max speed. */
-	// TODO All these values should depend on the ship's fitting.
+	// IMPROVE All these values should depend on the ship's fitting.
 	private static final float MAX_SPEED = 1000;
 	private static final float MAX_FORCE = 3000f;
 	private static final float MAX_ANGLE_SPEED_PER_MASS_UNIT = 3600f;

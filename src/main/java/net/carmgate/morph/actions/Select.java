@@ -3,6 +3,8 @@ package net.carmgate.morph.actions;
 import java.nio.IntBuffer;
 import java.util.List;
 
+import net.carmgate.morph.actions.common.Action;
+import net.carmgate.morph.actions.common.SelectionType;
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Entity;
@@ -72,7 +74,7 @@ public class Select implements Action {
 			// pick
 			select(Mouse.getX() - Model.getModel().getWindow().getWidth() / 2, Mouse.getY() - Model.getModel().getWindow().getHeight() / 2,
 					SelectionType.SIMPLE, true);
-			LOGGER.debug(Model.getModel().getSimpleSelection().toString());
+			LOGGER.debug("New simple selection: " + Model.getModel().getSimpleSelection().toString());
 		}
 
 		if (lastEvents.get(1).getEventType() == EventType.MOUSE_BUTTON_DOWN
@@ -86,7 +88,7 @@ public class Select implements Action {
 			// pick
 			select(Mouse.getX() - Model.getModel().getWindow().getWidth() / 2, Mouse.getY() - Model.getModel().getWindow().getHeight() / 2,
 					SelectionType.ACTION, true);
-			LOGGER.debug(Model.getModel().getActionSelection().toString());
+			LOGGER.debug("New action selection: " + Model.getModel().getActionSelection().toString());
 		}
 	}
 
@@ -98,7 +100,7 @@ public class Select implements Action {
 	 */
 	protected void select(int x, int y, SelectionType selectionType, boolean onlyOne) {
 
-		LOGGER.debug("Picking at " + x + " " + y);
+		LOGGER.debug("Picking at " + x + " " + y + "(" + selectionType + ")");
 
 		// get viewport
 		IntBuffer viewport = BufferUtils.createIntBuffer(16);

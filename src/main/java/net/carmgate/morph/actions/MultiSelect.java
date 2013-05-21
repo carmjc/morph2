@@ -2,6 +2,7 @@ package net.carmgate.morph.actions;
 
 import java.util.List;
 
+import net.carmgate.morph.actions.common.SelectionType;
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.ui.Event;
 import net.carmgate.morph.ui.Event.EventType;

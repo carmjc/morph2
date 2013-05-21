@@ -1,4 +1,4 @@
-package net.carmgate.morph.actions;
+package net.carmgate.morph.actions.common;
 
 import java.util.ArrayList;
 import java.util.Deque;

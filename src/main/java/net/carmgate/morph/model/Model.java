@@ -8,7 +8,7 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 
-import net.carmgate.morph.actions.InteractionStack;
+import net.carmgate.morph.actions.common.InteractionStack;
 import net.carmgate.morph.model.entities.Entity;
 import net.carmgate.morph.model.entities.EntityHints;
 import net.carmgate.morph.model.entities.EntityType;
@@ -158,7 +158,7 @@ public class Model {
 		}
 
 		// Update all entities
-		// TODO Find a way to filter the entities needing an update
+		// IMPROVE Find a way to filter the entities needing an update
 		for (EntityMap entityMap : entitiesByEntityType.values()) {
 			for (Entity entity : entityMap.values()) {
 				entity.update();

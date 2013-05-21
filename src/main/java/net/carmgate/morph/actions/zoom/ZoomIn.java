@@ -1,6 +1,7 @@
 package net.carmgate.morph.actions.zoom;
 
-import net.carmgate.morph.actions.Action;
+import net.carmgate.morph.actions.common.Action;
+import net.carmgate.morph.actions.common.ActionHints;
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.view.ViewPort;
 import net.carmgate.morph.ui.Event;
@@ -10,6 +11,7 @@ import org.lwjgl.input.Keyboard;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@ActionHints(mouseActionAutoload = true, keyboardActionAutoload = true)
 public class ZoomIn implements Action {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ZoomIn.class);

@@ -24,7 +24,7 @@ public class Morph implements Renderable, Selectable {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(Morph.class);
 	private static Integer nextId = 0;
-	private int id;
+	private int selectionId;
 	private static Texture baseTexture;
 	private static Map<MorphType, Texture> morphTypeTextures = new HashMap<>();
 	private final Vect3D pos = new Vect3D();
@@ -37,7 +37,7 @@ public class Morph implements Renderable, Selectable {
 	public Morph(MorphType morphType, float x, float y, float z) {
 		this.morphType = morphType;
 		synchronized (nextId) {
-			id = nextId++;
+			selectionId = nextId++;
 		}
 	}
 
@@ -47,8 +47,7 @@ public class Morph implements Renderable, Selectable {
 
 	@Override
 	public int getSelectionId() {
-		// TODO Auto-generated method stub
-		return 0;
+		return selectionId;
 	}
 
 	@Override

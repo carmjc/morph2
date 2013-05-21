@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
 
 public class ParticleEngine implements Renderable, Updatable {
 
-	// TODO Might be interesting to implement several fading types.
+	// IMPROVE Might be interesting to implement several fading types.
 	public static class Particle {
 		private final Vect3D pos;
 		private final Vect3D speed;

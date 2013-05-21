@@ -1,21 +1,15 @@
 package net.carmgate.morph;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import net.carmgate.morph.actions.Action;
-import net.carmgate.morph.actions.Attack;
-import net.carmgate.morph.actions.MoveTo;
 import net.carmgate.morph.actions.MultiSelect;
-import net.carmgate.morph.actions.Pause;
 import net.carmgate.morph.actions.Select;
-import net.carmgate.morph.actions.ToggleDebugMode;
+import net.carmgate.morph.actions.common.Action;
+import net.carmgate.morph.actions.common.ActionHints;
 import net.carmgate.morph.actions.drag.DragContext;
-import net.carmgate.morph.actions.drag.DraggedWorld;
-import net.carmgate.morph.actions.drag.DraggingWorld;
-import net.carmgate.morph.actions.zoom.ZoomIn;
-import net.carmgate.morph.actions.zoom.ZoomOut;
 import net.carmgate.morph.conf.Conf;
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.common.Vect3D;
@@ -60,22 +54,38 @@ public class Main {
 	 * Some special case handlers can not be initialized dynamically at the moment.
 	 */
 	private void initActions() {
-		// TODO use HardwareType to auto fill actions
-
+		// The drag context shared by all actions needing to handle drag
 		DragContext dragContext = new DragContext();
-		mouseActions.add(new DraggingWorld(dragContext));
 		mouseActions.add(new Select());
 		mouseActions.add(new MultiSelect());
-		mouseActions.add(new MoveTo());
-		mouseActions.add(new ZoomIn());
-		mouseActions.add(new ZoomOut());
-		mouseActions.add(new Attack());
-		mouseActions.add(new DraggedWorld(dragContext));
 
-		keyboardActions.add(new ZoomIn());
-		keyboardActions.add(new ZoomOut());
-		keyboardActions.add(new ToggleDebugMode());
-		keyboardActions.add(new Pause());
+		Set<Class<? extends Action>> actions = new Reflections("net.carmgate.morph.actions").getSubTypesOf(Action.class);
+		for (Class<? extends Action> action : actions) {
+			try {
+				Action actionInstance;
+				// in some special actions, there are no action hints.
+				if (action.getAnnotation(ActionHints.class) == null) {
+					continue;
+				}
+
+				// Handle actions hints
+				if (action.getAnnotation(ActionHints.class).dragAction()) {
+					actionInstance = action.getConstructor(DragContext.class).newInstance(dragContext);
+				} else {
+					actionInstance = action.newInstance();
+				}
+				if (action.getAnnotation(ActionHints.class).mouseActionAutoload()) {
+					mouseActions.add(actionInstance);
+				}
+				if (action.getAnnotation(ActionHints.class).keyboardActionAutoload()) {
+					keyboardActions.add(actionInstance);
+				}
+			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException
+					| SecurityException e) {
+				LOGGER.error("Exception raised while creating actions", e);
+			}
+
+		}
 	}
 
 	/**
@@ -191,23 +201,17 @@ public class Main {
 		GL11.glRotatef(model.getViewport().getRotation(), 0, 0, 1);
 		GL11.glScalef(scale, scale, 1);
 
-		// TODO draw world
-		// RenderStyle renderStyle = RenderStyle.NORMAL;
-		// if (WorldRenderer.debugDisplay) {
-		// renderStyle = RenderStyle.DEBUG;
-		// }
-		// worldRenderer.render(GL11.GL_RENDER, renderStyle, globalModel);
-
 		// Render particles
 		model.getParticleEngine().render(GL11.GL_RENDER);
 
-		// TODO render the world
+		// Rendering all renderable elements
 		for (RenderingSteps renderingStep : RenderingSteps.values()) {
 			for (Entity renderable : Model.getModel().getEntitiesByRenderingType(renderingStep).values()) {
 				renderable.render(GL11.GL_RENDER);
 			}
 		}
 
+		// TODO activate ship editor upon some action
 		// for (Morph morph : ship.getMorphs()) {
 		// // TODO remove the null parameter
 		// morph.render(GL11.GL_RENDER, null);
@@ -217,7 +221,7 @@ public class Main {
 		GL11.glRotatef(-model.getViewport().getRotation(), 0, 0, 1);
 		GL11.glTranslatef(-focalPoint.x, -focalPoint.y, -focalPoint.z);
 
-		// TODO Interface rendering
+		// IMPROVE Interface rendering
 		// GL11.glTranslatef(WorldRenderer.focalPoint.x,
 		// WorldRenderer.focalPoint.y, WorldRenderer.focalPoint.z);
 		// interfaceRenderer.render(GL11.GL_RENDER, WorldRenderer.debugDisplay ?
