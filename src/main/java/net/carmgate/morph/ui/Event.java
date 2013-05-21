@@ -13,6 +13,7 @@ public class Event {
 		MOUSE_BUTTON_DOWN(HardwareType.MOUSE),
 		MOUSE_BUTTON_UP(HardwareType.MOUSE),
 		MOUSE_MOVE(HardwareType.MOUSE),
+		MOUSE_WHEEL(HardwareType.MOUSE),
 		NOOP(HardwareType.NONE),
 		KEYBOARD_DOWN(HardwareType.KEYBOARD),
 		KEYBOARD_UP(HardwareType.KEYBOARD);

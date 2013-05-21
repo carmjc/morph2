@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Set;
 
 import net.carmgate.morph.actions.Action;
+import net.carmgate.morph.actions.Attack;
 import net.carmgate.morph.actions.MoveTo;
 import net.carmgate.morph.actions.MultiSelect;
 import net.carmgate.morph.actions.Select;
@@ -18,6 +19,8 @@ import net.carmgate.morph.conf.Conf;
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Entity;
+import net.carmgate.morph.model.entities.Morph;
+import net.carmgate.morph.model.entities.Morph.MorphType;
 import net.carmgate.morph.model.entities.Renderable;
 import net.carmgate.morph.model.entities.Ship;
 import net.carmgate.morph.ui.Event;
@@ -63,6 +66,9 @@ public class Main {
 		mouseActions.add(new Select());
 		mouseActions.add(new MultiSelect());
 		mouseActions.add(new MoveTo());
+		mouseActions.add(new ZoomIn());
+		mouseActions.add(new ZoomOut());
+		mouseActions.add(new Attack());
 		mouseActions.add(new DraggedWorld(dragContext));
 
 		keyboardActions.add(new ZoomIn());
@@ -98,7 +104,20 @@ public class Main {
 	}
 
 	private void initModel() {
-		Model.getModel().addEntity(new Ship(0, 0, 0, 10, 10));
+		Ship ship = new Ship(0, 0, 0, 10, 10);
+		Morph newMorph = new Morph(MorphType.OVERMIND, 0, 0, 0);
+		ship.getMorphs().add(newMorph);
+		newMorph = new Morph(MorphType.SHIELD, 1, 0, 0);
+		newMorph.getPos().x = 1;
+		ship.getMorphs().add(newMorph);
+		newMorph = new Morph(MorphType.PROPULSOR, 1, 0, 0);
+		newMorph.getPos().x = -1;
+		ship.getMorphs().add(newMorph);
+		newMorph = new Morph(MorphType.LASER, 1, 0, 0);
+		newMorph.getPos().x = 2;
+		ship.getMorphs().add(newMorph);
+		Model.getModel().addEntity(ship);
+
 		Model.getModel().addEntity(new Ship(128, 0, 0, 40, 12));
 		Model.getModel().addEntity(new Ship(128, 128, 0, 80, 15));
 		Model.getModel().addEntity(new Ship(0, 128, 0, 120, 10));
@@ -124,7 +143,6 @@ public class Main {
 
 			try {
 				renderable.newInstance().initRenderer();
-
 			} catch (InstantiationException | IllegalAccessException e) {
 				LOGGER.error("Exception raised while trying to init renderer " + renderable.getName(), e);
 			}
@@ -187,6 +205,11 @@ public class Main {
 				renderable.render(GL11.GL_RENDER);
 			}
 		}
+
+		// for (Morph morph : ship.getMorphs()) {
+		// // TODO remove the null parameter
+		// morph.render(GL11.GL_RENDER, null);
+		// }
 
 		GL11.glScalef(1 / scale, 1 / scale, 1);
 		GL11.glRotatef(-model.getViewport().getRotation(), 0, 0, 1);
@@ -263,6 +286,16 @@ public class Main {
 
 			// Fire events accordingly
 			if (Mouse.next()) {
+				int dWheel = Mouse.getDWheel();
+				if (dWheel != 0) {
+					LOGGER.debug("Logged a mouse wheel: " + dWheel);
+					Model.getModel().getInteractionStack()
+							.addEvent(new Event(EventType.MOUSE_WHEEL, dWheel, new int[] { Mouse.getEventX(), Mouse.getEventY() }));
+					for (Action action : mouseActions) {
+						action.run();
+					}
+				}
+
 				// add interaction to ui context
 				EventType evtType = null;
 				if (Mouse.getEventButton() >= 0) {
@@ -277,6 +310,7 @@ public class Main {
 						action.run();
 					}
 				}
+
 			}
 
 			if (Keyboard.next()) {

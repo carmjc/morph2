@@ -1,8 +1,10 @@
 package net.carmgate.morph.model;
 
 import java.util.Date;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 
@@ -42,17 +44,20 @@ public class Model {
 
 	private final ViewPort viewport = new ViewPort();
 
-	private final Set<Selectable> selection = new HashSet<>();
+	private final Set<Selectable> simpleSelection = new HashSet<>();
+	private final Deque<Selectable> actionSelection = new LinkedList<>();
 
 	private final InteractionStack interactionStack = new InteractionStack();
+
 	/** All the entities of the world can be searched by @entity uniqueId and entity instance uniqueId. */
 	// TODO we should rework this structure, it's not clean.
 	private final Map<EntityType, EntityMap> entitiesByEntityType = new HashMap<>();
-
 	private final Map<RenderingSteps, EntityMap> entitiesByRenderingStep = new HashMap<>();
 
 	private final ParticleEngine particleEngine = new ParticleEngine();
 	private boolean pause;
+
+	private final Set<Entity> entitiesToRemove = new HashSet<>();
 
 	private Model() {
 		// add some noop in the interaction queue to get rid of exceptions
@@ -72,11 +77,20 @@ public class Model {
 	}
 
 	// TODO We must fix the temptation to use getSelection.clear() instead
-	public void clearSelection() {
-		for (Selectable selectable : selection) {
+	public void clearActionSelection() {
+		actionSelection.clear();
+	}
+
+	// TODO We must fix the temptation to use getSelection.clear() instead
+	public void clearSimpleSelection() {
+		for (Selectable selectable : simpleSelection) {
 			selectable.setSelected(false);
 		}
-		selection.clear();
+		simpleSelection.clear();
+	}
+
+	public Deque<Selectable> getActionSelection() {
+		return actionSelection;
 	}
 
 	/**
@@ -106,8 +120,8 @@ public class Model {
 		return particleEngine;
 	}
 
-	public Set<Selectable> getSelection() {
-		return selection;
+	public Set<Selectable> getSimpleSelection() {
+		return simpleSelection;
 	}
 
 	public ViewPort getViewport() {
@@ -120,6 +134,10 @@ public class Model {
 
 	public boolean isDebugMode() {
 		return debugMode;
+	}
+
+	public void removeEntity(Entity entity) {
+		entitiesToRemove.add(entity);
 	}
 
 	public void setPause() {
@@ -142,6 +160,12 @@ public class Model {
 			for (Entity entity : entityMap.values()) {
 				entity.update();
 			}
+		}
+
+		// Remove entities flagged as "being removed"
+		for (Entity entity : entitiesToRemove) {
+			getEntitiesByRenderingType(entity.getClass().getAnnotation(RenderingHints.class).renderingStep()).remove(entity.getSelectionId());
+			getEntitiesByType(entity.getClass().getAnnotation(EntityHints.class).entityType()).remove(entity.getSelectionId());
 		}
 
 		// particle engin

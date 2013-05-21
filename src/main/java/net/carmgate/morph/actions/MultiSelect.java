@@ -29,7 +29,8 @@ public class MultiSelect extends Select {
 		}
 
 		// pick
-		select(Mouse.getX() - Model.getModel().getWindow().getWidth() / 2, Mouse.getY() - Model.getModel().getWindow().getHeight() / 2, true);
-		LOGGER.debug(Model.getModel().getSelection().toString());
+		select(Mouse.getX() - Model.getModel().getWindow().getWidth() / 2, Mouse.getY() - Model.getModel().getWindow().getHeight() / 2, SelectionType.SIMPLE,
+				true);
+		LOGGER.debug(Model.getModel().getSimpleSelection().toString());
 	}
 }
