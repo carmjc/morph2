@@ -52,6 +52,8 @@ public class Main {
 	private final List<Action> mouseActions = new LinkedList<>();
 	private final List<Action> keyboardActions = new LinkedList<>();
 
+	private Ship ship;
+
 	/**
 	 * This method initializes UI handlers.
 	 * Some special case handlers can not be initialized dynamically at the moment.
@@ -123,7 +125,13 @@ public class Main {
 	}
 
 	private void initModel() {
-		Ship ship = new Ship(0, 0, 0, 10, 10, Model.getModel().getSelf());
+		Player player = new Player(PlayerType.AI, "Nemesis", FOF.FOE);
+		Ship enemyShip = new Ship(128, 0, 0, 0, 200, player);
+		Model.getModel().addEntity(enemyShip);
+		enemyShip.movement.setWanderRadius(10);
+		enemyShip.movement.setWanderFocusDistance(200);
+
+		ship = new Ship(0, 0, 0, 10, 10, Model.getModel().getSelf());
 		Morph newMorph = new Morph(MorphType.OVERMIND, 0, 0, 0);
 		ship.getMorphs().add(newMorph);
 		newMorph = new Morph(MorphType.SHIELD, 1, 0, 0);
@@ -137,11 +145,6 @@ public class Main {
 		ship.getMorphs().add(newMorph);
 		Model.getModel().addEntity(ship);
 
-		Player player = new Player(PlayerType.AI, "Nemesis", FOF.FOE);
-		Ship enemyShip = new Ship(128, 0, 0, 0, 12, player);
-		Model.getModel().addEntity(enemyShip);
-		enemyShip.movement.setWanderRadius(10);
-		enemyShip.movement.setWanderFocusDistance(200);
 	}
 
 	/**
@@ -205,7 +208,13 @@ public class Main {
 
 		Vect3D focalPoint = model.getViewport().getFocalPoint();
 		float scale = model.getViewport().getZoomFactor();
+		if (model.getViewport().getLockedOnShip() != null) {
+			Vect3D shipPos = null;
+			shipPos = new Vect3D(model.getViewport().getLockedOnShip().getPos()).mult(scale);
+			focalPoint.copy(new Vect3D().substract(shipPos));
+		}
 		GL11.glTranslatef(focalPoint.x, focalPoint.y, focalPoint.z);
+
 		GL11.glRotatef(model.getViewport().getRotation(), 0, 0, 1);
 		GL11.glScalef(scale, scale, 1);
 

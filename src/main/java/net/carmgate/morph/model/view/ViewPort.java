@@ -1,12 +1,18 @@
 package net.carmgate.morph.model.view;
 
 import net.carmgate.morph.model.common.Vect3D;
+import net.carmgate.morph.model.entities.Ship;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This class represents the properties of the view through which the world is seen.
  * The viewport is rectangular in shape.
  */
 public class ViewPort {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(ViewPort.class);
 
 	/** The intersection of the diagonals of the viewport (in world coordinates). */
 	private final Vect3D focalPoint = new Vect3D();
@@ -17,9 +23,15 @@ public class ViewPort {
 	/** The zoom factor. > 1 means what you see is bigger. */
 	private float zoomFactor = 0.5f;
 
+	private Ship lockedOnShip;
+
 	/** The intersection of the diagonals of the viewport (in <b>world coordinates</b>).*/
 	public Vect3D getFocalPoint() {
 		return focalPoint;
+	}
+
+	public Ship getLockedOnShip() {
+		return lockedOnShip;
 	}
 
 	/** The rotation of the scene around the focal point. */
@@ -30,6 +42,10 @@ public class ViewPort {
 	/** The zoom factor. > 1 means what you see is bigger. */
 	public float getZoomFactor() {
 		return zoomFactor;
+	}
+
+	public void setLockedOnShip(Ship lockedOnShip) {
+		this.lockedOnShip = lockedOnShip;
 	}
 
 	public void setZoomFactor(float zoomFactor) {

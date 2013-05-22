@@ -125,6 +125,11 @@ public class Vect3D implements Renderable {
 		// nothing to do
 	}
 
+	public Vect3D lengthen(float scalar) {
+		normalize(Math.max(modulus(), scalar));
+		return this;
+	}
+
 	/**
 	 * @return the modulus of current vector.
 	 */

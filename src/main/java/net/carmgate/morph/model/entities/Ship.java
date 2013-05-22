@@ -66,12 +66,16 @@ public class Ship extends Entity {
 		private float wanderFocusDistance;
 		private float wanderRadius;
 		private final Vect3D wanderTarget = new Vect3D();
+		private final Vect3D[] steeringForces = new Vect3D[3];
 
 		protected Movement() {
+			for (int i = 0; i < steeringForces.length; i++) {
+				steeringForces[i] = new Vect3D();
+			}
 		}
 
 		private void addTrail() {
-			if (steeringForce.modulus() > MAX_FORCE * 0.02) {
+			if (steeringForce.modulus() > MAX_FORCE * 0.002) {
 				Model.getModel().getParticleEngine().addParticle(new Vect3D(pos), new Vect3D().substract(new Vect3D(steeringForce)), 3);
 			}
 		}
@@ -87,7 +91,7 @@ public class Ship extends Entity {
 
 		protected void arrive() {
 
-			targetOffset.copy(arriveTarget).substract(pos);
+			targetOffset.copy(arriveTarget).substract(pos).mult(0.9f);
 
 			normalizedTargetOffset.copy(targetOffset).normalize(1);
 			speedOpposition.copy(normalizedTargetOffset).rotate(90).mult(speed.prodVectOnZ(normalizedTargetOffset));
@@ -102,23 +106,49 @@ public class Ship extends Entity {
 
 			// Optimal slowing distance when cruising at MAX_SPEED before entering the slowing radius
 			// Optimal slowing distance is computed for debugging purposes only
-			if (Model.getModel().isDebugMode()) {
-				slowingDistance = 0.00001f + (float) (Math.pow(speed.modulus(), 2) / (2 * MAX_FORCE / mass * cosSpeedToTO));
-			}
+			slowingDistance = 0.00001f + (float) (Math.pow(speed.modulus(), 2) / (2 * MAX_FORCE / mass * cosSpeedToTO));
 
 			// Ramped speed is the optimal target speed modulus
 			float rampedSpeed = (float) Math.sqrt(2 * MAX_FORCE / mass * distance);
 			// clipped_speed clips the speed to max speed
 			float clippedSpeed = Math.min(rampedSpeed, MAX_SPEED);
-			// desired_velocity would be the optimal speed vector if we has unlimited thrust
+			// desired_velocity would be the optimal speed vector if we had unlimited thrust
 			desiredVelocity.copy(targetOffset).add(speedOpposition).mult(clippedSpeed / distance);
 
 			// steering_force is the force we will apply
-			steeringForce.copy(desiredVelocity).substract(speed).normalize(MAX_FORCE / mass);
-			// the following code helps to have a nice effect if the eulierian integration is not precise enough
-			if (slowingDistance > distance + 10) {
-				steeringForce.mult(1.01f);
+			for (int i = steeringForces.length - 1; i > 0; i--) {
+				steeringForces[i].copy(steeringForces[i - 1]);
 			}
+			steeringForces[0].copy(desiredVelocity).substract(speed);
+			float factor = 1.35f;
+			float sdmin = slowingDistance / factor;
+			float sdmax = slowingDistance;
+			float overdrive = 1.0f + speed.modulus() / MAX_SPEED;
+			if (distance > sdmax) {
+				steeringForces[0].truncate(MAX_FORCE / mass);
+			} else if (distance > sdmin) {
+				float stModulus = steeringForces[0].modulus();
+				steeringForces[0].normalize((distance - sdmin) / (sdmax - sdmin) * stModulus + (sdmax - distance)
+						/ (sdmax - sdmin) * MAX_FORCE / mass * overdrive);
+			} else {
+				steeringForces[0].normalize(MAX_FORCE / mass * overdrive);
+			}
+
+			steeringForce.nullify();
+			for (Vect3D steeringForce2 : steeringForces) {
+				steeringForce.add(new Vect3D(steeringForce2).mult(1f / steeringForces.length));
+			}
+
+			// steeringForce.nullify();
+			// for (Vect3D steeringForce2 : steeringForces) {
+			// steeringForce.add(steeringForce2);
+			// }
+			// steeringForce.mult(1f / steeringForces.length);
+
+			// the following code helps to have a nice effect if the eulierian integration is not precise enough
+			// if (slowingDistance > distance + 10) {
+			// steeringForce.mult(1.5f);
+			// }
 
 			applySteeringForce();
 			rotateProperly();
@@ -183,11 +213,11 @@ public class Ship extends Entity {
 			}
 
 			// Update target within the given constraints
-			Vect3D wanderFocus = new Vect3D(pos).add(new Vect3D(0, 1, 0).rotate(heading).normalize(wanderFocusDistance));
+			Vect3D wanderFocus = new Vect3D(pos).add(new Vect3D(0, 1, 0).rotate(heading).normalize(wanderFocusDistance + mass));
 
 			// Determine a target at acceptable distance from the wander focus point
-			wanderTarget.x += Math.random() * 4 - 2;
-			wanderTarget.y += Math.random() * 4 - 2;
+			wanderTarget.x += Math.random() * 0.25f - 0.125f;
+			wanderTarget.y += Math.random() * 0.25f - 0.125f;
 			if (new Vect3D(wanderFocus).add(wanderTarget).distance(wanderFocus) > wanderRadius) {
 				wanderTarget.copy(Vect3D.NULL);
 			}
@@ -282,6 +312,10 @@ public class Ship extends Entity {
 		return morphs;
 	}
 
+	public Vect3D getPos() {
+		return pos;
+	}
+
 	@Override
 	public int getSelectionId() {
 		return id;
@@ -364,7 +398,7 @@ public class Ship extends Entity {
 		if (movement.arriveTarget != null) {
 			// Add new particle
 
-			if (selected) {
+			if (selected && Model.getModel().isDebugMode()) {
 				// Show target
 				GL11.glTranslatef(movement.arriveTarget.x, movement.arriveTarget.y, 0);
 

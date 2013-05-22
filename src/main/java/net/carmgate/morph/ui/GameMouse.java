@@ -1,6 +1,7 @@
 package net.carmgate.morph.ui;
 
 import net.carmgate.morph.model.Model;
+import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.view.ViewPort;
 
 import org.lwjgl.input.Mouse;
@@ -9,6 +10,10 @@ import org.lwjgl.input.Mouse;
  * Allows mouse manipulation in world coordinates.
  */
 public class GameMouse {
+
+	public static Vect3D getPosInWord() {
+		return new Vect3D(getXInWorld(), getYInWorld(), 0);
+	}
 
 	/**
 	 * @return mouse X position in window coordinates.
