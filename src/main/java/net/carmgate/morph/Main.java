@@ -126,7 +126,7 @@ public class Main {
 
 	private void initModel() {
 		Player player = new Player(PlayerType.AI, "Nemesis", FOF.FOE);
-		Ship enemyShip = new Ship(128, 0, 0, 0, 200, player);
+		Ship enemyShip = new Ship(128, 0, 0, 0, 50, player);
 		Model.getModel().addEntity(enemyShip);
 		enemyShip.movement.setWanderRadius(10);
 		enemyShip.movement.setWanderFocusDistance(200);
@@ -190,6 +190,8 @@ public class Main {
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
+		GL11.glEnable(GL11.GL_LINE_SMOOTH);
+		GL11.glHint(GL11.GL_LINE_SMOOTH_HINT, GL11.GL_NICEST);
 
 		GL11.glMatrixMode(GL11.GL_PROJECTION);
 		GL11.glLoadIdentity();

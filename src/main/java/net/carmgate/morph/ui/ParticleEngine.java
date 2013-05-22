@@ -25,28 +25,43 @@ public class ParticleEngine implements Renderable, Updatable {
 		private final Vect3D pos;
 		private final Vect3D speed;
 		private final float rot = (float) (Math.random() * 360);
-		private final float halfLife;
 
-		private float luminosity = (float) Math.random() * 0.5f + 0.2f;
+		private final float initialLuminosity;
+		private float luminosity = 0;
+
+		private final float maxLife;
+
+		private float life;
+		private final Random random = new Random();
 
 		/**
 		 * Create a new particle
 		 * @param pos
 		 * @param speed
-		 * @param halfLife the time it takes for the particle to fade to half it's luminosity
+		 * @param life the time it takes for the particle to die
+		 * @param initialAlpha 
 		 */
-		public Particle(Vect3D pos, Vect3D speed, float halfLife) {
+		public Particle(Vect3D pos, Vect3D speed, float initialLife, float initialLifeDeviation, float minInitialAlpha, float maxInitialAlpha) {
 			this.pos = pos;
 			this.speed = speed;
-			this.halfLife = halfLife;
+			maxLife = life = Math.max(0, (float) random.nextGaussian() * initialLifeDeviation + initialLife);
+			initialLuminosity = luminosity = (float) (Math.random() * (maxInitialAlpha - minInitialAlpha) + minInitialAlpha);
 		}
 
-		public float getHalfLife() {
-			return halfLife;
+		public float getInitialLuminosity() {
+			return initialLuminosity;
+		}
+
+		public float getLife() {
+			return life;
 		}
 
 		public float getLuminosity() {
 			return luminosity;
+		}
+
+		public float getMaxLife() {
+			return maxLife;
 		}
 
 		public Vect3D getPos() {
@@ -59,6 +74,10 @@ public class ParticleEngine implements Renderable, Updatable {
 
 		public Vect3D getSpeed() {
 			return speed;
+		}
+
+		public void setLife(float life) {
+			this.life = life;
 		}
 
 		public void setLuminosity(float luminosity) {
@@ -80,11 +99,11 @@ public class ParticleEngine implements Renderable, Updatable {
 
 	protected float secondsSinceLastUpdate;
 
-	private final Random random = new Random();
+	protected final Random random = new Random();
 
-	public void addParticle(Vect3D pos, Vect3D speed, float halfLife) {
-		speed.rotate((float) random.nextGaussian() * 2);
-		particles.add(new Particle(pos, speed, halfLife));
+	public void addParticle(Vect3D pos, Vect3D speed, float initialLife, float initialLifeDeviation, float minInitialAlpha, float maxInitialAlpha) {
+		speed.rotate((float) random.nextGaussian() * 10);
+		particles.add(new Particle(pos, speed, initialLife, initialLifeDeviation, minInitialAlpha, maxInitialAlpha));
 	}
 
 	@Override
@@ -107,9 +126,9 @@ public class ParticleEngine implements Renderable, Updatable {
 			GL11.glTranslatef(particle.getPos().x, particle.getPos().y, 0);
 			GL11.glRotatef(particle.getRot(), 0, 0, 1);
 
-			float scaleAdj1 = 1.1f;
-			float scaleAdj2 = 0.1f;
-			GL11.glScalef(scaleAdj1 / (scaleAdj2 + particle.getLuminosity()), scaleAdj1 / (scaleAdj2 + particle.getLuminosity()), 0);
+			float factor = 5;
+			float particleSize = (particle.getMaxLife() - particle.getLife()) * factor;
+			GL11.glScalef(particleSize, particleSize, 0);
 
 			GL11.glEnable(GL11.GL_TEXTURE_2D);
 			GL11.glColor4f(1, 1, 1, particle.getLuminosity());
@@ -125,7 +144,7 @@ public class ParticleEngine implements Renderable, Updatable {
 			GL11.glVertex2f(-baseTexture.getTextureWidth() / 2, baseTexture.getTextureHeight() / 2);
 			GL11.glEnd();
 
-			GL11.glScalef((scaleAdj2 + particle.getLuminosity()) / scaleAdj1, (scaleAdj2 + particle.getLuminosity()) / scaleAdj1, 0);
+			GL11.glScalef(1f / particleSize, 1f / particleSize, 0);
 			GL11.glRotatef(-particle.getRot(), 0, 0, 1);
 			GL11.glTranslatef(-particle.getPos().x, -particle.getPos().y, 0);
 		}
@@ -149,8 +168,10 @@ public class ParticleEngine implements Renderable, Updatable {
 			pos.z += speed.z * secondsSinceLastUpdate;
 
 			// linear decrease in luminosity
-			particle.setLuminosity(particle.getLuminosity() - secondsSinceLastUpdate / (2 * particle.getHalfLife()));
-			if (particle.getLuminosity() <= 0) {
+			particle.setLuminosity(particle.getInitialLuminosity() * particle.getLife() / particle.getMaxLife());
+			particle.setLife(particle.getLife() - secondsSinceLastUpdate / particle.getMaxLife());
+
+			if (particle.getLife() <= 0 || particle.getLuminosity() <= 0) {
 				particlesToRemove.add(particle);
 			}
 		}

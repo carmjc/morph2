@@ -77,7 +77,10 @@ public class Ship extends Entity {
 
 		private void addTrail() {
 			if (steeringForce.modulus() > MAX_FORCE * 0.002) {
-				Model.getModel().getParticleEngine().addParticle(new Vect3D(pos), new Vect3D().substract(new Vect3D(steeringForce)), 3);
+				Model.getModel()
+						.getParticleEngine()
+						.addParticle(new Vect3D(pos), new Vect3D().substract(new Vect3D(steeringForce).mult(2)), 1f, 1f / 32,
+								steeringForce.modulus() / (MAX_FORCE / mass) * 0.1f, steeringForce.modulus() / (MAX_FORCE / mass) * 1f);
 			}
 		}
 
@@ -359,6 +362,64 @@ public class Ship extends Entity {
 		GL11.glRotatef(heading, 0, 0, 1);
 		float massScale = mass / 10;
 
+		// Render selection circle around the ship
+		boolean maxZoom = 64f * massScale * Model.getModel().getViewport().getZoomFactor() > 15;
+		if (selected) {
+			// render limit of effect zone
+			TextureImpl.bindNone();
+			float tInt = 0; // temporary data holder
+			float tExt = 0; // temporary data holder
+			float xInt;
+			float xExt;
+			if (maxZoom) {
+				xInt = 64 * massScale - 15; // radius
+				xExt = 64 * massScale - 15 + 6 / Model.getModel().getViewport().getZoomFactor(); // radius
+			} else {
+				xInt = 15f / Model.getModel().getViewport().getZoomFactor(); // radius
+				xExt = 21f / Model.getModel().getViewport().getZoomFactor(); // radius
+			}
+			float xIntBackup = xInt; // radius
+			float xExtBackup = xExt; // radius
+			float yInt = 0;
+			float yExt = 0;
+			float yIntBackup = 0;
+			float yExtBackup = 0;
+			float alphaMax = 1f;
+			for (int i = 0; i < nbSegments; i++) {
+
+				tInt = xInt;
+				tExt = xExt;
+				xInt = cos * xInt - sin * yInt;
+				xExt = cos * xExt - sin * yExt;
+				yInt = sin * tInt + cos * yInt;
+				yExt = sin * tExt + cos * yExt;
+
+				GL11.glBegin(GL11.GL_QUADS);
+				GL11.glColor4f(0, 0.7f, 0, 0);
+				GL11.glVertex2f(xInt, yInt);
+				GL11.glColor4f(0, 0.7f, 0, 0);
+				GL11.glVertex2f(xIntBackup, yIntBackup);
+				GL11.glColor4f(0, 0.7f, 0, alphaMax);
+				GL11.glVertex2f((xExtBackup + xIntBackup) / 2, (yExtBackup + yIntBackup) / 2);
+				GL11.glColor4f(0, 0.7f, 0, alphaMax);
+				GL11.glVertex2f((xExt + xInt) / 2, (yExt + yInt) / 2);
+				GL11.glColor4f(0, 0.7f, 0, alphaMax);
+				GL11.glVertex2f((xExtBackup + xIntBackup) / 2, (yExtBackup + yIntBackup) / 2);
+				GL11.glColor4f(0, 0.7f, 0, alphaMax);
+				GL11.glVertex2f((xExt + xInt) / 2, (yExt + yInt) / 2);
+				GL11.glColor4f(0, 0.7f, 0, 0);
+				GL11.glVertex2f(xExt, yExt);
+				GL11.glColor4f(0, 0.7f, 0, 0);
+				GL11.glVertex2f(xExtBackup, yExtBackup);
+				GL11.glEnd();
+
+				xIntBackup = xInt;
+				xExtBackup = xExt;
+				yIntBackup = yInt;
+				yExtBackup = yExt;
+			}
+		}
+
 		// Render for show
 		if (Model.getModel().isDebugMode()) {
 			// TODO replace this with some more proper mass rendering
@@ -368,12 +429,10 @@ public class Ship extends Entity {
 			} else {
 				GL11.glColor3f(1f - energyPercent, energyPercent, 0);
 			}
-		} else if (selected) {
-			GL11.glColor3f(1f, 1f, 1f);
 		} else {
-			GL11.glColor3f(0.5f, 0.5f, 0.5f);
+			GL11.glColor3f(1f, 1f, 1f);
 		}
-		if (64f * massScale * Model.getModel().getViewport().getZoomFactor() > 15) {
+		if (maxZoom) {
 			GL11.glScalef(massScale, massScale, 0);
 			baseTexture.bind();
 			GL11.glBegin(GL11.GL_QUADS);
@@ -418,31 +477,22 @@ public class Ship extends Entity {
 
 		GL11.glTranslatef(-pos.x, -pos.y, -pos.z);
 
-		if (movement.arriveTarget != null) {
-			// Add new particle
-
-			if (selected && Model.getModel().isDebugMode()) {
-				// Show target
-				GL11.glTranslatef(movement.arriveTarget.x, movement.arriveTarget.y, 0);
-
-				TextureImpl.bindNone();
-				GL11.glBegin(GL11.GL_QUADS);
-				GL11.glVertex2f(-16, -16);
-				GL11.glVertex2f(16, -16);
-				GL11.glVertex2f(16, 16);
-				GL11.glVertex2f(-16, 16);
-				GL11.glEnd();
-
-				GL11.glTranslatef(-movement.arriveTarget.x, -movement.arriveTarget.y, 0);
-			}
-		}
-
-		if (movement.arriveTarget != null) {
+		if (movement.arriveTarget != null && selected && Model.getModel().isDebugMode()) {
+			// Show target
 			GL11.glTranslatef(movement.arriveTarget.x, movement.arriveTarget.y, 0);
+
+			TextureImpl.bindNone();
+			GL11.glBegin(GL11.GL_QUADS);
+			GL11.glVertex2f(-16, -16);
+			GL11.glVertex2f(16, -16);
+			GL11.glVertex2f(16, 16);
+			GL11.glVertex2f(-16, 16);
+			GL11.glEnd();
+
 			// render limit of effect zone
 			GL11.glBegin(GL11.GL_LINES);
 			float t = 0; // temporary data holder
-			float x = movement.slowingDistance; // radius = 1
+			float x = movement.slowingDistance; // radius
 			float y = 0;
 			for (int i = 0; i < nbSegments; i++) {
 				GL11.glColor4d(1, 1, 1, 0.15);
@@ -456,8 +506,8 @@ public class Ship extends Entity {
 			}
 			GL11.glEnd();
 			GL11.glTranslatef(-movement.arriveTarget.x, -movement.arriveTarget.y, 0);
-
 		}
+
 	}
 
 	/**
