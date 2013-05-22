@@ -3,6 +3,7 @@ package net.carmgate.morph.model.common;
 import net.carmgate.morph.model.entities.common.Renderable;
 
 import org.lwjgl.opengl.GL11;
+import org.newdawn.slick.opengl.TextureImpl;
 
 /**
  * A vector class holding some common vector operations.
@@ -195,7 +196,7 @@ public class Vect3D implements Renderable {
 		Vect3D vector = new Vect3D(this).mult(exagerate);
 		Vect3D origin = new Vect3D(vector);
 
-		GL11.glDisable(GL11.GL_TEXTURE_2D);
+		TextureImpl.bindNone();
 		GL11.glLineWidth(2.0f);
 		GL11.glEnable(GL11.GL_LINE_SMOOTH);
 		GL11.glBegin(GL11.GL_LINES);

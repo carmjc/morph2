@@ -19,6 +19,7 @@ import net.carmgate.morph.ui.rendering.RenderingSteps;
 
 import org.lwjgl.opengl.GL11;
 import org.newdawn.slick.opengl.Texture;
+import org.newdawn.slick.opengl.TextureImpl;
 import org.newdawn.slick.opengl.TextureLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -246,6 +247,7 @@ public class Ship extends Entity {
 
 	/** The texture under the morph image. */
 	private static Texture baseTexture;
+	private static Texture zoomedOutTexture;
 
 	/** The ship max speed. */
 	// IMPROVE All these values should depend on the ship's fitting.
@@ -335,6 +337,13 @@ public class Ship extends Entity {
 			}
 		}
 
+		if (zoomedOutTexture == null) {
+			try (FileInputStream fileInputStream = new FileInputStream(ClassLoader.getSystemResource("spaceshipZoomedOut.png").getPath())) {
+				zoomedOutTexture = TextureLoader.getTexture("PNG", fileInputStream);
+			} catch (IOException e) {
+				LOGGER.error("Exception raised while loading texture", e);
+			}
+		}
 	}
 
 	private void processAI() {
@@ -349,7 +358,6 @@ public class Ship extends Entity {
 		GL11.glTranslatef(pos.x, pos.y, pos.z);
 		GL11.glRotatef(heading, 0, 0, 1);
 		float massScale = mass / 10;
-		GL11.glScalef(massScale, massScale, 0);
 
 		// Render for show
 		if (Model.getModel().isDebugMode()) {
@@ -365,20 +373,35 @@ public class Ship extends Entity {
 		} else {
 			GL11.glColor3f(0.5f, 0.5f, 0.5f);
 		}
-		GL11.glEnable(GL11.GL_TEXTURE_2D);
-		baseTexture.bind();
-		GL11.glBegin(GL11.GL_QUADS);
-		GL11.glTexCoord2f(0, 0);
-		GL11.glVertex2f(-baseTexture.getTextureWidth() / 2, -baseTexture.getTextureWidth() / 2);
-		GL11.glTexCoord2f(1, 0);
-		GL11.glVertex2f(baseTexture.getTextureWidth() / 2, -baseTexture.getTextureWidth() / 2);
-		GL11.glTexCoord2f(1, 1);
-		GL11.glVertex2f(baseTexture.getTextureWidth() / 2, baseTexture.getTextureHeight() / 2);
-		GL11.glTexCoord2f(0, 1);
-		GL11.glVertex2f(-baseTexture.getTextureWidth() / 2, baseTexture.getTextureHeight() / 2);
-		GL11.glEnd();
+		if (64f * massScale * Model.getModel().getViewport().getZoomFactor() > 15) {
+			GL11.glScalef(massScale, massScale, 0);
+			baseTexture.bind();
+			GL11.glBegin(GL11.GL_QUADS);
+			GL11.glTexCoord2f(0, 0);
+			GL11.glVertex2f(-64, 64);
+			GL11.glTexCoord2f(1, 0);
+			GL11.glVertex2f(64, 64);
+			GL11.glTexCoord2f(1, 1);
+			GL11.glVertex2f(64, -64);
+			GL11.glTexCoord2f(0, 1);
+			GL11.glVertex2f(-64, -64);
+			GL11.glEnd();
+			GL11.glScalef(1 / massScale, 1 / massScale, 0);
+		} else {
+			float adjustedSize = 15 / Model.getModel().getViewport().getZoomFactor();
+			zoomedOutTexture.bind();
+			GL11.glBegin(GL11.GL_QUADS);
+			GL11.glTexCoord2f(0, 0);
+			GL11.glVertex2f(-adjustedSize, adjustedSize);
+			GL11.glTexCoord2f(1, 0);
+			GL11.glVertex2f(adjustedSize, adjustedSize);
+			GL11.glTexCoord2f(1, 1);
+			GL11.glVertex2f(adjustedSize, -adjustedSize);
+			GL11.glTexCoord2f(0, 1);
+			GL11.glVertex2f(-adjustedSize, -adjustedSize);
+			GL11.glEnd();
+		}
 
-		GL11.glScalef(1 / massScale, 1 / massScale, 0);
 		GL11.glRotatef(-heading, 0, 0, 1);
 
 		if (Model.getModel().isDebugMode()) {
@@ -402,7 +425,7 @@ public class Ship extends Entity {
 				// Show target
 				GL11.glTranslatef(movement.arriveTarget.x, movement.arriveTarget.y, 0);
 
-				GL11.glDisable(GL11.GL_TEXTURE_2D);
+				TextureImpl.bindNone();
 				GL11.glBegin(GL11.GL_QUADS);
 				GL11.glVertex2f(-16, -16);
 				GL11.glVertex2f(16, -16);
