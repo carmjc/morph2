@@ -71,7 +71,7 @@ public class Model {
 		self = new Player(PlayerType.HUMAN, "Carm", FOF.SELF);
 		rootWA = new WorldArea();
 		// TODO The following lines should not be needed
-		for (int i = 0; i < 16; i++) {
+		for (int i = 0; i < 5; i++) {
 			rootWA = rootWA.getParent();
 		}
 	}
@@ -190,7 +190,7 @@ public class Model {
 
 			// get the WA under the focal point
 			float zoomFactor = Model.getModel().getViewport().getZoomFactor();
-			Set<WorldArea> fpWAs = rootWA.getOverlappingWAs(new Vect3D().substract(viewport.getFocalPoint()).mult(1f / zoomFactor), 0);
+			Set<WorldArea> fpWAs = rootWA.getOverlappingWAs(new Vect3D().substract(new Vect3D(viewport.getFocalPoint())).mult(1f / zoomFactor), 0);
 			WorldArea fpWA = null;
 
 			if (fpWAs.isEmpty()) {
@@ -200,13 +200,16 @@ public class Model {
 			} else {
 				int minLevel = Integer.MAX_VALUE;
 				for (WorldArea wa : fpWAs) {
-					minLevel = Math.min(minLevel, wa.getLevel());
-					fpWA = wa;
+					if (minLevel > wa.getLevel()) {
+						minLevel = wa.getLevel();
+						fpWA = wa;
+					}
 				}
 
 				// fpWAs is not empty, therefore, fpWA cannot be null
 				if (minLevel > 0) {
-					fpWA = fpWA.createDescendantWA(new Vect3D().substract(viewport.getFocalPoint().mult(1f / zoomFactor)), 0);
+					LOGGER.debug(new Vect3D(viewport.getFocalPoint()).mult(1f / zoomFactor).toString());
+					fpWA = fpWA.createDescendantWA(new Vect3D().substract(new Vect3D(viewport.getFocalPoint()).mult(1f / zoomFactor)), 0);
 				}
 			}
 

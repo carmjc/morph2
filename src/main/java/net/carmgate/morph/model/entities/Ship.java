@@ -677,7 +677,7 @@ public class Ship extends Entity {
 
 	@Override
 	public void update() {
-		secondsSinceLastUpdate = ((float) Model.getModel().getCurrentTS() - lastUpdateTS) / 1000;
+		secondsSinceLastUpdate = ((float) Model.getModel().getCurrentTS() - lastUpdateTS) / 1000 / 2;
 		lastUpdateTS = Model.getModel().getCurrentTS();
 		if (secondsSinceLastUpdate == 0f) {
 			return;
