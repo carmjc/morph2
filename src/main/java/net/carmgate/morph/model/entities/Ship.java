@@ -192,7 +192,7 @@ public class Ship extends Entity {
 				Model.getModel()
 						.getParticleEngine()
 						.addParticle(new Vect3D(pos), new Vect3D().substract(new Vect3D(steeringForce).mult(2)), 1f, 1f / 32,
-								steeringForce.modulus() / (MAX_FORCE / ship.getMass()) * 0.1f, steeringForce.modulus() / (MAX_FORCE / ship.getMass()) * 1f);
+								steeringForce.modulus() / (MAX_FORCE / ship.getMass()) * 0.2f, steeringForce.modulus() / (MAX_FORCE / ship.getMass()) * 1f);
 			}
 		}
 
@@ -378,6 +378,11 @@ public class Ship extends Entity {
 		return heading;
 	}
 
+	@Override
+	public int getId() {
+		return id;
+	}
+
 	public float getMass() {
 		return mass;
 	}
@@ -388,11 +393,6 @@ public class Ship extends Entity {
 
 	public Vect3D getPos() {
 		return pos;
-	}
-
-	@Override
-	public int getId() {
-		return id;
 	}
 
 	public Vect3D getSpeed() {

@@ -9,6 +9,8 @@ import java.util.Map;
 import java.util.Set;
 
 import net.carmgate.morph.actions.common.InteractionStack;
+import net.carmgate.morph.model.common.Vect3D;
+import net.carmgate.morph.model.entities.WorldArea;
 import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.model.entities.common.EntityHints;
 import net.carmgate.morph.model.entities.common.EntityType;
@@ -63,9 +65,15 @@ public class Model {
 	private final Set<Entity> entitiesToRemove = new HashSet<>();
 	private final Player self;
 	private final Set<Player> players = new HashSet<>();
+	private WorldArea rootWA;
 
 	private Model() {
 		self = new Player(PlayerType.HUMAN, "Carm", FOF.SELF);
+		rootWA = new WorldArea();
+		// TODO The following lines should not be needed
+		for (int i = 0; i < 16; i++) {
+			rootWA = rootWA.getParent();
+		}
 	}
 
 	public void addEntity(Entity entity) {
@@ -129,6 +137,10 @@ public class Model {
 		return players;
 	}
 
+	public WorldArea getRootWA() {
+		return rootWA;
+	}
+
 	public Player getSelf() {
 		return self;
 	}
@@ -168,6 +180,36 @@ public class Model {
 			gameStartMsec += tmpMsec - msec;
 		} else {
 			msec = tmpMsec;
+		}
+
+		// Update WAs
+		// Create necessary WAs
+		if (viewport.getZoomFactor() > 0.25) {
+			float windowMaxRadius = (float) (Math.sqrt(window.getWidth() * window.getWidth() + window.getHeight() * window.getHeight()) / viewport
+					.getZoomFactor());
+
+			// get the WA under the focal point
+			float zoomFactor = Model.getModel().getViewport().getZoomFactor();
+			Set<WorldArea> fpWAs = rootWA.getOverlappingWAs(new Vect3D().substract(viewport.getFocalPoint()).mult(1f / zoomFactor), 0);
+			WorldArea fpWA = null;
+
+			if (fpWAs.isEmpty()) {
+				// the focal point is not even in the root wa ..
+				// not probable for now
+				LOGGER.debug("empty");
+			} else {
+				int minLevel = Integer.MAX_VALUE;
+				for (WorldArea wa : fpWAs) {
+					minLevel = Math.min(minLevel, wa.getLevel());
+					fpWA = wa;
+				}
+
+				// fpWAs is not empty, therefore, fpWA cannot be null
+				if (minLevel > 0) {
+					fpWA = fpWA.createDescendantWA(new Vect3D().substract(viewport.getFocalPoint().mult(1f / zoomFactor)), 0);
+				}
+			}
+
 		}
 
 		// Update all entities

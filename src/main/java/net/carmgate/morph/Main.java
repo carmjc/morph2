@@ -16,7 +16,6 @@ import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Morph;
 import net.carmgate.morph.model.entities.Morph.MorphType;
 import net.carmgate.morph.model.entities.Ship;
-import net.carmgate.morph.model.entities.WorldArea;
 import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.model.entities.common.Renderable;
 import net.carmgate.morph.model.player.Player;
@@ -109,7 +108,7 @@ public class Main {
 			Display.setDisplayMode(new DisplayMode(width, height));
 			Display.create();
 			Display.setTitle("Morph");
-			Display.setVSyncEnabled(false);
+			Display.setVSyncEnabled(true);
 			Display.setResizable(true);
 		} catch (LWJGLException e) {
 			e.printStackTrace();
@@ -127,11 +126,8 @@ public class Main {
 
 	private void initModel() {
 
-		WorldArea wa = new WorldArea(0, 0);
-		Model.getModel().addEntity(wa);
-
 		Player player = new Player(PlayerType.AI, "Nemesis", FOF.FOE);
-		Ship enemyShip = new Ship(128, 0, 0, 0, 50, player);
+		Ship enemyShip = new Ship(128, 0, 0, 0, 20, player);
 		Model.getModel().addEntity(enemyShip);
 		enemyShip.wander.setWanderRadius(10);
 		enemyShip.wander.setWanderFocusDistance(200);
@@ -214,7 +210,6 @@ public class Main {
 	public void render() {
 
 		Vect3D focalPoint = model.getViewport().getFocalPoint();
-		LOGGER.debug(focalPoint.toString());
 		float scale = model.getViewport().getZoomFactor();
 		if (model.getViewport().getLockedOnShip() != null) {
 			Vect3D shipPos = null;
@@ -226,13 +221,17 @@ public class Main {
 		GL11.glRotatef(model.getViewport().getRotation(), 0, 0, 1);
 		GL11.glScalef(scale, scale, 1);
 
+		Model.getModel().getRootWA().render(GL11.GL_RENDER);
+
 		// Render particles
 		model.getParticleEngine().render(GL11.GL_RENDER);
 
 		// Rendering all renderable elements
 		for (RenderingSteps renderingStep : RenderingSteps.values()) {
-			for (Entity renderable : Model.getModel().getEntitiesByRenderingType(renderingStep).values()) {
-				renderable.render(GL11.GL_RENDER);
+			if (Model.getModel().getEntitiesByRenderingType(renderingStep) != null) {
+				for (Entity renderable : Model.getModel().getEntitiesByRenderingType(renderingStep).values()) {
+					renderable.render(GL11.GL_RENDER);
+				}
 			}
 		}
 
@@ -305,7 +304,7 @@ public class Main {
 
 			// updates display and sets frame rate
 			Display.update();
-			Display.sync(150);
+			Display.sync(200);
 
 			// update model
 			Model.getModel().update();

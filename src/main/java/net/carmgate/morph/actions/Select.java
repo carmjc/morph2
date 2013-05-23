@@ -46,12 +46,14 @@ public class Select implements Action {
 		// In select mode, we render the model elements in reverse order, because, the first items drawn will
 		// be the first picked
 		for (RenderingSteps renderingStep : RenderingSteps.values()) {
-			for (Entity entity : Model.getModel().getEntitiesByRenderingType(renderingStep).values()) {
-				GL11.glPushName(entity.getClass().getAnnotation(EntityHints.class).entityType().ordinal());
-				GL11.glPushName(entity.getId());
-				entity.render(GL11.GL_SELECT);
-				GL11.glPopName();
-				GL11.glPopName();
+			if (Model.getModel().getEntitiesByRenderingType(renderingStep) != null) {
+				for (Entity entity : Model.getModel().getEntitiesByRenderingType(renderingStep).values()) {
+					GL11.glPushName(entity.getClass().getAnnotation(EntityHints.class).entityType().ordinal());
+					GL11.glPushName(entity.getId());
+					entity.render(GL11.GL_SELECT);
+					GL11.glPopName();
+					GL11.glPopName();
+				}
 			}
 		}
 

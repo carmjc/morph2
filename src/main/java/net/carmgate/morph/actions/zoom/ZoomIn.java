@@ -25,7 +25,7 @@ public class ZoomIn implements Action {
 		if ((lastEvent.getButton() != Keyboard.KEY_UP
 				|| lastEvent.getEventType() != EventType.KEYBOARD_UP)
 				&& (lastEvent.getEventType() != EventType.MOUSE_WHEEL
-				|| lastEvent.getButton() > 0)) {
+				|| lastEvent.getButton() < 0)) {
 			return;
 		}
 

@@ -102,7 +102,7 @@ public class ParticleEngine implements Renderable, Updatable {
 	protected final Random random = new Random();
 
 	public void addParticle(Vect3D pos, Vect3D speed, float initialLife, float initialLifeDeviation, float minInitialAlpha, float maxInitialAlpha) {
-		speed.rotate((float) random.nextGaussian() * 10);
+		speed.rotate((float) random.nextGaussian() * 2);
 		particles.add(new Particle(pos, speed, initialLife, initialLifeDeviation, minInitialAlpha, maxInitialAlpha));
 	}
 
