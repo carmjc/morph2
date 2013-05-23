@@ -111,7 +111,7 @@ public class ParticleEngine implements Renderable, Updatable {
 		// load texture from PNG file if needed
 		if (baseTexture == null) {
 			try (FileInputStream fileInputStream = new FileInputStream(ClassLoader.getSystemResource("particle1-32.png").getPath())) {
-				baseTexture = TextureLoader.getTexture("PNG", fileInputStream);
+				baseTexture = TextureLoader.getTexture("PNG", fileInputStream, true);
 			} catch (IOException e) {
 				LOGGER.error("Exception raised while loading texture", e);
 			}
@@ -121,6 +121,7 @@ public class ParticleEngine implements Renderable, Updatable {
 
 	@Override
 	public void render(int glMode) {
+		// GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
 		for (Particle particle : particles) {
 			// LOGGER.debug("Rendering particle: " + particle);
 			GL11.glTranslatef(particle.getPos().x, particle.getPos().y, 0);
@@ -148,6 +149,7 @@ public class ParticleEngine implements Renderable, Updatable {
 			GL11.glRotatef(-particle.getRot(), 0, 0, 1);
 			GL11.glTranslatef(-particle.getPos().x, -particle.getPos().y, 0);
 		}
+		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 	}
 
 	@Override

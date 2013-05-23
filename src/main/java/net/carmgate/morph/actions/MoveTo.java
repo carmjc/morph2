@@ -34,7 +34,7 @@ public class MoveTo implements Action {
 		for (Selectable selectable : Model.getModel().getSimpleSelection()) {
 			if (selectable instanceof Ship) {
 				Vect3D target = new Vect3D(GameMouse.getXInWorld(), GameMouse.getYInWorld(), 0);
-				((Ship) selectable).movement.setArriveTarget(target);
+				((Ship) selectable).arrive.setArriveTarget(target);
 				LOGGER.debug("target set to " + target);
 			}
 		}

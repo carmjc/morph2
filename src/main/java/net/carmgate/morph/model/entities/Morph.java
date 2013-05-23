@@ -48,7 +48,7 @@ public class Morph implements Renderable, Selectable {
 	}
 
 	@Override
-	public int getSelectionId() {
+	public int getId() {
 		return selectionId;
 	}
 

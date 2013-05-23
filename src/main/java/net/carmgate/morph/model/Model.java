@@ -78,7 +78,7 @@ public class Model {
 			entitiesByEntityType.put(entityType, entityMap);
 			entitiesByRenderingStep.put(renderingStep, entityMap);
 		}
-		entityMap.put(entity.getSelectionId(), entity);
+		entityMap.put(entity.getId(), entity);
 	}
 
 	// IMPROVE We must fix the temptation to use getSelection.clear() instead
@@ -180,9 +180,11 @@ public class Model {
 
 		// Remove entities flagged as "being removed"
 		for (Entity entity : entitiesToRemove) {
-			getEntitiesByRenderingType(entity.getClass().getAnnotation(RenderingHints.class).renderingStep()).remove(entity.getSelectionId());
-			getEntitiesByType(entity.getClass().getAnnotation(EntityHints.class).entityType()).remove(entity.getSelectionId());
+			getEntitiesByRenderingType(entity.getClass().getAnnotation(RenderingHints.class).renderingStep()).remove(entity.getId());
+			getEntitiesByType(entity.getClass().getAnnotation(EntityHints.class).entityType()).remove(entity.getId());
 		}
+
+		// TODO Add new world areas if necessary
 
 		// particle engin
 		particleEngine.update();

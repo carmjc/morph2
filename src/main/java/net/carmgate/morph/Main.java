@@ -16,6 +16,7 @@ import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Morph;
 import net.carmgate.morph.model.entities.Morph.MorphType;
 import net.carmgate.morph.model.entities.Ship;
+import net.carmgate.morph.model.entities.WorldArea;
 import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.model.entities.common.Renderable;
 import net.carmgate.morph.model.player.Player;
@@ -125,11 +126,15 @@ public class Main {
 	}
 
 	private void initModel() {
+
+		WorldArea wa = new WorldArea(0, 0);
+		Model.getModel().addEntity(wa);
+
 		Player player = new Player(PlayerType.AI, "Nemesis", FOF.FOE);
 		Ship enemyShip = new Ship(128, 0, 0, 0, 50, player);
 		Model.getModel().addEntity(enemyShip);
-		enemyShip.movement.setWanderRadius(10);
-		enemyShip.movement.setWanderFocusDistance(200);
+		enemyShip.wander.setWanderRadius(10);
+		enemyShip.wander.setWanderFocusDistance(200);
 
 		ship = new Ship(0, 0, 0, 10, 10, Model.getModel().getSelf());
 		Morph newMorph = new Morph(MorphType.OVERMIND, 0, 0, 0);
@@ -183,7 +188,7 @@ public class Main {
 		Model.getModel().getWindow().setHeight(height);
 
 		// set clear color - Wont be needed once we have a background
-		GL11.glClearColor(0f, 0f, 0f, 0);
+		GL11.glClearColor(0f, 0f, 0f, 0f);
 
 		// enable alpha blending
 		GL11.glEnable(GL11.GL_BLEND);
@@ -209,6 +214,7 @@ public class Main {
 	public void render() {
 
 		Vect3D focalPoint = model.getViewport().getFocalPoint();
+		LOGGER.debug(focalPoint.toString());
 		float scale = model.getViewport().getZoomFactor();
 		if (model.getViewport().getLockedOnShip() != null) {
 			Vect3D shipPos = null;
@@ -308,6 +314,17 @@ public class Main {
 			if (Display.wasResized()) {
 				initView();
 			}
+
+			GL11.glMatrixMode(GL11.GL_PROJECTION);
+			GL11.glLoadIdentity();
+
+			int width = Display.getWidth();
+			int height = Display.getHeight();
+			GL11.glOrtho(-width / 2, width / 2, -height / 2, height / 2, 1, -1);
+			GL11.glViewport(0, 0, width, height);
+
+			GL11.glMatrixMode(GL11.GL_MODELVIEW);
+			GL11.glLoadIdentity();
 
 			// Fire events accordingly
 			if (Mouse.next()) {

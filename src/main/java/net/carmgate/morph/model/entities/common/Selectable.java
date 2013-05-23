@@ -1,7 +1,7 @@
 package net.carmgate.morph.model.entities.common;
 
 public interface Selectable {
-	int getSelectionId();
+	int getId();
 
 	void setSelected(boolean selected);
 }

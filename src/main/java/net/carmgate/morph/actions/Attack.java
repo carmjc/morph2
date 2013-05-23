@@ -35,7 +35,7 @@ public class Attack implements Action {
 		Selectable targetShip = Model.getModel().getActionSelection().getFirst();
 		for (Selectable selectable : Model.getModel().getSimpleSelection()) {
 			if (selectable instanceof Ship && selectable != targetShip) {
-				((Ship) selectable).movement.setArriveTarget((Ship) targetShip);
+				((Ship) selectable).arrive.setArriveTarget((Ship) targetShip);
 				((Ship) selectable).combat.setTarget((Ship) targetShip);
 			}
 		}

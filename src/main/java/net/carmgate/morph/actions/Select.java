@@ -45,10 +45,10 @@ public class Select implements Action {
 
 		// In select mode, we render the model elements in reverse order, because, the first items drawn will
 		// be the first picked
-		for (RenderingSteps renderingStep : RenderingSteps.reverseValues()) {
+		for (RenderingSteps renderingStep : RenderingSteps.values()) {
 			for (Entity entity : Model.getModel().getEntitiesByRenderingType(renderingStep).values()) {
 				GL11.glPushName(entity.getClass().getAnnotation(EntityHints.class).entityType().ordinal());
-				GL11.glPushName(entity.getSelectionId());
+				GL11.glPushName(entity.getId());
 				entity.render(GL11.GL_SELECT);
 				GL11.glPopName();
 				GL11.glPopName();
@@ -156,6 +156,9 @@ public class Select implements Action {
 
 			// get the matching element in the model
 			Entity entity = Model.getModel().getEntitiesByType(selectBuf.get(selectBufIndex++)).get(selectBuf.get(selectBufIndex++));
+			if (!entity.getClass().getAnnotation(EntityHints.class).selectable()) {
+				continue;
+			}
 
 			// if we were asked a unique selection, clear the selection before adding the new selected element
 			if (onlyOne) {

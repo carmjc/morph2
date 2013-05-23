@@ -78,6 +78,12 @@ public class Vect3D implements Renderable {
 		return angleInDegrees;
 	}
 
+	public void copy(float x, float y, float z) {
+		this.x = x;
+		this.y = y;
+		this.z = z;
+	}
+
 	/**
 	 * Copy the coordinates of the provided vector.
 	 * @param vect3d

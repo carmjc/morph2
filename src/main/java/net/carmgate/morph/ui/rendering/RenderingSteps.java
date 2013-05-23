@@ -3,6 +3,7 @@ package net.carmgate.morph.ui.rendering;
 import org.apache.commons.collections.CollectionUtils;
 
 public enum RenderingSteps {
+	WORLDAREA,
 	SHIP;
 
 	private static RenderingSteps[] reverseValuesArray;
