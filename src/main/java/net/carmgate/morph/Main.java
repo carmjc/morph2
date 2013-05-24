@@ -55,6 +55,7 @@ public class Main {
 	private Ship ship;
 
 	private int fpsCounter = 0;
+	private float meanFpsCounter = 0;
 	private long lastFpsResetTs = 0;
 
 	/**
@@ -132,8 +133,8 @@ public class Main {
 		Player player = new Player(PlayerType.AI, "Nemesis", FOF.FOE);
 		Ship enemyShip = new Ship(128, 0, 0, 0, 20, player);
 		Model.getModel().addEntity(enemyShip);
-		enemyShip.wander.setWanderRadius(10);
-		enemyShip.wander.setWanderFocusDistance(200);
+		enemyShip.wander.setWanderRadius(50);
+		enemyShip.wander.setWanderFocusDistance(100);
 
 		ship = new Ship(0, 0, 0, 10, 10, Model.getModel().getSelf());
 		Morph newMorph = new Morph(MorphType.OVERMIND, 0, 0, 0);
@@ -435,7 +436,11 @@ public class Main {
 
 			fpsCounter++;
 			if (model.getCurrentTS() - lastFpsResetTs > 1000) {
-				LOGGER.debug("Fps: " + fpsCounter);
+				if (meanFpsCounter == 0) {
+					meanFpsCounter = fpsCounter;
+				}
+				meanFpsCounter = meanFpsCounter * 0.9f + fpsCounter * 0.1f;
+				LOGGER.debug("Fps: " + fpsCounter + ". Mean fps : " + meanFpsCounter);
 				lastFpsResetTs += 1000;
 				fpsCounter = 0;
 			}

@@ -124,7 +124,7 @@ public class Ship extends Entity {
 			rotateProperly(secondsSinceLastUpdate);
 
 			// stop condition
-			if (new Vect3D(arriveTarget).substract(pos).modulus() < 10 && speed.modulus() < 10) {
+			if (new Vect3D(arriveTarget).substract(pos).modulus() < 5 && speed.modulus() < 60) {
 				clearMovementVariables();
 			}
 
@@ -223,8 +223,17 @@ public class Ship extends Entity {
 				return;
 			}
 
-			// rotate properly
-			float newHeading = new Vect3D(0, 1, 0).angleWith(steeringForce);
+			// rotate properly along the speed vector (historically along the steering force vector)
+			float newHeading;
+			float headingFactor = steeringForce.modulus() / MAX_FORCE * mass * 4;
+			if (headingFactor > 3) {
+				newHeading = new Vect3D(0, 1, 0).angleWith(steeringForce);
+			} else if (headingFactor > 0) {
+				newHeading = new Vect3D(0, 1, 0).angleWith(new Vect3D(steeringForce).mult(headingFactor).add(new Vect3D(speed).mult(1 - headingFactor / 3)));
+			} else {
+				newHeading = new Vect3D(0, 1, 0).angleWith(speed);
+			}
+
 			// heading = newHeading;
 			float angleDiff = (newHeading - heading + 360) % 360;
 			float maxAngleSpeed = MAX_ANGLE_SPEED_PER_MASS_UNIT / mass;
