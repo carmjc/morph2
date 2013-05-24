@@ -120,11 +120,12 @@ public class Ship extends Entity {
 			// steeringForce.mult(1.5f);
 			// }
 
-			applySteeringForce(secondsSinceLastUpdate);
+			ship.applySteeringForce(this);
 			rotateProperly(secondsSinceLastUpdate);
 
 			// stop condition
-			if (new Vect3D(arriveTarget).substract(pos).modulus() < 5 && speed.modulus() < 60) {
+			if (new Vect3D(arriveTarget).substract(pos).modulus() < 5 && speed.modulus() < 60
+					&& ship.effectiveForce.modulus() == 0) {
 				clearMovementVariables();
 			}
 
@@ -197,17 +198,8 @@ public class Ship extends Entity {
 			}
 		}
 
-		protected void applySteeringForce(float secondsSinceLastUpdate) {
-			// acceleration = steering_force / mass
-			accel.copy(steeringForce);
-			// velocity = truncate (velocity + acceleration, max_speed)
-			speed.add(new Vect3D(accel).mult(secondsSinceLastUpdate)).truncate(MAX_SPEED);
-			// position = position + velocity
-			pos.add(new Vect3D(speed).mult(secondsSinceLastUpdate));
-		}
-
 		protected void clearMovementVariables() {
-			accel.nullify();
+			// accel.substract(steeringForce);
 			speed.nullify();
 		}
 
@@ -285,7 +277,7 @@ public class Ship extends Entity {
 
 			steeringForce.copy(new Vect3D(wanderFocus).substract(pos).add(wanderTarget)).truncate(MAX_FORCE / ship.getMass());
 
-			applySteeringForce(secondsSinceLastUpdate);
+			ship.applySteeringForce(this);
 			rotateProperly(secondsSinceLastUpdate);
 			addTrail();
 		}
@@ -346,6 +338,8 @@ public class Ship extends Entity {
 
 	protected final Vect3D accel = new Vect3D();
 
+	protected final Vect3D effectiveForce = new Vect3D();
+
 	protected float secondsSinceLastUpdate;
 	private final Player player;
 
@@ -381,6 +375,12 @@ public class Ship extends Entity {
 		wander = new Wander(this);
 		// other
 		combat = new Combat();
+	}
+
+	// TODO should not depend on a movement parameter
+	// movements should add a propulsion force to the ship
+	protected void applySteeringForce(Movement movement) {
+		effectiveForce.add(movement.steeringForce);
 	}
 
 	public void fireOrder(Order order) {
@@ -557,6 +557,8 @@ public class Ship extends Entity {
 			speed.render(glMode, 1);
 			GL11.glColor3f(1, 0, 0);
 			arrive.desiredVelocity.render(glMode, 1);
+			GL11.glColor3f(1, 1, 0);
+			effectiveForce.render(glMode, 1);
 			GL11.glTranslated(arrive.desiredVelocity.x, arrive.desiredVelocity.y, 0);
 			GL11.glColor3f(0, 0, 1);
 			arrive.steeringForce.render(glMode, 1);
@@ -700,6 +702,26 @@ public class Ship extends Entity {
 			return;
 		}
 
+		// TODO Is this really the proper way to do it
+		accel.nullify();
+		effectiveForce.nullify();
+
+		// Collect applying forces
+		// Get neighboring stars
+		for (Entity entity : Model.getModel().getEntitiesByType(EntityType.STAR).values()) {
+			Star star = (Star) entity;
+			Vect3D starOffset = new Vect3D(star.getPos()).substract(pos);
+			float distance = starOffset.modulus();
+
+			// if the ship enters the star, it's destroyed
+			if (distance < star.getKillingRadius()) {
+				Model.getModel().removeEntity(this);
+			}
+
+			starOffset.normalize(1).mult((float) (star.getGm() * mass / distance / distance));
+			effectiveForce.add(starOffset);
+		}
+
 		// handle AI assignements if appropriate
 		if (player.getPlayerType() == PlayerType.AI) {
 			processAI();
@@ -716,6 +738,13 @@ public class Ship extends Entity {
 		if (combat.target != null) {
 			combat.run(secondsSinceLastUpdate);
 		}
+
+		// acceleration = steering_force / mass
+		accel.add(effectiveForce);
+		// velocity = truncate (velocity + acceleration, max_speed)
+		speed.add(new Vect3D(accel).mult(secondsSinceLastUpdate)).truncate(Ship.MAX_SPEED);
+		// position = position + velocity
+		pos.add(new Vect3D(speed).mult(secondsSinceLastUpdate));
 
 		// TODO This should be improved to handle order in a generic fashion
 		for (Order order : orderList) {
