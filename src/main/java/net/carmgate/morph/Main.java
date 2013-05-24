@@ -54,6 +54,9 @@ public class Main {
 
 	private Ship ship;
 
+	private int fpsCounter = 0;
+	private long lastFpsResetTs = 0;
+
 	/**
 	 * This method initializes UI handlers.
 	 * Some special case handlers can not be initialized dynamically at the moment.
@@ -108,7 +111,7 @@ public class Main {
 			Display.setDisplayMode(new DisplayMode(width, height));
 			Display.create();
 			Display.setTitle("Morph");
-			Display.setVSyncEnabled(true);
+			// Display.setVSyncEnabled(true);
 			Display.setResizable(true);
 		} catch (LWJGLException e) {
 			e.printStackTrace();
@@ -294,6 +297,7 @@ public class Main {
 
 		// Rendering loop
 		while (true) {
+
 			// Renders everything
 			GL11.glClear(GL11.GL_COLOR_BUFFER_BIT);
 			if (!Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) {
@@ -427,6 +431,13 @@ public class Main {
 			if (Display.isCloseRequested()) {
 				Display.destroy();
 				System.exit(0);
+			}
+
+			fpsCounter++;
+			if (model.getCurrentTS() - lastFpsResetTs > 1000) {
+				LOGGER.debug("Fps: " + fpsCounter);
+				lastFpsResetTs += 1000;
+				fpsCounter = 0;
 			}
 		}
 	}

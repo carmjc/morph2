@@ -71,7 +71,7 @@ public class Model {
 		self = new Player(PlayerType.HUMAN, "Carm", FOF.SELF);
 		rootWA = new WorldArea();
 		// TODO The following lines should not be needed
-		for (int i = 0; i < 5; i++) {
+		for (int i = 0; i < 16; i++) {
 			rootWA = rootWA.getParent();
 		}
 	}
@@ -174,6 +174,8 @@ public class Model {
 	}
 
 	public void update() {
+		// long before = new GregorianCalendar().getTimeInMillis();
+
 		// update the number of millis since game start
 		long tmpMsec = new Date().getTime() - gameStartMsec;
 		if (pause) {
@@ -185,32 +187,40 @@ public class Model {
 		// Update WAs
 		// Create necessary WAs
 		if (viewport.getZoomFactor() > 0.25) {
-			float windowMaxRadius = (float) (Math.sqrt(window.getWidth() * window.getWidth() + window.getHeight() * window.getHeight()) / viewport
-					.getZoomFactor());
-
-			// get the WA under the focal point
 			float zoomFactor = Model.getModel().getViewport().getZoomFactor();
-			Set<WorldArea> fpWAs = rootWA.getOverlappingWAs(new Vect3D().substract(new Vect3D(viewport.getFocalPoint())).mult(1f / zoomFactor), 0);
-			WorldArea fpWA = null;
+			float windowWidthInWorld = window.getWidth() / zoomFactor;
+			float windowHeightInWorld = window.getHeight() / zoomFactor;
+			Vect3D focalPointInWorld = new Vect3D().substract(new Vect3D(viewport.getFocalPoint())).mult(1f / zoomFactor);
+			for (float x = focalPointInWorld.x - windowWidthInWorld / 2; x < focalPointInWorld.x + windowWidthInWorld + 512 / zoomFactor; x += 512 / zoomFactor) {
+				for (float y = focalPointInWorld.y - windowHeightInWorld / 2; y < focalPointInWorld.y + windowHeightInWorld + 512 / zoomFactor; y += 512 / zoomFactor) {
 
-			if (fpWAs.isEmpty()) {
-				// the focal point is not even in the root wa ..
-				// not probable for now
-				LOGGER.debug("empty");
-			} else {
-				int minLevel = Integer.MAX_VALUE;
-				for (WorldArea wa : fpWAs) {
-					if (minLevel > wa.getLevel()) {
-						minLevel = wa.getLevel();
-						fpWA = wa;
+					Vect3D studiedPoint = new Vect3D(x, y, 0);
+
+					// get the WA under the focal point
+					Set<WorldArea> fpWAs = rootWA.getOverlappingWAs(studiedPoint, 0);
+					WorldArea fpWA = null;
+
+					if (fpWAs.isEmpty()) {
+						// the focal point is not even in the root wa ..
+						// not probable for now
+						LOGGER.debug("empty");
+					} else {
+						int minLevel = Integer.MAX_VALUE;
+						for (WorldArea wa : fpWAs) {
+							if (minLevel > wa.getLevel()) {
+								minLevel = wa.getLevel();
+								fpWA = wa;
+							}
+						}
+
+						// fpWAs is not empty, therefore, fpWA cannot be null
+						if (minLevel > 0) {
+							// LOGGER.debug(studiedPoint.toString());
+							fpWA = fpWA.createDescendantWA(studiedPoint, 0);
+						}
 					}
 				}
 
-				// fpWAs is not empty, therefore, fpWA cannot be null
-				if (minLevel > 0) {
-					LOGGER.debug(new Vect3D(viewport.getFocalPoint()).mult(1f / zoomFactor).toString());
-					fpWA = fpWA.createDescendantWA(new Vect3D().substract(new Vect3D(viewport.getFocalPoint()).mult(1f / zoomFactor)), 0);
-				}
 			}
 
 		}
@@ -233,5 +243,8 @@ public class Model {
 
 		// particle engin
 		particleEngine.update();
+
+		// long after = new GregorianCalendar().getTimeInMillis();
+		// LOGGER.debug("Time spent in world update: " + (after - before));
 	}
 }

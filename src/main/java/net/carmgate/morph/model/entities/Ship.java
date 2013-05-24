@@ -103,10 +103,11 @@ public class Ship extends Entity {
 				steeringForces[0].normalize(MAX_FORCE / mass * overdrive);
 			}
 
-			steeringForce.nullify();
-			for (Vect3D steeringForce2 : steeringForces) {
-				steeringForce.add(new Vect3D(steeringForce2).mult(1f / steeringForces.length));
-			}
+			steeringForce.copy(steeringForces[0]);
+			// steeringForce.nullify();
+			// for (Vect3D steeringForce2 : steeringForces) {
+			// steeringForce.add(new Vect3D(steeringForce2).mult(1f / steeringForces.length));
+			// }
 
 			// steeringForce.nullify();
 			// for (Vect3D steeringForce2 : steeringForces) {
@@ -215,16 +216,23 @@ public class Ship extends Entity {
 			final float heading = ship.getHeading();
 			final float mass = ship.getMass();
 
+			// if steeringForce is too small, we must not change the orientation or we will be
+			// by orientation fluctuations due to improper angle approximation
+			// LOGGER.debug("" + steeringForce.modulus());
+			if (steeringForce.modulus() < 0.1) {
+				return;
+			}
+
 			// rotate properly
 			float newHeading = new Vect3D(0, 1, 0).angleWith(steeringForce);
 			// heading = newHeading;
 			float angleDiff = (newHeading - heading + 360) % 360;
 			float maxAngleSpeed = MAX_ANGLE_SPEED_PER_MASS_UNIT / mass;
-			if (angleDiff < maxAngleSpeed * secondsSinceLastUpdate) {
+			if (angleDiff < maxAngleSpeed * Math.max(1, angleDiff / 180) * secondsSinceLastUpdate) {
 				ship.setHeading(newHeading);
 			} else if (angleDiff < 180) {
 				ship.setHeading(heading + maxAngleSpeed * Math.max(1, angleDiff / 180) * secondsSinceLastUpdate);
-			} else if (angleDiff >= 360 - maxAngleSpeed * secondsSinceLastUpdate) {
+			} else if (angleDiff >= 360 - maxAngleSpeed * Math.max(1, angleDiff / 180) * secondsSinceLastUpdate) {
 				ship.setHeading(newHeading);
 			} else {
 				ship.setHeading(heading - maxAngleSpeed * Math.max(1, angleDiff / 180) * secondsSinceLastUpdate);
@@ -677,7 +685,7 @@ public class Ship extends Entity {
 
 	@Override
 	public void update() {
-		secondsSinceLastUpdate = ((float) Model.getModel().getCurrentTS() - lastUpdateTS) / 1000 / 2;
+		secondsSinceLastUpdate = ((float) Model.getModel().getCurrentTS() - lastUpdateTS) / 1000;
 		lastUpdateTS = Model.getModel().getCurrentTS();
 		if (secondsSinceLastUpdate == 0f) {
 			return;
