@@ -124,8 +124,7 @@ public class Ship extends Entity {
 			rotateProperly(secondsSinceLastUpdate);
 
 			// stop condition
-			if (new Vect3D(arriveTarget).substract(pos).modulus() < 5 && speed.modulus() < 60
-					&& ship.effectiveForce.modulus() == 0) {
+			if (new Vect3D(arriveTarget).substract(pos).modulus() < 5 && speed.modulus() < 60) {
 				clearMovementVariables();
 			}
 
