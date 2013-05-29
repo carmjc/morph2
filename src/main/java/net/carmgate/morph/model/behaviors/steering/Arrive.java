@@ -36,15 +36,12 @@ public class Arrive extends Movement {
 		super(ship);
 	}
 
-	// TODO we should not expose the real instance of the ship's position.
+	// IMPROVE we should not expose the real instance of the ship's position. We risk it being modified.
+	// However, we should not generate a new Vect3D each time we need the ship's position.
+	// Maybe we could have a public position and a private position attribute, the public one
+	// being generated from the private one during update()
 	public Vect3D getArriveTarget() {
 		return arriveTarget;
-	}
-
-	@Override
-	public Vect3D getNonSteeringForce() {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	@Override
@@ -69,7 +66,6 @@ public class Arrive extends Movement {
 
 		GL11.glTranslatef(pos.x, pos.y, pos.z);
 		if (Model.getModel().isDebugMode()) {
-			// TODO move this in a render method of the movement
 			speed.render(glMode, 1);
 			GL11.glColor3f(1, 0, 0);
 			desiredVelocity.render(glMode, 1);
@@ -164,7 +160,7 @@ public class Arrive extends Movement {
 		// stop condition
 		if (new Vect3D(arriveTarget).substract(pos).modulus() < 5 && speed.modulus() < 60) {
 
-			// TODO Remove the current behavior from the ship's behavior list
+			ship.removeBehavior(this);
 
 			// Stop and reset the behavior
 			arriveTarget = null;
@@ -177,6 +173,7 @@ public class Arrive extends Movement {
 
 			// stop ship
 			// TODO we should do this some other way, there is a risk it collides with some other order
+			// This might also be implemented with a physics cheating mecanism (see github issue #16)
 			// -> Maybe we should send a stop order to the ship.
 			ship.getSpeed().nullify();
 		}

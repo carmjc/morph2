@@ -9,8 +9,9 @@ import java.util.Set;
 
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.behaviors.Behavior;
-import net.carmgate.morph.model.behaviors.Combat;
+import net.carmgate.morph.model.behaviors.ForceGeneratingBehavior;
 import net.carmgate.morph.model.behaviors.Movement;
+import net.carmgate.morph.model.behaviors.StarsGravityPull;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.model.entities.common.EntityHints;
@@ -49,11 +50,6 @@ public class Ship extends Entity {
 			return behaviorClass.isInstance(object);
 		}
 	}
-
-	// TODO remove the public access to these behaviors
-	// public final Arrive arrive;
-	// public final Wander wander;
-	public final Combat combat;
 
 	private static final int nbSegments = 200;
 	private static final double deltaAngle = (float) (2 * Math.PI / nbSegments);
@@ -104,6 +100,7 @@ public class Ship extends Entity {
 	private final Vect3D steeringForce = new Vect3D();
 
 	private final Set<Behavior> behaviorSet = new HashSet<>();
+	private final Set<Behavior> pendingRemovalBehaviors = new HashSet<>();
 
 	/***
 	 * Creates a new ship with position (0, 0, 0), mass = 10 assigned to player "self".
@@ -131,13 +128,8 @@ public class Ship extends Entity {
 		// Init lastUpdateTS
 		lastUpdateTS = Model.getModel().getCurrentTS();
 
-		// init behaviors
-		// steering
-		// TODO Clean this
-		// arrive = new Arrive(this);
-		// wander = new Wander(this);
-		// other
-		combat = new Combat();
+		// Add always active behaviors
+		addBehavior(new StarsGravityPull(this));
 	}
 
 	public boolean addBehavior(Behavior e) {
@@ -153,7 +145,7 @@ public class Ship extends Entity {
 		}
 	}
 
-	// TODO remove effectiveForce from steeringForce management
+	// IMPROVE remove effectiveForce from steeringForce management ?
 	// movements should add a propulsion force to the ship
 	private void applySteeringForce(Vect3D force) {
 		steeringForce.add(force);
@@ -223,9 +215,19 @@ public class Ship extends Entity {
 
 	private void processAI() {
 		// TODO Outsource this AI to allow several kinds of AIs
-		// TODO implement this
+		// TODO implement AI processing
 		// Very simple AI : wander and attack
 
+	}
+
+	/**
+	 * Removes a behavior from the ship's behavior collection.
+	 * This method postpones the behavior deletion until the end of the processing loop.
+	 * This way, the handling of behaviors is insensitive to the order in which they are processed and removed.
+	 * @param behavior to remove
+	 */
+	public void removeBehavior(Behavior behavior) {
+		pendingRemovalBehaviors.add(behavior);
 	}
 
 	/**
@@ -397,94 +399,10 @@ public class Ship extends Entity {
 		}
 	}
 
-	// TODO This should not be modifiable outside the ship's code.
-	public void setHeading(float heading) {
-		this.heading = heading;
-	}
-
-	// TODO This should not be modifiable from outside the ship's code.
-	public void setMass(float mass) {
-		this.mass = mass;
-	}
-
-	/**
-	 * Get the neighbours of the provided Morph.
-	 * Works in 2D only for now.
-	 * @param morph
-	 * @return
-	 */
-	// public List<Morph> getNeighbours(Morph morph) {
-	// List<Morph> neighbours = new ArrayList<Morph>();
-	// // 1 2
-	// // 3 4
-	// // 5 6
-	// neighbours.add(getShipMorph((int) morph.shipGridPos.x -1, (int) morph.shipGridPos.y + 1, (int) morph.shipGridPos.z));
-	// neighbours.add(getShipMorph((int) morph.shipGridPos.x, (int) morph.shipGridPos.y + 1, (int) morph.shipGridPos.z));
-	// neighbours.add(getShipMorph((int) morph.shipGridPos.x - 1, (int) morph.shipGridPos.y, (int) morph.shipGridPos.z));
-	// neighbours.add(getShipMorph((int) morph.shipGridPos.x + 1, (int) morph.shipGridPos.y, (int) morph.shipGridPos.z));
-	// neighbours.add(getShipMorph((int) morph.shipGridPos.x, (int) morph.shipGridPos.y - 1, (int) morph.shipGridPos.z));
-	// neighbours.add(getShipMorph((int) morph.shipGridPos.x + 1, (int) morph.shipGridPos.y - 1, (int) morph.shipGridPos.z));
-	// return neighbours;
-	// }
-
-	// public List<Morph> getSelectedMorphList() {
-	// return selectedMorphList;
-	// }
-
-	// public Morph getShipMorph(int x, int y, int z) {
-	// for (Morph m : morphList) {
-	// if (m.shipGridPos.x == x && m.shipGridPos.y == y && m.shipGridPos.z == z) {
-	// return m;
-	// }
-	// }
-	//
-	// return null;
-	// }
-
 	@Override
 	public void setSelected(boolean selected) {
 		this.selected = selected;
 	}
-
-	/**
-	 * Looks for the {@link Morph} at the specified position in the ship.
-	 * If there is no morph at the given position, it returns null.
-	 * @param pos the position in the ship
-	 * @return null if there is no morph at the specified location.
-	 */
-	// public Morph getShipMorph(Vect3D pos) {
-	// return getShipMorph((int) pos.x, (int) pos.y, (int) pos.z);
-	// }
-	//
-	// public void removeActiveMorph(Morph morph) {
-	// activeMorphList.remove(morph);
-	// }
-	//
-	// public void setSelectedMorph(int index) {
-	// selectedMorphList.clear();
-	// if (index >= 0 && index < morphList.size()) {
-	// selectedMorphList.add(morphList.get(index));
-	// }
-	// }
-	//
-	// public boolean toggleActiveMorph(Morph morph) {
-	// if (activeMorphList.contains(morph)) {
-	// activeMorphList.remove(morph);
-	// return false;
-	// }
-	//
-	// activeMorphList.add(morph);
-	// return true;
-	// }
-	//
-	// public void toggleSelectedMorph(int index) {
-	// Morph selectedMorph = morphList.get(index);
-	// if (selectedMorphList.contains(selectedMorph)) {
-	// selectedMorphList.remove(selectedMorph);
-	// } else {
-	// selectedMorphList.add(selectedMorph);
-	// }
-	// }
 
 	@Override
 	public String toString() {
@@ -499,27 +417,10 @@ public class Ship extends Entity {
 			return;
 		}
 
-		// TODO Is this really the proper way to do it
+		// TODO Is this really the proper way to do it ?
 		accel.nullify();
 		effectiveForce.nullify();
 		steeringForce.nullify();
-
-		// Collect applying forces
-		// Get neighboring stars
-		// TODO Move this to an always applied behavior.
-		for (Entity entity : Model.getModel().getEntitiesByType(EntityType.STAR).values()) {
-			Star star = (Star) entity;
-			Vect3D starOffset = new Vect3D(star.getPos()).substract(pos);
-			float distance = starOffset.modulus();
-
-			// if the ship enters the star, it's destroyed
-			if (distance < star.getKillingRadius()) {
-				Model.getModel().removeEntity(this);
-			}
-
-			starOffset.normalize(1).mult((float) (star.getGm() * mass / distance / distance));
-			effectiveForce.add(starOffset);
-		}
 
 		// handle AI assignements if appropriate
 		if (player.getPlayerType() == PlayerType.AI) {
@@ -534,6 +435,11 @@ public class Ship extends Entity {
 				// if the behavior is a movement, use the generated steering force
 				if (behavior instanceof Movement) {
 					applySteeringForce(((Movement) behavior).getSteeringForce());
+				}
+
+				// if the behavior is generating a force, we must apply it
+				if (behavior instanceof ForceGeneratingBehavior) {
+					effectiveForce.add(((ForceGeneratingBehavior) behavior).getNonSteeringForce());
 				}
 			}
 		}
@@ -566,59 +472,9 @@ public class Ship extends Entity {
 			Model.getModel().removeEntity(this);
 		}
 
-		// applyForces();
-
-		// logger.debug(posAccel.modulus());
-
-		// posSpeed.x += posAccel.x * secondsSinceLastUpdate;
-		// posSpeed.y += posAccel.y * secondsSinceLastUpdate;
-		// posSpeed.z += posAccel.z * secondsSinceLastUpdate;
-
-		// The drag factor is reduced to take into account the fact that we update the position since last TS and not from a full second ago.
-		// float reducedDragFactor = 1 - (1 - dragFactor) * secondsSinceLastUpdate;
-		// posSpeed.x = Math.abs(posSpeed.x * reducedDragFactor) > MIN_SPEED ? posSpeed.x * reducedDragFactor : 0;
-		// posSpeed.y = Math.abs(posSpeed.y * reducedDragFactor) > MIN_SPEED ? posSpeed.y * reducedDragFactor : 0;
-		// posSpeed.z = Math.abs(posSpeed.z * reducedDragFactor) > MIN_SPEED ? posSpeed.z * reducedDragFactor : 0;
-		//
-		// pos.x += posSpeed.x * secondsSinceLastUpdate;
-		// pos.y += posSpeed.y * secondsSinceLastUpdate;
-		// pos.z += posSpeed.z * secondsSinceLastUpdate;
-
-		// rotSpeed += rotAccel * secondsSinceLastUpdate;
-
-		// rotSpeed = Math.abs(rotSpeed * reducedDragFactor) > MIN_SPEED ? rotSpeed * reducedDragFactor : 0;
-		//
-		// rot = (rot + rotSpeed * secondsSinceLastUpdate) % 360;
-
-		// updateMorphs();
+		// Cleaning
+		for (Behavior behavior : pendingRemovalBehaviors) {
+			behaviorSet.remove(behavior);
+		}
 	}
-	// private void updateMorphs() {
-	// for (Morph m : morphList) {
-	// // Position of the morph in the referential centered on the ship (the central one has coords (0, 0).
-	// // m.getPosInShip().x = m.shipGridPos.x * World.GRID_SIZE + m.shipGridPos.y * World.GRID_SIZE / 2;
-	// // m.getPosInShip().y = (float) (m.shipGridPos.y * World.GRID_SIZE * Math.sqrt(3)/2);
-	//
-	// // Adding the rotation around the center of the ship
-	// // m.getPosInShip().rotate(rot);
-	//
-	// // Adding the position of the ship's inertia center
-	// // m.getPosInShip().add(pos);
-	//
-	// // Disabling if necessary
-	// if (m.mass < m.disableMass && !m.disabled) {
-	// logger.debug("Disabling morph");
-	// m.disabled = true;
-	// }
-	//
-	// // Reenable the morph if possible
-	// if (m.mass >= m.reenableMass && m.disabled && m.energy > 0) {
-	// m.disabled = false;
-	// }
-	//
-	// // Regaining mass if disabled
-	// if (m.disabled && m.mass < m.maxMass) {
-	// m.mass += 0.1;
-	// }
-	// }
-	// }
 }

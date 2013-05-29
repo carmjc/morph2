@@ -113,8 +113,7 @@ public class Morph implements Renderable, Selectable {
 
 	@Override
 	public void setSelected(boolean selected) {
-		// TODO Auto-generated method stub
-
+		// TODO implement this with ship editor
 	}
 
 }

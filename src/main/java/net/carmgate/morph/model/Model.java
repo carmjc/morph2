@@ -239,8 +239,6 @@ public class Model {
 			getEntitiesByType(entity.getClass().getAnnotation(EntityHints.class).entityType()).remove(entity.getId());
 		}
 
-		// TODO Add new world areas if necessary
-
 		// particle engin
 		particleEngine.update();
 

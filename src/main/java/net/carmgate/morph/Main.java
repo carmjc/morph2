@@ -257,8 +257,7 @@ public class Main {
 
 		// TODO activate ship editor upon some action
 		// for (Morph morph : ship.getMorphs()) {
-		// // TODO remove the null parameter
-		// morph.render(GL11.GL_RENDER, null);
+		// morph.render(GL11.GL_RENDER);
 		// }
 
 		GL11.glScalef(1 / scale, 1 / scale, 1);

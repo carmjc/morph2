@@ -24,12 +24,6 @@ public class Wander extends Movement {
 	}
 
 	@Override
-	public Vect3D getNonSteeringForce() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
 	public Vect3D getSteeringForce() {
 		return steeringForce;
 	}
@@ -40,8 +34,7 @@ public class Wander extends Movement {
 
 	@Override
 	public void initRenderer() {
-		// TODO Auto-generated method stub
-
+		// nothing to do
 	}
 
 	@Override
@@ -51,14 +44,13 @@ public class Wander extends Movement {
 
 	@Override
 	public void render(int glMode) {
-		// TODO Auto-generated method stub
-
+		// nothing to do
 	}
 
 	@Override
 	public void run(float secondsSinceLastUpdate) {
 		if (wanderRadius == 0) {
-			// TODO Remove the current behavior from the ship's behavior list
+			ship.removeBehavior(this);
 			return;
 		}
 
