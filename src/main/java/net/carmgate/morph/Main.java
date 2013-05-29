@@ -146,17 +146,10 @@ public class Main {
 		enemyShip.addBehavior(wander);
 
 		ship = new Ship(0, 0, 0, 10, 10, Model.getModel().getSelf());
-		Morph newMorph = new Morph(MorphType.OVERMIND, 0, 0, 0);
-		ship.getMorphs().add(newMorph);
-		newMorph = new Morph(MorphType.SHIELD, 1, 0, 0);
-		newMorph.getPos().x = 1;
-		ship.getMorphs().add(newMorph);
-		newMorph = new Morph(MorphType.PROPULSOR, 1, 0, 0);
-		newMorph.getPos().x = -1;
-		ship.getMorphs().add(newMorph);
-		newMorph = new Morph(MorphType.LASER, 1, 0, 0);
-		newMorph.getPos().x = 2;
-		ship.getMorphs().add(newMorph);
+		ship.getMorphs().add(new Morph(MorphType.OVERMIND));
+		ship.getMorphs().add(new Morph(MorphType.SHIELD));
+		ship.getMorphs().add(new Morph(MorphType.PROPULSOR));
+		ship.getMorphs().add(new Morph(MorphType.LASER));
 		Model.getModel().addEntity(ship);
 
 	}

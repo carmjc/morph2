@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.common.Renderable;
 import net.carmgate.morph.model.entities.common.Selectable;
 
@@ -29,14 +28,13 @@ public class Morph implements Renderable, Selectable {
 	private int selectionId;
 	private static Texture baseTexture;
 	private static Map<MorphType, Texture> morphTypeTextures = new HashMap<>();
-	private final Vect3D pos = new Vect3D();
 	private final MorphType morphType;
 
 	public Morph() {
-		this(null, 0, 0, 0);
+		this(null);
 	}
 
-	public Morph(MorphType morphType, float x, float y, float z) {
+	public Morph(MorphType morphType) {
 		this.morphType = morphType;
 		synchronized (nextId) {
 			selectionId = nextId++;
@@ -46,10 +44,6 @@ public class Morph implements Renderable, Selectable {
 	@Override
 	public int getId() {
 		return selectionId;
-	}
-
-	public Vect3D getPos() {
-		return pos;
 	}
 
 	@Override
@@ -76,13 +70,12 @@ public class Morph implements Renderable, Selectable {
 
 	@Override
 	public boolean isSelected() {
-		// TODO
+		// TODO implement this in the ship editor
 		return false;
 	}
 
 	@Override
 	public void render(int glMode) {
-		GL11.glTranslated(pos.x * 64, pos.y * 64, 0);
 		GL11.glScalef(1.2f, 1.2f, 1.2f);
 
 		// TODO the hexagons must be drawn in a form of hexagon to ensure picking will be done properly.
@@ -116,7 +109,6 @@ public class Morph implements Renderable, Selectable {
 		}
 
 		GL11.glScalef(1 / 1.2f, 1 / 1.2f, 1 / 1.2f);
-		GL11.glTranslated(-pos.x * 64, -pos.y * 64, 0);
 	}
 
 	@Override
