@@ -140,10 +140,7 @@ public class Main {
 		Player player = new Player(PlayerType.AI, "Nemesis", FOF.FOE);
 		Ship enemyShip = new Ship(128, 0, 0, 0, 20, player);
 		Model.getModel().addEntity(enemyShip);
-		Wander wander = new Wander(enemyShip);
-		wander.setWanderRadius(50);
-		wander.setWanderFocusDistance(100);
-		enemyShip.addBehavior(wander);
+		enemyShip.addBehavior(new Wander(enemyShip, 100, 50));
 
 		ship = new Ship(0, 0, 0, 10, 10, Model.getModel().getSelf());
 		ship.getMorphs().add(new Morph(MorphType.OVERMIND));

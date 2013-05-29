@@ -5,7 +5,7 @@ import java.util.List;
 import net.carmgate.morph.actions.common.Action;
 import net.carmgate.morph.actions.common.ActionHints;
 import net.carmgate.morph.model.Model;
-import net.carmgate.morph.model.behaviors.Combat;
+import net.carmgate.morph.model.behaviors.FollowAndInflictDamage;
 import net.carmgate.morph.model.behaviors.steering.Arrive;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Ship;
@@ -40,12 +40,11 @@ public class MoveTo implements Action {
 
 				// Remove existing arrive and combat behaviors
 				ship.removeBehaviorsByClass(Arrive.class);
-				ship.removeBehaviorsByClass(Combat.class);
+				ship.removeBehaviorsByClass(FollowAndInflictDamage.class);
 
 				// Add new arrive behavior
-				Arrive arrive = new Arrive((Ship) selectable);
-				arrive.setArriveTarget(target);
-				ship.addBehavior(arrive);
+				ship.addBehavior(new Arrive((Ship) selectable, target));
+
 				// ((Ship) selectable).arrive.setArriveTarget(target);
 				LOGGER.debug("target set to " + target);
 			}

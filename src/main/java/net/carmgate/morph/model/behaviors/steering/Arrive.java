@@ -16,7 +16,7 @@ public class Arrive extends Movement {
 	private static final float sin = (float) Math.sin(deltaAngle);
 
 	// Be careful, this is the real instance of the ship's position
-	private Vect3D arriveTarget;
+	private Vect3D target;
 	private final Vect3D desiredVelocity = new Vect3D();
 
 	private float slowingDistance;
@@ -32,16 +32,14 @@ public class Arrive extends Movement {
 	public Arrive() {
 	}
 
-	public Arrive(Ship ship) {
-		super(ship);
+	public Arrive(Ship shipToMove, Ship target) {
+		super(shipToMove);
+		this.target = target.getPos();
 	}
 
-	// IMPROVE we should not expose the real instance of the ship's position. We risk it being modified.
-	// However, we should not generate a new Vect3D each time we need the ship's position.
-	// Maybe we could have a public position and a private position attribute, the public one
-	// being generated from the private one during update()
-	public Vect3D getArriveTarget() {
-		return arriveTarget;
+	public Arrive(Ship shipToMove, Vect3D target) {
+		super(shipToMove);
+		this.target = target;
 	}
 
 	@Override
@@ -56,13 +54,13 @@ public class Arrive extends Movement {
 
 	@Override
 	public boolean isActive() {
-		return arriveTarget != null;
+		return target != null;
 	}
 
 	@Override
 	public void render(int glMode) {
-		final Vect3D pos = ship.getPos();
-		final Vect3D speed = ship.getSpeed();
+		final Vect3D pos = shipToMove.getPos();
+		final Vect3D speed = shipToMove.getSpeed();
 
 		GL11.glTranslatef(pos.x, pos.y, pos.z);
 		if (Model.getModel().isDebugMode()) {
@@ -78,9 +76,9 @@ public class Arrive extends Movement {
 		}
 		GL11.glTranslatef(-pos.x, -pos.y, -pos.z);
 
-		if (arriveTarget != null && ship.isSelected() && Model.getModel().isDebugMode()) {
+		if (target != null && shipToMove.isSelected() && Model.getModel().isDebugMode()) {
 			// Show target
-			GL11.glTranslatef(arriveTarget.x, arriveTarget.y, 0);
+			GL11.glTranslatef(target.x, target.y, 0);
 
 			TextureImpl.bindNone();
 			GL11.glBegin(GL11.GL_QUADS);
@@ -106,7 +104,7 @@ public class Arrive extends Movement {
 				GL11.glVertex2d(x, y);
 			}
 			GL11.glEnd();
-			GL11.glTranslatef(-arriveTarget.x, -arriveTarget.y, 0);
+			GL11.glTranslatef(-target.x, -target.y, 0);
 		}
 	}
 
@@ -114,11 +112,11 @@ public class Arrive extends Movement {
 	public void run(float secondsSinceLastUpdate) {
 
 		// Get some ship variables (must be final)
-		final float mass = ship.getMass();
-		final Vect3D pos = new Vect3D(ship.getPos());
-		final Vect3D speed = new Vect3D(ship.getSpeed());
+		final float mass = shipToMove.getMass();
+		final Vect3D pos = new Vect3D(shipToMove.getPos());
+		final Vect3D speed = new Vect3D(shipToMove.getSpeed());
 
-		targetOffset.copy(arriveTarget).substract(pos).mult(0.9f);
+		targetOffset.copy(target).substract(pos).mult(0.9f);
 
 		normalizedTargetOffset.copy(targetOffset).normalize(1);
 		speedOpposition.copy(normalizedTargetOffset).rotate(90).mult(speed.prodVectOnZ(normalizedTargetOffset));
@@ -158,12 +156,12 @@ public class Arrive extends Movement {
 		}
 
 		// stop condition
-		if (new Vect3D(arriveTarget).substract(pos).modulus() < 5 && speed.modulus() < 60) {
+		if (new Vect3D(target).substract(pos).modulus() < 5 && speed.modulus() < 60) {
 
-			ship.removeBehavior(this);
+			shipToMove.removeBehavior(this);
 
 			// Stop and reset the behavior
-			arriveTarget = null;
+			target = null;
 			desiredVelocity.nullify();
 			steeringForce.nullify();
 			slowingDistance = 0;
@@ -175,16 +173,8 @@ public class Arrive extends Movement {
 			// TODO we should do this some other way, there is a risk it collides with some other order
 			// This might also be implemented with a physics cheating mecanism (see github issue #16)
 			// -> Maybe we should send a stop order to the ship.
-			ship.getSpeed().nullify();
+			shipToMove.getSpeed().nullify();
 		}
-	}
-
-	public void setArriveTarget(Ship targetShip) {
-		arriveTarget = targetShip.getPos();
-	}
-
-	public void setArriveTarget(Vect3D target) {
-		arriveTarget = target;
 	}
 
 }

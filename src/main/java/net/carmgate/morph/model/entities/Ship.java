@@ -102,6 +102,8 @@ public class Ship extends Entity {
 	private final Set<Behavior> behaviorSet = new HashSet<>();
 	private final Set<Behavior> pendingRemovalBehaviors = new HashSet<>();
 
+	private float damage = 0;
+
 	/***
 	 * Creates a new ship with position (0, 0, 0), mass = 10 assigned to player "self".
 	 */
@@ -183,6 +185,15 @@ public class Ship extends Entity {
 
 	public Vect3D getSpeed() {
 		return speed;
+	}
+
+	private void handleOrder(Order order) {
+		if (order instanceof TakeDamageOrder) {
+			// This is not multiplied by lastUpdateTS because the timing is handled by the sender of the event.
+			// TODO Introduce the previous rule in the Order contract
+			damage += ((TakeDamageOrder) order).getDamageAmount();
+			LOGGER.debug("Damage at " + mass + " for " + this);
+		}
 	}
 
 	/** List of ships IAs. */
@@ -444,8 +455,7 @@ public class Ship extends Entity {
 			}
 		}
 
-		// rotate properly
-		// We use the sum of the propulsing vector to rotate the ship along a proper direction.
+		// rotate and add trail according to the steering force vector
 		rotateProperly();
 		addTrail();
 
@@ -458,12 +468,7 @@ public class Ship extends Entity {
 
 		// TODO This should be improved to handle orders in a generic fashion
 		for (Order order : orderList) {
-			if (order instanceof TakeDamageOrder) {
-				// This is not multiplied by lastUpdateTS because the timing is handled by the sender of the event.
-				// TODO Introduce the previous rule in the Order contract
-				mass -= ((TakeDamageOrder) order).getDamageAmount();
-				LOGGER.debug("Mass at " + mass + " for " + this);
-			}
+			handleOrder(order);
 		}
 		orderList.clear();
 

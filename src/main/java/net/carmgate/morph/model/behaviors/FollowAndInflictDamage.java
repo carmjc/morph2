@@ -7,14 +7,23 @@ import net.carmgate.morph.model.entities.orders.TakeDamageOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Combat implements Behavior {
-	private final Logger LOGGER = LoggerFactory.getLogger(Combat.class);
+public class FollowAndInflictDamage implements Behavior {
+	private final Logger LOGGER = LoggerFactory.getLogger(FollowAndInflictDamage.class);
 
 	/** rate of fire (nb/ms). */
-	private static final float rateOfFire = 0.001f;
+	private static final float rateOfFire = 0.01f;
+	private static final float MAX_DISTANCE = 500f;
 
-	Ship target;
+	private final Ship sourceOfDamage;
+
+	private Ship target;
+
 	private long timeOfLastAction;
+
+	public FollowAndInflictDamage(Ship sourceOfDamage, Ship target) {
+		this.sourceOfDamage = sourceOfDamage;
+		this.target = target;
+	}
 
 	@Override
 	public boolean isActive() {
@@ -28,14 +37,10 @@ public class Combat implements Behavior {
 		// TODO This should also be updated to cope with the improbable possibility that the refresh rate is insufficient to handle
 		// the orders one by one. (currentTs - timeOfLastAction / rateOfFire > 2)
 		if (timeOfLastAction == 0 || (Model.getModel().getCurrentTS() - timeOfLastAction) * rateOfFire > 1) {
-			target.fireOrder(new TakeDamageOrder(0.1f));
+			if (target.getPos().distance(sourceOfDamage.getPos()) < MAX_DISTANCE) {
+				target.fireOrder(new TakeDamageOrder(0.1f));
+			}
 			timeOfLastAction += 1 / rateOfFire;
 		}
-	}
-
-	public void setTarget(Ship target) {
-		LOGGER.debug(target.toString());
-		this.target = target;
-		timeOfLastAction = Model.getModel().getCurrentTS();
 	}
 }

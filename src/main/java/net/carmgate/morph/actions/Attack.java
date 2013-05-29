@@ -5,7 +5,7 @@ import java.util.List;
 import net.carmgate.morph.actions.common.Action;
 import net.carmgate.morph.actions.common.ActionHints;
 import net.carmgate.morph.model.Model;
-import net.carmgate.morph.model.behaviors.Combat;
+import net.carmgate.morph.model.behaviors.FollowAndInflictDamage;
 import net.carmgate.morph.model.behaviors.steering.Arrive;
 import net.carmgate.morph.model.entities.Ship;
 import net.carmgate.morph.model.entities.common.Selectable;
@@ -42,17 +42,13 @@ public class Attack implements Action {
 
 				// Remove existing arrive and combat behaviors
 				ship.removeBehaviorsByClass(Arrive.class);
-				ship.removeBehaviorsByClass(Combat.class);
+				ship.removeBehaviorsByClass(FollowAndInflictDamage.class);
 
 				// Add new arrive behavior
-				Arrive arrive = new Arrive((Ship) selectable);
-				arrive.setArriveTarget((Ship) targetShip);
-				ship.addBehavior(arrive);
+				ship.addBehavior(new Arrive((Ship) selectable, (Ship) targetShip));
 
 				// Add new combat behavior
-				Combat combat = new Combat();
-				combat.setTarget((Ship) targetShip);
-				ship.addBehavior(combat);
+				ship.addBehavior(new FollowAndInflictDamage(ship, (Ship) targetShip));
 			}
 		}
 	}
