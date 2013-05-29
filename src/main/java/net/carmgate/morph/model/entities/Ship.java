@@ -3,13 +3,19 @@ package net.carmgate.morph.model.entities;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import net.carmgate.morph.model.Model;
+import net.carmgate.morph.model.behaviors.Behavior;
+import net.carmgate.morph.model.behaviors.Combat;
+import net.carmgate.morph.model.behaviors.Movement;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.model.entities.common.EntityHints;
 import net.carmgate.morph.model.entities.common.EntityType;
+import net.carmgate.morph.model.entities.common.Renderable;
 import net.carmgate.morph.model.entities.orders.Order;
 import net.carmgate.morph.model.entities.orders.TakeDamageOrder;
 import net.carmgate.morph.model.player.Player;
@@ -17,6 +23,9 @@ import net.carmgate.morph.model.player.Player.PlayerType;
 import net.carmgate.morph.ui.rendering.RenderingHints;
 import net.carmgate.morph.ui.rendering.RenderingSteps;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.Predicate;
+import org.apache.commons.collections.functors.NotPredicate;
 import org.lwjgl.opengl.GL11;
 import org.newdawn.slick.opengl.Texture;
 import org.newdawn.slick.opengl.TextureImpl;
@@ -28,271 +37,22 @@ import org.slf4j.LoggerFactory;
 @RenderingHints(renderingStep = RenderingSteps.SHIP)
 public class Ship extends Entity {
 
-	public static class Arrive extends Movement {
+	private static final class SameClassPredicate implements Predicate {
+		private final Class<?> behaviorClass;
 
-		protected Vect3D arriveTarget;
-
-		protected final Vect3D desiredVelocity = new Vect3D();
-		private float slowingDistance;
-		private final Vect3D speedOpposition = new Vect3D();
-		private final Vect3D targetOffset = new Vect3D();
-		private final Vect3D normalizedTargetOffset = new Vect3D();
-
-		protected Arrive(Ship ship) {
-			super(ship);
+		public SameClassPredicate(Class<?> behaviorClass) {
+			this.behaviorClass = behaviorClass;
 		}
 
 		@Override
-		protected void clearMovementVariables() {
-			super.clearMovementVariables();
-			arriveTarget = null;
-			desiredVelocity.nullify();
-			steeringForce.nullify();
-			slowingDistance = 0;
-			speedOpposition.nullify();
-			targetOffset.nullify();
-			normalizedTargetOffset.nullify();
-		}
-
-		@Override
-		protected void run(float secondsSinceLastUpdate) {
-
-			// Get some ship variables (must be final)
-			final float mass = ship.getMass();
-
-			targetOffset.copy(arriveTarget).substract(pos).mult(0.9f);
-
-			normalizedTargetOffset.copy(targetOffset).normalize(1);
-			speedOpposition.copy(normalizedTargetOffset).rotate(90).mult(speed.prodVectOnZ(normalizedTargetOffset));
-
-			float cosSpeedToTO = 1;
-			if (speed.modulus() != 0) {
-				cosSpeedToTO = Math.abs(new Vect3D(speed).normalize(1).prodScal(normalizedTargetOffset));
-			}
-
-			// distance = length (target_offset)
-			float distance = targetOffset.modulus();
-
-			// Optimal slowing distance when cruising at MAX_SPEED before entering the slowing radius
-			// Optimal slowing distance is computed for debugging purposes only
-			slowingDistance = 0.00001f + (float) (Math.pow(speed.modulus(), 2) / (2 * MAX_FORCE / mass * cosSpeedToTO));
-
-			// Ramped speed is the optimal target speed modulus
-			float rampedSpeed = (float) Math.sqrt(2 * MAX_FORCE / mass * distance);
-			// clipped_speed clips the speed to max speed
-			float clippedSpeed = Math.min(rampedSpeed, MAX_SPEED);
-			// desired_velocity would be the optimal speed vector if we had unlimited thrust
-			desiredVelocity.copy(targetOffset).add(speedOpposition).mult(clippedSpeed / distance);
-
-			// steering_force is the force we will apply
-			for (int i = steeringForces.length - 1; i > 0; i--) {
-				steeringForces[i].copy(steeringForces[i - 1]);
-			}
-			steeringForces[0].copy(desiredVelocity).substract(speed);
-			float factor = 1.35f;
-			float sdmin = slowingDistance / factor;
-			float sdmax = slowingDistance;
-			float overdrive = 1.0f + speed.modulus() / MAX_SPEED;
-			if (distance > sdmax) {
-				steeringForces[0].truncate(MAX_FORCE / mass);
-			} else if (distance > sdmin) {
-				float stModulus = steeringForces[0].modulus();
-				steeringForces[0].normalize((distance - sdmin) / (sdmax - sdmin) * stModulus + (sdmax - distance)
-						/ (sdmax - sdmin) * MAX_FORCE / mass * overdrive);
-			} else {
-				steeringForces[0].normalize(MAX_FORCE / mass * overdrive);
-			}
-
-			steeringForce.copy(steeringForces[0]);
-			// steeringForce.nullify();
-			// for (Vect3D steeringForce2 : steeringForces) {
-			// steeringForce.add(new Vect3D(steeringForce2).mult(1f / steeringForces.length));
-			// }
-
-			// steeringForce.nullify();
-			// for (Vect3D steeringForce2 : steeringForces) {
-			// steeringForce.add(steeringForce2);
-			// }
-			// steeringForce.mult(1f / steeringForces.length);
-
-			// the following code helps to have a nice effect if the eulierian integration is not precise enough
-			// if (slowingDistance > distance + 10) {
-			// steeringForce.mult(1.5f);
-			// }
-
-			ship.applySteeringForce(this);
-			rotateProperly(secondsSinceLastUpdate);
-
-			// stop condition
-			if (new Vect3D(arriveTarget).substract(pos).modulus() < 5 && speed.modulus() < 60) {
-				clearMovementVariables();
-			}
-
-			addTrail();
-		}
-
-		public void setArriveTarget(Ship targetShip) {
-			arriveTarget = targetShip.pos;
-		}
-
-		public void setArriveTarget(Vect3D target) {
-			arriveTarget = target;
-		}
-
-	}
-
-	public static class Combat {
-		private final Logger LOGGER = LoggerFactory.getLogger(Combat.class);
-
-		/** rate of fire (nb/ms). */
-		private static final float rateOfFire = 0.001f;
-
-		protected Ship target;
-		protected long timeOfLastAction;
-
-		protected void run(float secondsSinceLastUpdate) {
-			// TODO The damage amount taken from the target take into account the target's speed, distance and size.
-			// TODO The damage sent to the target should take into account current morphs' xp, level and type.
-			// TODO This should also be updated to cope with the improbable possibility that the refresh rate is insufficient to handle
-			// the orders one by one. (currentTs - timeOfLastAction / rateOfFire > 2)
-			if (timeOfLastAction == 0 || (Model.getModel().getCurrentTS() - timeOfLastAction) * rateOfFire > 1) {
-				target.fireOrder(new TakeDamageOrder(0.1f));
-				timeOfLastAction += 1 / rateOfFire;
-			}
-		}
-
-		public void setTarget(Ship target) {
-			LOGGER.debug(target.toString());
-			this.target = target;
-			timeOfLastAction = Model.getModel().getCurrentTS();
+		public boolean evaluate(Object object) {
+			return behaviorClass.isInstance(object);
 		}
 	}
 
-	// TODO make several movement classes to implement the different behaviors instead of mixing them.
-	public static abstract class Movement {
-		protected final Vect3D[] steeringForces = new Vect3D[3];
-		protected final Vect3D steeringForce = new Vect3D();
-		protected final Vect3D pos;
-		protected final Vect3D accel;
-		protected final Vect3D speed;
-		protected final Ship ship;
-
-		protected Movement(Ship ship) {
-			pos = ship.getPos();
-			accel = ship.getAccel();
-			speed = ship.getSpeed();
-			this.ship = ship;
-
-			for (int i = 0; i < steeringForces.length; i++) {
-				steeringForces[i] = new Vect3D();
-			}
-		}
-
-		protected void addTrail() {
-			if (steeringForce.modulus() > MAX_FORCE * 0.002) {
-				Model.getModel()
-						.getParticleEngine()
-						.addParticle(new Vect3D(pos), new Vect3D().substract(new Vect3D(steeringForce).mult(2)), 1f, 1f / 32,
-								steeringForce.modulus() / (MAX_FORCE / ship.getMass()) * 0.2f, steeringForce.modulus() / (MAX_FORCE / ship.getMass()) * 1f);
-			}
-		}
-
-		protected void clearMovementVariables() {
-			// accel.substract(steeringForce);
-			speed.nullify();
-		}
-
-		protected void rotateProperly(float secondsSinceLastUpdate) {
-			// Get some ship variables
-			final float heading = ship.getHeading();
-			final float mass = ship.getMass();
-
-			// if steeringForce is too small, we must not change the orientation or we will be
-			// by orientation fluctuations due to improper angle approximation
-			// LOGGER.debug("" + steeringForce.modulus());
-			if (steeringForce.modulus() < 0.1) {
-				return;
-			}
-
-			// rotate properly along the speed vector (historically along the steering force vector)
-			float newHeading;
-			float headingFactor = steeringForce.modulus() / MAX_FORCE * mass * 4;
-			if (headingFactor > 3) {
-				newHeading = new Vect3D(0, 1, 0).angleWith(steeringForce);
-			} else if (headingFactor > 0) {
-				newHeading = new Vect3D(0, 1, 0).angleWith(new Vect3D(steeringForce).mult(headingFactor).add(new Vect3D(speed).mult(1 - headingFactor / 3)));
-			} else {
-				newHeading = new Vect3D(0, 1, 0).angleWith(speed);
-			}
-
-			// heading = newHeading;
-			float angleDiff = (newHeading - heading + 360) % 360;
-			float maxAngleSpeed = MAX_ANGLE_SPEED_PER_MASS_UNIT / mass;
-			if (angleDiff < maxAngleSpeed * Math.max(1, angleDiff / 180) * secondsSinceLastUpdate) {
-				ship.setHeading(newHeading);
-			} else if (angleDiff < 180) {
-				ship.setHeading(heading + maxAngleSpeed * Math.max(1, angleDiff / 180) * secondsSinceLastUpdate);
-			} else if (angleDiff >= 360 - maxAngleSpeed * Math.max(1, angleDiff / 180) * secondsSinceLastUpdate) {
-				ship.setHeading(newHeading);
-			} else {
-				ship.setHeading(heading - maxAngleSpeed * Math.max(1, angleDiff / 180) * secondsSinceLastUpdate);
-			}
-		}
-
-		protected abstract void run(float secondsSinceLastUpdate);
-	}
-
-	public static class Wander extends Movement {
-
-		private float wanderFocusDistance;
-		private float wanderRadius;
-
-		private final Vect3D wanderTarget = new Vect3D();
-
-		public Wander(Ship ship) {
-			super(ship);
-		}
-
-		public float getWanderFocusDistance() {
-			return wanderFocusDistance;
-		}
-
-		@Override
-		protected void run(float secondsSinceLastUpdate) {
-			if (wanderRadius == 0) {
-				clearMovementVariables();
-				return;
-			}
-
-			// Update target within the given constraints
-			Vect3D wanderFocus = new Vect3D(pos).add(new Vect3D(0, 1, 0).rotate(ship.getHeading()).normalize(wanderFocusDistance + ship.getMass()));
-
-			// Determine a target at acceptable distance from the wander focus point
-			wanderTarget.x += Math.random() * 0.25f - 0.125f;
-			wanderTarget.y += Math.random() * 0.25f - 0.125f;
-			if (new Vect3D(wanderFocus).add(wanderTarget).distance(wanderFocus) > wanderRadius) {
-				wanderTarget.copy(Vect3D.NULL);
-			}
-
-			steeringForce.copy(new Vect3D(wanderFocus).substract(pos).add(wanderTarget)).truncate(MAX_FORCE / ship.getMass());
-
-			ship.applySteeringForce(this);
-			rotateProperly(secondsSinceLastUpdate);
-			addTrail();
-		}
-
-		public void setWanderFocusDistance(float wanderFocusDistance) {
-			this.wanderFocusDistance = wanderFocusDistance;
-		}
-
-		public void setWanderRadius(float wanderRadius) {
-			this.wanderRadius = wanderRadius;
-		}
-
-	}
-
-	public final Arrive arrive;
-	public final Wander wander;
+	// TODO remove the public access to these behaviors
+	// public final Arrive arrive;
+	// public final Wander wander;
 	public final Combat combat;
 
 	private static final int nbSegments = 200;
@@ -312,18 +72,18 @@ public class Ship extends Entity {
 
 	/** The ship max speed. */
 	// IMPROVE All these values should depend on the ship's fitting.
-	private static final float MAX_SPEED = 1000;
-	private static final float MAX_FORCE = 3000f;
+	public static final float MAX_SPEED = 1000;
+	public static final float MAX_FORCE = 3000f;
 	private static final float MAX_ANGLE_SPEED_PER_MASS_UNIT = 3600f;
 	private final List<Morph> morphs = new ArrayList<>();
 
 	/** The ship position in the world. */
-	protected final Vect3D pos = new Vect3D();
+	private final Vect3D pos = new Vect3D();
 
-	protected final Vect3D speed = new Vect3D();
+	private final Vect3D speed = new Vect3D();
 
 	/** The ship orientation in the world. */
-	protected float heading;
+	private float heading;
 
 	private final List<Order> orderList = new ArrayList<>();
 
@@ -335,12 +95,15 @@ public class Ship extends Entity {
 
 	private boolean selected;
 
-	protected final Vect3D accel = new Vect3D();
+	private final Vect3D accel = new Vect3D();
 
-	protected final Vect3D effectiveForce = new Vect3D();
+	private final Vect3D effectiveForce = new Vect3D();
 
-	protected float secondsSinceLastUpdate;
+	private float secondsSinceLastUpdate;
 	private final Player player;
+	private final Vect3D steeringForce = new Vect3D();
+
+	private final Set<Behavior> behaviorSet = new HashSet<>();
 
 	/***
 	 * Creates a new ship with position (0, 0, 0), mass = 10 assigned to player "self".
@@ -370,16 +133,31 @@ public class Ship extends Entity {
 
 		// init behaviors
 		// steering
-		arrive = new Arrive(this);
-		wander = new Wander(this);
+		// TODO Clean this
+		// arrive = new Arrive(this);
+		// wander = new Wander(this);
 		// other
 		combat = new Combat();
 	}
 
-	// TODO should not depend on a movement parameter
+	public boolean addBehavior(Behavior e) {
+		return behaviorSet.add(e);
+	}
+
+	private void addTrail() {
+		if (steeringForce.modulus() > MAX_FORCE * 0.002) {
+			Model.getModel()
+					.getParticleEngine()
+					.addParticle(new Vect3D(pos), new Vect3D().substract(new Vect3D(steeringForce).mult(2)), 1f, 1f / 32,
+							steeringForce.modulus() / (MAX_FORCE / mass) * 0.2f, steeringForce.modulus() / (MAX_FORCE / mass) * 1f);
+		}
+	}
+
+	// TODO remove effectiveForce from steeringForce management
 	// movements should add a propulsion force to the ship
-	protected void applySteeringForce(Movement movement) {
-		effectiveForce.add(movement.steeringForce);
+	private void applySteeringForce(Vect3D force) {
+		steeringForce.add(force);
+		effectiveForce.add(force);
 	}
 
 	public void fireOrder(Order order) {
@@ -438,10 +216,28 @@ public class Ship extends Entity {
 		}
 	}
 
+	@Override
+	public boolean isSelected() {
+		return selected;
+	}
+
 	private void processAI() {
 		// TODO Outsource this AI to allow several kinds of AIs
+		// TODO implement this
 		// Very simple AI : wander and attack
 
+	}
+
+	/**
+	 * Removes all the behaviors that are of the same type
+	 * @param behaviorClass
+	 */
+	public void removeBehaviorsByClass(Class<?> behaviorClass) {
+		if (behaviorClass == null) {
+			LOGGER.error("This method parameter should not be null");
+		}
+
+		CollectionUtils.filter(behaviorSet, NotPredicate.getInstance(new SameClassPredicate(behaviorClass)));
 	}
 
 	@Override
@@ -553,58 +349,60 @@ public class Ship extends Entity {
 		GL11.glRotatef(-heading, 0, 0, 1);
 
 		if (Model.getModel().isDebugMode()) {
-			speed.render(glMode, 1);
-			GL11.glColor3f(1, 0, 0);
-			arrive.desiredVelocity.render(glMode, 1);
 			GL11.glColor3f(1, 1, 0);
 			effectiveForce.render(glMode, 1);
-			GL11.glTranslated(arrive.desiredVelocity.x, arrive.desiredVelocity.y, 0);
-			GL11.glColor3f(0, 0, 1);
-			arrive.steeringForce.render(glMode, 1);
-			GL11.glTranslated(-arrive.desiredVelocity.x, -arrive.desiredVelocity.y, 0);
-			GL11.glColor3f(0, 1, 0);
-			arrive.speedOpposition.render(glMode, 1);
 		}
 
 		GL11.glTranslatef(-pos.x, -pos.y, -pos.z);
 
-		if (arrive.arriveTarget != null && selected && Model.getModel().isDebugMode()) {
-			// Show target
-			GL11.glTranslatef(arrive.arriveTarget.x, arrive.arriveTarget.y, 0);
-
-			TextureImpl.bindNone();
-			GL11.glBegin(GL11.GL_QUADS);
-			GL11.glVertex2f(-16, -16);
-			GL11.glVertex2f(16, -16);
-			GL11.glVertex2f(16, 16);
-			GL11.glVertex2f(-16, 16);
-			GL11.glEnd();
-
-			// render limit of effect zone
-			GL11.glBegin(GL11.GL_LINES);
-			float t = 0; // temporary data holder
-			float x = arrive.slowingDistance; // radius
-			float y = 0;
-			for (int i = 0; i < nbSegments; i++) {
-				GL11.glColor4d(1, 1, 1, 0.15);
-				GL11.glVertex2d(x, y);
-
-				t = x;
-				x = cos * x - sin * y;
-				y = sin * t + cos * y;
-
-				GL11.glVertex2d(x, y);
+		for (Behavior behavior : behaviorSet) {
+			if (behavior instanceof Renderable) {
+				((Renderable) behavior).render(glMode);
 			}
-			GL11.glEnd();
-			GL11.glTranslatef(-arrive.arriveTarget.x, -arrive.arriveTarget.y, 0);
 		}
 
 	}
 
+	private void rotateProperly() {
+
+		// if steeringForce is too small, we must not change the orientation or we will be
+		// by orientation fluctuations due to improper angle approximation
+		// LOGGER.debug("" + steeringForce.modulus());
+		if (steeringForce.modulus() < 0.1) {
+			return;
+		}
+
+		// rotate properly along the speed vector (historically along the steering force vector)
+		float newHeading;
+		float headingFactor = steeringForce.modulus() / MAX_FORCE * mass * 4;
+		if (headingFactor > 3) {
+			newHeading = new Vect3D(0, 1, 0).angleWith(steeringForce);
+		} else if (headingFactor > 0) {
+			newHeading = new Vect3D(0, 1, 0).angleWith(new Vect3D(steeringForce).mult(headingFactor).add(new Vect3D(speed).mult(1 - headingFactor / 3)));
+		} else {
+			newHeading = new Vect3D(0, 1, 0).angleWith(speed);
+		}
+
+		// heading = newHeading;
+		float angleDiff = (newHeading - heading + 360) % 360;
+		float maxAngleSpeed = MAX_ANGLE_SPEED_PER_MASS_UNIT / mass;
+		if (angleDiff < maxAngleSpeed * Math.max(1, angleDiff / 180) * secondsSinceLastUpdate) {
+			heading = newHeading;
+		} else if (angleDiff < 180) {
+			heading = heading + maxAngleSpeed * Math.max(1, angleDiff / 180) * secondsSinceLastUpdate;
+		} else if (angleDiff >= 360 - maxAngleSpeed * Math.max(1, angleDiff / 180) * secondsSinceLastUpdate) {
+			heading = newHeading;
+		} else {
+			heading = heading - maxAngleSpeed * Math.max(1, angleDiff / 180) * secondsSinceLastUpdate;
+		}
+	}
+
+	// TODO This should not be modifiable outside the ship's code.
 	public void setHeading(float heading) {
 		this.heading = heading;
 	}
 
+	// TODO This should not be modifiable from outside the ship's code.
 	public void setMass(float mass) {
 		this.mass = mass;
 	}
@@ -704,9 +502,11 @@ public class Ship extends Entity {
 		// TODO Is this really the proper way to do it
 		accel.nullify();
 		effectiveForce.nullify();
+		steeringForce.nullify();
 
 		// Collect applying forces
 		// Get neighboring stars
+		// TODO Move this to an always applied behavior.
 		for (Entity entity : Model.getModel().getEntitiesByType(EntityType.STAR).values()) {
 			Star star = (Star) entity;
 			Vect3D starOffset = new Vect3D(star.getPos()).substract(pos);
@@ -727,16 +527,21 @@ public class Ship extends Entity {
 		}
 
 		// if no movement needed, no update needed
-		if (arrive.arriveTarget != null) {
-			arrive.run(secondsSinceLastUpdate);
-		}
-		if (wander.wanderFocusDistance != 0) {
-			wander.run(secondsSinceLastUpdate);
+		for (Behavior behavior : behaviorSet) {
+			if (behavior.isActive()) {
+				behavior.run(secondsSinceLastUpdate);
+
+				// if the behavior is a movement, use the generated steering force
+				if (behavior instanceof Movement) {
+					applySteeringForce(((Movement) behavior).getSteeringForce());
+				}
+			}
 		}
 
-		if (combat.target != null) {
-			combat.run(secondsSinceLastUpdate);
-		}
+		// rotate properly
+		// We use the sum of the propulsing vector to rotate the ship along a proper direction.
+		rotateProperly();
+		addTrail();
 
 		// acceleration = steering_force / mass
 		accel.add(effectiveForce);
@@ -745,7 +550,7 @@ public class Ship extends Entity {
 		// position = position + velocity
 		pos.add(new Vect3D(speed).mult(secondsSinceLastUpdate));
 
-		// TODO This should be improved to handle order in a generic fashion
+		// TODO This should be improved to handle orders in a generic fashion
 		for (Order order : orderList) {
 			if (order instanceof TakeDamageOrder) {
 				// This is not multiplied by lastUpdateTS because the timing is handled by the sender of the event.

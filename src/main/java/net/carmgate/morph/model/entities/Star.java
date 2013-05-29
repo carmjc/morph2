@@ -94,6 +94,12 @@ public class Star extends Entity {
 	}
 
 	@Override
+	public boolean isSelected() {
+		// Stars are not selectable
+		return false;
+	}
+
+	@Override
 	public void render(int glMode) {
 		GL11.glTranslatef(pos.x, pos.y, pos.z);
 		float radiusScale = radius / 10;

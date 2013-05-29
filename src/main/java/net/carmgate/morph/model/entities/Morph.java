@@ -43,13 +43,13 @@ public class Morph implements Renderable, Selectable {
 		}
 	}
 
-	public Vect3D getPos() {
-		return pos;
-	}
-
 	@Override
 	public int getId() {
 		return selectionId;
+	}
+
+	public Vect3D getPos() {
+		return pos;
 	}
 
 	@Override
@@ -72,6 +72,12 @@ public class Morph implements Renderable, Selectable {
 				LOGGER.error("Exception raised while loading texture", e);
 			}
 		}
+	}
+
+	@Override
+	public boolean isSelected() {
+		// TODO
+		return false;
 	}
 
 	@Override

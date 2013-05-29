@@ -1,4 +1,4 @@
-package net.carmgate.morph.actions;
+package net.carmgate.morph.actions.ui;
 
 import net.carmgate.morph.actions.common.Action;
 import net.carmgate.morph.actions.common.ActionHints;

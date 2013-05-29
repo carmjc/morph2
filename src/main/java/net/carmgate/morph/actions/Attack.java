@@ -5,6 +5,8 @@ import java.util.List;
 import net.carmgate.morph.actions.common.Action;
 import net.carmgate.morph.actions.common.ActionHints;
 import net.carmgate.morph.model.Model;
+import net.carmgate.morph.model.behaviors.Combat;
+import net.carmgate.morph.model.behaviors.steering.Arrive;
 import net.carmgate.morph.model.entities.Ship;
 import net.carmgate.morph.model.entities.common.Selectable;
 import net.carmgate.morph.ui.Event;
@@ -16,6 +18,7 @@ import org.slf4j.LoggerFactory;
 @ActionHints(mouseActionAutoload = true)
 public class Attack implements Action {
 
+	@SuppressWarnings("unused")
 	private static final Logger LOGGER = LoggerFactory.getLogger(Attack.class);
 
 	@Override
@@ -35,8 +38,21 @@ public class Attack implements Action {
 		Selectable targetShip = Model.getModel().getActionSelection().getFirst();
 		for (Selectable selectable : Model.getModel().getSimpleSelection()) {
 			if (selectable instanceof Ship && selectable != targetShip) {
-				((Ship) selectable).arrive.setArriveTarget((Ship) targetShip);
-				((Ship) selectable).combat.setTarget((Ship) targetShip);
+				Ship ship = (Ship) selectable;
+
+				// Remove existing arrive and combat behaviors
+				ship.removeBehaviorsByClass(Arrive.class);
+				ship.removeBehaviorsByClass(Combat.class);
+
+				// Add new arrive behavior
+				Arrive arrive = new Arrive((Ship) selectable);
+				arrive.setArriveTarget((Ship) targetShip);
+				ship.addBehavior(arrive);
+
+				// Add new combat behavior
+				Combat combat = new Combat();
+				combat.setTarget((Ship) targetShip);
+				ship.addBehavior(combat);
 			}
 		}
 	}

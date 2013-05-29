@@ -1,6 +1,7 @@
 package net.carmgate.morph;
 
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Modifier;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -11,7 +12,9 @@ import net.carmgate.morph.actions.common.Action;
 import net.carmgate.morph.actions.common.ActionHints;
 import net.carmgate.morph.actions.drag.DragContext;
 import net.carmgate.morph.conf.Conf;
+import net.carmgate.morph.exception.ConcreteInitRendererInAbstractClassException;
 import net.carmgate.morph.model.Model;
+import net.carmgate.morph.model.behaviors.steering.Wander;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Morph;
 import net.carmgate.morph.model.entities.Morph.MorphType;
@@ -131,14 +134,16 @@ public class Main {
 
 	private void initModel() {
 
-		Star star = new Star(1000, -1000, 0, 1000, 100);
+		Star star = new Star(3000, -3000, 0, 5000, 100);
 		Model.getModel().addEntity(star);
 
 		Player player = new Player(PlayerType.AI, "Nemesis", FOF.FOE);
 		Ship enemyShip = new Ship(128, 0, 0, 0, 20, player);
 		Model.getModel().addEntity(enemyShip);
-		enemyShip.wander.setWanderRadius(50);
-		enemyShip.wander.setWanderFocusDistance(100);
+		Wander wander = new Wander(enemyShip);
+		wander.setWanderRadius(50);
+		wander.setWanderFocusDistance(100);
+		enemyShip.addBehavior(wander);
 
 		ship = new Ship(0, 0, 0, 10, 10, Model.getModel().getSelf());
 		Morph newMorph = new Morph(MorphType.OVERMIND, 0, 0, 0);
@@ -173,11 +178,25 @@ public class Main {
 				continue;
 			}
 
+			// if the class is abstract, do not try instanciate either
+			if (Modifier.isAbstract(renderable.getModifiers())) {
+				// if the initRenderer method is not abstract in this class, log an error
+				try {
+					if (!Modifier.isAbstract(renderable.getMethod("initRenderer", new Class<?>[] {}).getModifiers())) {
+						throw new ConcreteInitRendererInAbstractClassException(renderable);
+					}
+				} catch (NoSuchMethodException | SecurityException | ConcreteInitRendererInAbstractClassException e) {
+					LOGGER.error("Error while retrieveing initRenderer method within " + renderable.getName(), e);
+				}
+				continue;
+			}
+
 			try {
 				renderable.newInstance().initRenderer();
 			} catch (InstantiationException | IllegalAccessException e) {
 				LOGGER.error("Exception raised while trying to init renderer " + renderable.getName(), e);
 			}
+
 		}
 	}
 
