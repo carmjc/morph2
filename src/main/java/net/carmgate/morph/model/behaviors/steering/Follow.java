@@ -63,15 +63,15 @@ public class Follow extends Movement {
 
 		GL11.glTranslatef(pos.x, pos.y, pos.z);
 		if (Model.getModel().isDebugMode()) {
-			speed.render(glMode, 1);
+			speed.render(1);
 			GL11.glColor3f(1, 0, 0);
-			desiredVelocity.render(glMode, 1);
+			desiredVelocity.render(1);
 			GL11.glTranslated(desiredVelocity.x, desiredVelocity.y, 0);
 			GL11.glColor3f(0, 0, 1);
-			steeringForce.render(glMode, 1);
+			steeringForce.render(1);
 			GL11.glTranslated(-desiredVelocity.x, -desiredVelocity.y, 0);
 			GL11.glColor3f(0, 1, 0);
-			speedOpposition.render(glMode, 1);
+			speedOpposition.render(1);
 		}
 		GL11.glTranslatef(-pos.x, -pos.y, -pos.z);
 

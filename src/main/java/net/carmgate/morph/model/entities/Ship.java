@@ -17,8 +17,9 @@ import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.model.entities.common.EntityHints;
 import net.carmgate.morph.model.entities.common.EntityType;
 import net.carmgate.morph.model.entities.common.Renderable;
+import net.carmgate.morph.model.entities.orders.Die;
 import net.carmgate.morph.model.entities.orders.Order;
-import net.carmgate.morph.model.entities.orders.TakeDamageOrder;
+import net.carmgate.morph.model.entities.orders.TakeDamage;
 import net.carmgate.morph.model.player.Player;
 import net.carmgate.morph.model.player.Player.PlayerType;
 import net.carmgate.morph.ui.rendering.RenderingHints;
@@ -189,16 +190,22 @@ public class Ship extends Entity {
 		return speed;
 	}
 
+	/**
+	 * This method handles orders.
+	 * IMPROVE This probably should be improved. It is quite ugly to have such a if-else cascade.
+	 * However, I don't want to use a handler factory that would kill the current simplicity of orders handling
+	 * @param order
+	 */
 	private void handleOrder(Order order) {
-		if (order instanceof TakeDamageOrder) {
+		if (order instanceof TakeDamage) {
 			// This is not multiplied by lastUpdateTS because the timing is handled by the sender of the event.
-			// TODO Introduce the previous rule in the Order contract
-			damage += ((TakeDamageOrder) order).getDamageAmount();
+			damage += ((TakeDamage) order).getDamageAmount();
 			if (damage > MAX_DAMAGE) {
-				// TODO Kill the ship with an order
-				Model.getModel().removeEntity(this);
+				fireOrder(new Die());
 			}
 			LOGGER.debug("Damage at " + damage + " for " + this);
+		} else if (order instanceof Die) {
+			Model.getModel().removeEntity(this);
 		}
 	}
 
@@ -326,7 +333,7 @@ public class Ship extends Entity {
 
 		// Render for show
 		if (Model.getModel().isDebugMode()) {
-			// TODO replace this with some more proper mass rendering
+			// IMPROVE replace this with some more proper mass rendering
 			float energyPercent = mass / 10;
 			if (energyPercent <= 0) {
 				GL11.glColor3f(0.1f, 0.1f, 0.1f);
@@ -472,7 +479,6 @@ public class Ship extends Entity {
 		// position = position + velocity
 		pos.add(new Vect3D(speed).mult(secondsSinceLastUpdate));
 
-		// TODO This should be improved to handle orders in a generic fashion
 		for (Order order : orderList) {
 			handleOrder(order);
 		}

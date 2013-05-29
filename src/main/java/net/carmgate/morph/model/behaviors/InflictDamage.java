@@ -2,7 +2,7 @@ package net.carmgate.morph.model.behaviors;
 
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.entities.Ship;
-import net.carmgate.morph.model.entities.orders.TakeDamageOrder;
+import net.carmgate.morph.model.entities.orders.TakeDamage;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +38,7 @@ public class InflictDamage implements Behavior {
 		// the orders one by one. (currentTs - timeOfLastAction / rateOfFire > 2)
 		if (timeOfLastAction == 0 || (Model.getModel().getCurrentTS() - timeOfLastAction) * rateOfFire > 1) {
 			if (target.getPos().distance(sourceOfDamage.getPos()) < MAX_RANGE) {
-				target.fireOrder(new TakeDamageOrder(0.1f));
+				target.fireOrder(new TakeDamage(0.1f));
 			} else {
 				LOGGER.debug("" + target.getPos().distance(sourceOfDamage.getPos()));
 			}

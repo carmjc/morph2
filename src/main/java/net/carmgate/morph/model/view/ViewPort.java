@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
  */
 public class ViewPort {
 
+	@SuppressWarnings("unused")
 	private static final Logger LOGGER = LoggerFactory.getLogger(ViewPort.class);
 
 	/** The intersection of the diagonals of the viewport (in world coordinates). */

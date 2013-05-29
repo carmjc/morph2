@@ -3,7 +3,6 @@ package net.carmgate.morph.model.entities;
 import java.io.FileInputStream;
 import java.io.IOException;
 
-import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.model.entities.common.EntityHints;
@@ -28,7 +27,6 @@ public class Star extends Entity {
 	private int id;
 
 	private static Integer nextId = 0;
-	private boolean selected;
 	private final float mass;
 	private static double SIMPLE_G = 6.67259 * Math.pow(10, 3); // normal one is .. * Math.pow(10, -11)
 	private final double gm;
@@ -104,7 +102,7 @@ public class Star extends Entity {
 		GL11.glTranslatef(pos.x, pos.y, pos.z);
 		float radiusScale = radius / 10;
 		float halfWidth = 64f;
-		boolean maxZoom = halfWidth * radiusScale * Model.getModel().getViewport().getZoomFactor() > 15;
+		// boolean maxZoom = halfWidth * radiusScale * Model.getModel().getViewport().getZoomFactor() > 15;
 
 		// if (maxZoom) {
 		GL11.glColor4f(1, 1, 1, 1);
@@ -143,7 +141,7 @@ public class Star extends Entity {
 
 	@Override
 	public void setSelected(boolean selected) {
-		this.selected = selected;
+		// Stars are not selectable
 	}
 
 	@Override

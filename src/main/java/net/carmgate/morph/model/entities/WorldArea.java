@@ -46,9 +46,9 @@ public class WorldArea implements Renderable {
 		width = GRID_SIZE << level + 1;
 	}
 
-	public WorldArea createDescendantWA(Vect3D focalPoint, int level) {
+	public WorldArea createDescendantWA(Vect3D focalPoint, int descendantLevel) {
 		WorldArea currentWA = this;
-		while (currentWA.getLevel() > level) {
+		while (currentWA.getLevel() > descendantLevel) {
 			if (focalPoint.x < currentWA.center.x) {
 				if (focalPoint.y > currentWA.center.y) {
 					currentWA = currentWA.getChild(0);
@@ -94,19 +94,19 @@ public class WorldArea implements Renderable {
 		if (children[i] == null) {
 			Vect3D childCenter = new Vect3D().copy(center);
 			// TODO Check what the maximum is and put constraint on the level.
-			long width = GRID_SIZE << level;
+			long levelWidth = GRID_SIZE << level;
 			switch (i) {
 			case 0:
-				childCenter.copy(center.x - width / 2, center.y + width / 2, center.z);
+				childCenter.copy(center.x - levelWidth / 2, center.y + levelWidth / 2, center.z);
 				break;
 			case 1:
-				childCenter.copy(center.x + width / 2, center.y + width / 2, center.z);
+				childCenter.copy(center.x + levelWidth / 2, center.y + levelWidth / 2, center.z);
 				break;
 			case 2:
-				childCenter.copy(center.x + width / 2, center.y - width / 2, center.z);
+				childCenter.copy(center.x + levelWidth / 2, center.y - levelWidth / 2, center.z);
 				break;
 			case 3:
-				childCenter.copy(center.x - width / 2, center.y - width / 2, center.z);
+				childCenter.copy(center.x - levelWidth / 2, center.y - levelWidth / 2, center.z);
 				break;
 			default:
 				throw new IllegalArgumentException("getChild cannot be called with i > 3");

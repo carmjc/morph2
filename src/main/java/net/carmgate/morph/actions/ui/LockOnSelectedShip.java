@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 @ActionHints(keyboardActionAutoload = true)
 public class LockOnSelectedShip implements Action {
 
+	@SuppressWarnings("unused")
 	private static final Logger LOGGER = LoggerFactory.getLogger(LockOnSelectedShip.class);
 
 	@Override

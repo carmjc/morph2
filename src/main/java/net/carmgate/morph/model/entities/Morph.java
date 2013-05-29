@@ -57,11 +57,11 @@ public class Morph implements Renderable, Selectable {
 			}
 		}
 
-		for (MorphType morphType : MorphType.values()) {
+		for (MorphType tmpMorphType : MorphType.values()) {
 			// morphTypeTextures.put(morphType, baseTexture)
-			try (FileInputStream fileInputStream = new FileInputStream(ClassLoader.getSystemResource("morph_" + morphType.name().toLowerCase() + ".png")
+			try (FileInputStream fileInputStream = new FileInputStream(ClassLoader.getSystemResource("morph_" + tmpMorphType.name().toLowerCase() + ".png")
 					.getPath())) {
-				morphTypeTextures.put(morphType, TextureLoader.getTexture("PNG", fileInputStream));
+				morphTypeTextures.put(tmpMorphType, TextureLoader.getTexture("PNG", fileInputStream));
 			} catch (IOException e) {
 				LOGGER.error("Exception raised while loading texture", e);
 			}

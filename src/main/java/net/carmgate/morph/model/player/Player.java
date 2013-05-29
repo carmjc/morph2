@@ -49,6 +49,10 @@ public class Player {
 		return true;
 	}
 
+	public FOF getFof() {
+		return fof;
+	}
+
 	public String getName() {
 		return name;
 	}
