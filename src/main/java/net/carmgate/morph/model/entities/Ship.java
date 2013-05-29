@@ -11,6 +11,8 @@ import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.behaviors.Behavior;
 import net.carmgate.morph.model.behaviors.ForceGeneratingBehavior;
 import net.carmgate.morph.model.behaviors.Movement;
+import net.carmgate.morph.model.behaviors.Need;
+import net.carmgate.morph.model.behaviors.Needs;
 import net.carmgate.morph.model.behaviors.StarsGravityPull;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.common.Entity;
@@ -137,8 +139,26 @@ public class Ship extends Entity {
 		addBehavior(new StarsGravityPull(this));
 	}
 
-	public boolean addBehavior(Behavior e) {
-		return behaviorSet.add(e);
+	public void addBehavior(Behavior behavior) {
+		// Checks that the behavior can be added to the ship
+		if (behavior != null
+				&& behavior.getClass().isAnnotationPresent(Needs.class)) {
+			Need[] needs = behavior.getClass().getAnnotation(Needs.class).value();
+
+			for (Need need : needs) {
+				for (Morph morph : morphs) {
+					if (morph.getMorphType() == need.morphType()) {
+						behaviorSet.add(behavior);
+						return;
+					}
+				}
+			}
+
+			return;
+		}
+
+		behaviorSet.add(behavior);
+
 	}
 
 	private void addTrail() {

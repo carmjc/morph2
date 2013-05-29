@@ -1,9 +1,13 @@
 package net.carmgate.morph.model.behaviors.steering;
 
 import net.carmgate.morph.model.behaviors.Movement;
+import net.carmgate.morph.model.behaviors.Need;
+import net.carmgate.morph.model.behaviors.Needs;
 import net.carmgate.morph.model.common.Vect3D;
+import net.carmgate.morph.model.entities.Morph.MorphType;
 import net.carmgate.morph.model.entities.Ship;
 
+@Needs({ @Need(morphType = MorphType.PROPULSOR) })
 public class Wander extends Movement {
 
 	private final float wanderFocusDistance;

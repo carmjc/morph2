@@ -139,6 +139,7 @@ public class Main {
 
 		Player player = new Player(PlayerType.AI, "Nemesis", FOF.FOE);
 		Ship enemyShip = new Ship(128, 0, 0, 0, 20, player);
+		enemyShip.getMorphs().add(new Morph(MorphType.PROPULSOR));
 		Model.getModel().addEntity(enemyShip);
 		enemyShip.addBehavior(new Wander(enemyShip, 100, 50));
 

@@ -2,12 +2,16 @@ package net.carmgate.morph.model.behaviors.steering;
 
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.behaviors.Movement;
+import net.carmgate.morph.model.behaviors.Need;
+import net.carmgate.morph.model.behaviors.Needs;
 import net.carmgate.morph.model.common.Vect3D;
+import net.carmgate.morph.model.entities.Morph.MorphType;
 import net.carmgate.morph.model.entities.Ship;
 
 import org.lwjgl.opengl.GL11;
 import org.newdawn.slick.opengl.TextureImpl;
 
+@Needs({ @Need(morphType = MorphType.PROPULSOR) })
 public class Follow extends Movement {
 
 	private static final int nbSegments = 200;

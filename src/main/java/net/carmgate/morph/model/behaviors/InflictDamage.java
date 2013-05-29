@@ -1,12 +1,14 @@
 package net.carmgate.morph.model.behaviors;
 
 import net.carmgate.morph.model.Model;
+import net.carmgate.morph.model.entities.Morph.MorphType;
 import net.carmgate.morph.model.entities.Ship;
 import net.carmgate.morph.model.entities.orders.TakeDamage;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Needs({ @Need(morphType = MorphType.LASER) })
 public class InflictDamage implements Behavior {
 	private final Logger LOGGER = LoggerFactory.getLogger(InflictDamage.class);
 

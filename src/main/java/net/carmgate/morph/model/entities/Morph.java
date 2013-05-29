@@ -28,7 +28,12 @@ public class Morph implements Renderable, Selectable {
 	private int selectionId;
 	private static Texture baseTexture;
 	private static Map<MorphType, Texture> morphTypeTextures = new HashMap<>();
+
+	// Morph characteristics
 	private final MorphType morphType;
+	private int level = 1;
+
+	private float xp = 0;
 
 	public Morph() {
 		this(null);
@@ -44,6 +49,26 @@ public class Morph implements Renderable, Selectable {
 	@Override
 	public int getId() {
 		return selectionId;
+	}
+
+	public int getLevel() {
+		return level;
+	}
+
+	public MorphType getMorphType() {
+		return morphType;
+	}
+
+	public float getXp() {
+		return xp;
+	}
+
+	public void increaseLevel() {
+		level++;
+	}
+
+	public void increaseXp(float xpIncrement) {
+		xp += xpIncrement;
 	}
 
 	@Override
