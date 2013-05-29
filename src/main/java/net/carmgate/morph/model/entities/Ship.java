@@ -71,6 +71,8 @@ public class Ship extends Entity {
 	public static final float MAX_SPEED = 1000;
 	public static final float MAX_FORCE = 3000f;
 	private static final float MAX_ANGLE_SPEED_PER_MASS_UNIT = 3600f;
+	private static final float MAX_DAMAGE = 10;
+	public static final float MAX_RANGE = 300;
 	private final List<Morph> morphs = new ArrayList<>();
 
 	/** The ship position in the world. */
@@ -192,7 +194,11 @@ public class Ship extends Entity {
 			// This is not multiplied by lastUpdateTS because the timing is handled by the sender of the event.
 			// TODO Introduce the previous rule in the Order contract
 			damage += ((TakeDamageOrder) order).getDamageAmount();
-			LOGGER.debug("Damage at " + mass + " for " + this);
+			if (damage > MAX_DAMAGE) {
+				// TODO Kill the ship with an order
+				Model.getModel().removeEntity(this);
+			}
+			LOGGER.debug("Damage at " + damage + " for " + this);
 		}
 	}
 

@@ -5,8 +5,9 @@ import java.util.List;
 import net.carmgate.morph.actions.common.Action;
 import net.carmgate.morph.actions.common.ActionHints;
 import net.carmgate.morph.model.Model;
-import net.carmgate.morph.model.behaviors.FollowAndInflictDamage;
+import net.carmgate.morph.model.behaviors.InflictDamage;
 import net.carmgate.morph.model.behaviors.steering.Arrive;
+import net.carmgate.morph.model.behaviors.steering.Follow;
 import net.carmgate.morph.model.entities.Ship;
 import net.carmgate.morph.model.entities.common.Selectable;
 import net.carmgate.morph.ui.Event;
@@ -16,10 +17,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @ActionHints(mouseActionAutoload = true)
-public class Attack implements Action {
+public class FollowAndInflictDamage implements Action {
 
 	@SuppressWarnings("unused")
-	private static final Logger LOGGER = LoggerFactory.getLogger(Attack.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(FollowAndInflictDamage.class);
 
 	@Override
 	public void run() {
@@ -41,14 +42,15 @@ public class Attack implements Action {
 				Ship ship = (Ship) selectable;
 
 				// Remove existing arrive and combat behaviors
+				ship.removeBehaviorsByClass(Follow.class);
 				ship.removeBehaviorsByClass(Arrive.class);
-				ship.removeBehaviorsByClass(FollowAndInflictDamage.class);
+				ship.removeBehaviorsByClass(InflictDamage.class);
 
 				// Add new arrive behavior
-				ship.addBehavior(new Arrive((Ship) selectable, (Ship) targetShip));
+				ship.addBehavior(new Follow((Ship) selectable, (Ship) targetShip, InflictDamage.MAX_RANGE * 0.5f));
 
 				// Add new combat behavior
-				ship.addBehavior(new FollowAndInflictDamage(ship, (Ship) targetShip));
+				ship.addBehavior(new InflictDamage(ship, (Ship) targetShip));
 			}
 		}
 	}
