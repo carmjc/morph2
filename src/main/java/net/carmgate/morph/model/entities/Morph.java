@@ -19,7 +19,7 @@ public class Morph implements Renderable, Selectable {
 	public enum MorphType {
 		OVERMIND(0),
 		SHIELD(20),
-		LASER(10),
+		LASER(100),
 		SIMPLE_PROPULSOR(10);
 
 		private final float energyConsumption;

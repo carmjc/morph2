@@ -10,10 +10,12 @@ import org.slf4j.LoggerFactory;
 
 @Needs({ @ActivatedMorph(morphType = MorphType.LASER) })
 public class InflictDamage implements Behavior {
+	private static final float MAX_DAMAGE_PER_HIT = 0.2f;
+
 	private final Logger LOGGER = LoggerFactory.getLogger(InflictDamage.class);
 
 	/** rate of fire (nb/ms). */
-	private static final float rateOfFire = 0.001f;
+	private static final float rateOfFire = 0.005f;
 	public static final float MAX_RANGE = 800f;
 
 	private final Ship sourceOfDamage;
@@ -45,7 +47,7 @@ public class InflictDamage implements Behavior {
 		// the orders one by one. (currentTs - timeOfLastAction / rateOfFire > 2)
 		if (timeOfLastAction == 0 || (Model.getModel().getCurrentTS() - timeOfLastAction) * rateOfFire > 1) {
 			if (target.getPos().distance(sourceOfDamage.getPos()) < MAX_RANGE && consumeEnergy()) {
-				target.fireOrder(new TakeDamage(1f));
+				target.fireOrder(new TakeDamage(MAX_DAMAGE_PER_HIT));
 			} else {
 				LOGGER.debug("" + target.getPos().distance(sourceOfDamage.getPos()));
 			}

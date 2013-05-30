@@ -200,12 +200,10 @@ public class Ship extends Entity {
 		if (energy >= energyDec) {
 			// TODO implement some kind of max energy
 			energy -= energyDec;
-			LOGGER.debug("Energy: " + energyDec + "/" + energy);
 			return true;
 		}
 
 		// return false if there isn't enough energy
-		LOGGER.debug("Not enough energy: " + energyDec + "/" + energy);
 		return false;
 	}
 
@@ -297,7 +295,7 @@ public class Ship extends Entity {
 			for (int i = 0; i < 200; i++) {
 				Model.getModel()
 						.getParticleEngine()
-						.addParticle(new Vect3D(pos), new Vect3D(200, 0, 0).rotate((float) (Math.random() * 360)).mult((float) Math.random()),
+						.addParticle(new Vect3D(pos), new Vect3D(200, 0, 0).rotate((float) (Math.random() * 360)).mult((float) Math.random()).add(speed),
 								2, 0.5f,
 								0.5f, 0.05f);
 			}
@@ -450,6 +448,10 @@ public class Ship extends Entity {
 			effectiveForce.render(glMode, 1);
 		}
 
+		// Render energy gauge
+		renderGauge(50, -64 * massScale - 10, Math.min(MAX_DAMAGE - damage, MAX_DAMAGE) / MAX_DAMAGE, 0.2f);
+		renderGauge(50, -64 * massScale + 10, Math.min(energy, 100) / 100, 0.05f);
+
 		GL11.glTranslatef(-pos.x, -pos.y, -pos.z);
 
 		// Render behaviors
@@ -459,6 +461,43 @@ public class Ship extends Entity {
 			}
 		}
 
+	}
+
+	private void renderGauge(float xGaugePosition, float yGaugePosition, float percentage, float alarmThreshold) {
+		TextureImpl.bindNone();
+		GL11.glColor4f(0.5f, 0.5f, 0.5f, 10);
+		GL11.glBegin(GL11.GL_QUADS);
+		GL11.glVertex2f(xGaugePosition + 4, yGaugePosition - 9);
+		GL11.glVertex2f(xGaugePosition + 4, yGaugePosition + 9);
+		GL11.glVertex2f(-(xGaugePosition + 4), yGaugePosition + 9);
+		GL11.glVertex2f(-(xGaugePosition + 4), yGaugePosition - 9);
+		GL11.glEnd();
+
+		GL11.glColor4f(0, 0, 0, 1);
+		GL11.glBegin(GL11.GL_QUADS);
+		GL11.glVertex2f(xGaugePosition + 2, yGaugePosition - 7);
+		GL11.glVertex2f(xGaugePosition + 2, yGaugePosition + 7);
+		GL11.glVertex2f(-(xGaugePosition + 2), yGaugePosition + 7);
+		GL11.glVertex2f(-(xGaugePosition + 2), yGaugePosition - 7);
+		GL11.glEnd();
+
+		if (percentage < alarmThreshold) {
+			GL11.glColor4f(1, 0.5f, 0.5f, 0.5f);
+			GL11.glBegin(GL11.GL_QUADS);
+			GL11.glVertex2f(xGaugePosition, yGaugePosition - 5);
+			GL11.glVertex2f(xGaugePosition, yGaugePosition + 5);
+			GL11.glVertex2f(-xGaugePosition, yGaugePosition + 5);
+			GL11.glVertex2f(-xGaugePosition, yGaugePosition - 5);
+			GL11.glEnd();
+		}
+
+		GL11.glColor4f(0.5f, 1, 0.5f, 1);
+		GL11.glBegin(GL11.GL_QUADS);
+		GL11.glVertex2f(-xGaugePosition + percentage * xGaugePosition * 2, yGaugePosition - 5);
+		GL11.glVertex2f(-xGaugePosition + percentage * xGaugePosition * 2, yGaugePosition + 5);
+		GL11.glVertex2f(-xGaugePosition, yGaugePosition + 5);
+		GL11.glVertex2f(-xGaugePosition, yGaugePosition - 5);
+		GL11.glEnd();
 	}
 
 	private void renderSelection(float massScale, boolean maxZoom) {

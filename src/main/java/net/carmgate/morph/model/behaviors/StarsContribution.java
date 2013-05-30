@@ -8,7 +8,12 @@ import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.model.entities.common.EntityType;
 import net.carmgate.morph.model.entities.orders.Die;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class StarsContribution extends ForceGeneratingBehavior {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(StarsContribution.class);
 
 	private final Ship ship;
 
@@ -44,13 +49,13 @@ public class StarsContribution extends ForceGeneratingBehavior {
 			}
 
 			// Adds the gravity pulling force
-			force.normalize(1).mult((float) (star.getGm() * ship.getMass() / distance / distance));
+			force.normalize(1).mult((float) (star.getGm() * ship.getMass() / (distance * distance)));
 
 			// Add energy inflow
-			ship.addEnergy((float) (star.getEnergyFlow() * Math.sqrt(ship.getMass()) / ship.getPos().distance(star.getPos())));
+			float energyInflux = (float) (star.getEnergyFlow() * Math.sqrt(ship.getMass()) / ship.getPos().distance(star.getPos()));
+			ship.addEnergy(energyInflux * Model.getModel().getSecondsSinceLastUpdate());
 
 			// TODO Add overflow energy induced damage
 		}
 	}
-
 }
