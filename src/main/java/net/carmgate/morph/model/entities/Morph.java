@@ -17,10 +17,20 @@ import org.slf4j.LoggerFactory;
 public class Morph implements Renderable, Selectable {
 
 	public enum MorphType {
-		OVERMIND,
-		SHIELD,
-		LASER,
-		SIMPLE_PROPULSOR;
+		OVERMIND(0),
+		SHIELD(20),
+		LASER(10),
+		SIMPLE_PROPULSOR(10);
+
+		private final float energyConsumption;
+
+		MorphType(float energyConsumption) {
+			this.energyConsumption = energyConsumption;
+		}
+
+		public float getEnergyConsumption() {
+			return energyConsumption;
+		}
 	}
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(Morph.class);

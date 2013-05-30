@@ -8,13 +8,13 @@ import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.model.entities.common.EntityType;
 import net.carmgate.morph.model.entities.orders.Die;
 
-public class StarsGravityPull implements ForceGeneratingBehavior {
+public class StarsContribution extends ForceGeneratingBehavior {
 
 	private final Ship ship;
 
 	private final Vect3D force = new Vect3D();
 
-	public StarsGravityPull(Ship ship) {
+	public StarsContribution(Ship ship) {
 		this.ship = ship;
 	}
 
@@ -43,7 +43,13 @@ public class StarsGravityPull implements ForceGeneratingBehavior {
 				;
 			}
 
+			// Adds the gravity pulling force
 			force.normalize(1).mult((float) (star.getGm() * ship.getMass() / distance / distance));
+
+			// Add energy inflow
+			ship.addEnergy((float) (star.getEnergyFlow() * Math.sqrt(ship.getMass()) / ship.getPos().distance(star.getPos())));
+
+			// TODO Add overflow energy induced damage
 		}
 	}
 

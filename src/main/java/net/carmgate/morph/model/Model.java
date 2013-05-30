@@ -40,7 +40,7 @@ public class Model {
 	private boolean debugMode = false;
 
 	/** number of millis since game start. */
-	private long msec = 0;
+	private long currentTS = 0;
 
 	/** timestamp of game start. */
 	private long gameStartMsec = new Date().getTime();
@@ -66,6 +66,8 @@ public class Model {
 	private final Player self;
 	private final Set<Player> players = new HashSet<>();
 	private WorldArea rootWA;
+	private float secondsSinceLastUpdate;
+	private long lastUpdateTS;
 
 	private Model() {
 		self = new Player(PlayerType.HUMAN, "Carm", FOF.SELF);
@@ -110,7 +112,7 @@ public class Model {
 	 * @return number of millis since game start.
 	 */
 	public long getCurrentTS() {
-		return msec;
+		return currentTS;
 	}
 
 	public EntityMap getEntitiesByRenderingType(RenderingSteps renderingStep) {
@@ -129,6 +131,10 @@ public class Model {
 		return interactionStack;
 	}
 
+	public long getLastUpdateTS() {
+		return lastUpdateTS;
+	}
+
 	public ParticleEngine getParticleEngine() {
 		return particleEngine;
 	}
@@ -139,6 +145,10 @@ public class Model {
 
 	public WorldArea getRootWA() {
 		return rootWA;
+	}
+
+	public float getSecondsSinceLastUpdate() {
+		return secondsSinceLastUpdate;
 	}
 
 	public Player getSelf() {
@@ -178,11 +188,13 @@ public class Model {
 
 		// update the number of millis since game start
 		long tmpMsec = new Date().getTime() - gameStartMsec;
+		lastUpdateTS = currentTS;
 		if (pause) {
-			gameStartMsec += tmpMsec - msec;
+			gameStartMsec += tmpMsec - currentTS;
 		} else {
-			msec = tmpMsec;
+			currentTS = tmpMsec;
 		}
+		secondsSinceLastUpdate = ((float) currentTS - lastUpdateTS) / 1000;
 
 		// Update WAs
 		// Create necessary WAs

@@ -12,12 +12,12 @@ import java.util.Set;
 import net.carmgate.morph.conf.Conf;
 import net.carmgate.morph.conf.Conf.ConfItem;
 import net.carmgate.morph.model.Model;
+import net.carmgate.morph.model.behaviors.ActivatedMorph;
 import net.carmgate.morph.model.behaviors.Behavior;
 import net.carmgate.morph.model.behaviors.ForceGeneratingBehavior;
 import net.carmgate.morph.model.behaviors.Movement;
-import net.carmgate.morph.model.behaviors.Need;
 import net.carmgate.morph.model.behaviors.Needs;
-import net.carmgate.morph.model.behaviors.StarsGravityPull;
+import net.carmgate.morph.model.behaviors.StarsContribution;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Morph.MorphType;
 import net.carmgate.morph.model.entities.common.Entity;
@@ -90,17 +90,12 @@ public class Ship extends Entity {
 
 	private float mass = 10;
 
-	/** Timestamp of last time the ship's position was calculated. */
-	// IMPROVE We should move this in a class that can handle this behavior for any Updatable
-	private long lastUpdateTS;
-
 	private boolean selected;
 
 	private final Vect3D accel = new Vect3D();
 
 	private final Vect3D effectiveForce = new Vect3D();
 
-	private float secondsSinceLastUpdate;
 	private final Player player;
 	private final Vect3D steeringForce = new Vect3D();
 
@@ -113,9 +108,13 @@ public class Ship extends Entity {
 
 	// TODO put in conf the dimension of the table
 	private final Vect3D[] trail = new Vect3D[20];
+	/** Stores last trail update. It occurred less than trailUpdateInterval ago. */
 	private long trailLastUpdate;
 	// TODO put in conf the trail update interval
 	private final int trailUpdateInterval = 50;
+
+	private float energy;
+	private final List<Order> newOrderList = new ArrayList<>();
 
 	/***
 	 * Creates a new ship with position (0, 0, 0), mass = 10 assigned to player "self".
@@ -132,19 +131,17 @@ public class Ship extends Entity {
 			id = nextId++;
 		}
 
+		// initialize positional information
 		pos.copy(x, y, z);
-		// speed.nullify();
-		// accel = new Vect3D();
-		// posAccel = new Vect3D(0, 0, 0);
 		this.heading = heading;
 		this.mass = mass;
-		// rotSpeed = 0;
 
-		// Init lastUpdateTS
-		lastUpdateTS = Model.getModel().getCurrentTS();
+		// initialize energy
+		// TODO This should be a function of the ship's fitting
+		energy = 100;
 
 		// Add always active behaviors
-		addBehavior(new StarsGravityPull(this));
+		addBehavior(new StarsContribution(this));
 	}
 
 	/**
@@ -156,9 +153,9 @@ public class Ship extends Entity {
 		// Checks that the behavior can be added to the ship
 		if (behavior != null
 				&& behavior.getClass().isAnnotationPresent(Needs.class)) {
-			Need[] needs = behavior.getClass().getAnnotation(Needs.class).value();
+			ActivatedMorph[] needs = behavior.getClass().getAnnotation(Needs.class).value();
 
-			for (Need need : needs) {
+			for (ActivatedMorph need : needs) {
 				for (Morph morph : morphs) {
 					if (morph.getMorphType() == need.morphType()) {
 						behaviorSet.add(behavior);
@@ -171,6 +168,11 @@ public class Ship extends Entity {
 		}
 
 		behaviorSet.add(behavior);
+	}
+
+	public void addEnergy(float energyInc) {
+		// TODO implement some kind of max energy
+		energy += energyInc;
 	}
 
 	public void addMorph(Morph morph) {
@@ -193,12 +195,32 @@ public class Ship extends Entity {
 		effectiveForce.add(force);
 	}
 
-	public void fireOrder(Order order) {
-		orderList.add(order);
+	public boolean consumeEnergy(float energyDec) {
+		// return true if there is enough energy
+		if (energy >= energyDec) {
+			// TODO implement some kind of max energy
+			energy -= energyDec;
+			LOGGER.debug("Energy: " + energyDec + "/" + energy);
+			return true;
+		}
+
+		// return false if there isn't enough energy
+		LOGGER.debug("Not enough energy: " + energyDec + "/" + energy);
+		return false;
 	}
 
-	public Vect3D getAccel() {
-		return accel;
+	/** 
+	 * Adds orders.
+	 * The orders are effectively added at the end of the update cycle
+	 * once the current update cycle orders have been processed.
+	 * @param order
+	 */
+	public void fireOrder(Order order) {
+		newOrderList.add(order);
+	}
+
+	public float getEnergy() {
+		return energy;
 	}
 
 	public float getHeading() {
@@ -382,7 +404,7 @@ public class Ship extends Entity {
 		// Render the ship in itself
 		if (Model.getModel().isDebugMode()) {
 			// IMPROVE replace this with some more proper mass rendering
-			float energyPercent = mass / 10;
+			float energyPercent = energy / 100;
 			if (energyPercent <= 0) {
 				GL11.glColor3f(0.1f, 0.1f, 0.1f);
 			} else {
@@ -499,6 +521,8 @@ public class Ship extends Entity {
 
 	private void rotateProperly() {
 
+		float secondsSinceLastUpdate = Model.getModel().getSecondsSinceLastUpdate();
+
 		// if steeringForce is too small, we must not change the orientation or we will be
 		// by orientation fluctuations due to improper angle approximation
 		// LOGGER.debug("" + steeringForce.modulus());
@@ -543,8 +567,7 @@ public class Ship extends Entity {
 
 	@Override
 	public void update() {
-		secondsSinceLastUpdate = ((float) Model.getModel().getCurrentTS() - lastUpdateTS) / 1000;
-		lastUpdateTS = Model.getModel().getCurrentTS();
+		float secondsSinceLastUpdate = Model.getModel().getSecondsSinceLastUpdate();
 		if (secondsSinceLastUpdate == 0f) {
 			return;
 		}
@@ -565,7 +588,7 @@ public class Ship extends Entity {
 				behavior.run(secondsSinceLastUpdate);
 
 				// if the behavior is a movement, use the generated steering force
-				if (behavior instanceof Movement) {
+				if (behavior instanceof Movement && ((Movement) behavior).consumeEnergy()) {
 					applySteeringForce(((Movement) behavior).getSteeringForce());
 				}
 
@@ -573,6 +596,7 @@ public class Ship extends Entity {
 				if (behavior instanceof ForceGeneratingBehavior) {
 					effectiveForce.add(((ForceGeneratingBehavior) behavior).getNonSteeringForce());
 				}
+
 			}
 		}
 
@@ -586,10 +610,13 @@ public class Ship extends Entity {
 		// position = position + velocity
 		pos.add(new Vect3D(speed).mult(secondsSinceLastUpdate));
 
+		// Handle orders
 		for (Order order : orderList) {
 			handleOrder(order);
 		}
 		orderList.clear();
+		orderList.addAll(newOrderList);
+		newOrderList.clear();
 
 		// If the mass of the current ship is null or below, remove it
 		if (mass <= 0) {
@@ -597,7 +624,7 @@ public class Ship extends Entity {
 		}
 
 		// update trail
-		if (trailLastUpdate == 0 || lastUpdateTS - trailLastUpdate > trailUpdateInterval) {
+		if (trailLastUpdate == 0 || Model.getModel().getLastUpdateTS() - trailLastUpdate > trailUpdateInterval) {
 			for (int i = trail.length - 2; i >= 0; i--) {
 				trail[i + 1] = trail[i];
 			}

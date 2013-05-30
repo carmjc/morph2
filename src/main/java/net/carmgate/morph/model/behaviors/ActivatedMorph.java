@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import net.carmgate.morph.model.entities.Morph.MorphType;
 
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Need {
+public @interface ActivatedMorph {
 	int level() default 1;
 
 	MorphType morphType();

@@ -32,15 +32,16 @@ public class Star extends Entity {
 	private final double gm;
 
 	private final float radius;
+	private final float energyFlow;
 
 	/**
 	 * Do not use this constructor.
 	 */
 	public Star() {
-		this(0, 0, 0, 0, 0);
+		this(0, 0, 0, 0, 0, 0);
 	}
 
-	public Star(float x, float y, float z, float mass, float radius) {
+	public Star(float x, float y, float z, float mass, float radius, float energyFlow) {
 		synchronized (nextId) {
 			id = nextId++;
 		}
@@ -51,6 +52,11 @@ public class Star extends Entity {
 		this.mass = mass;
 		this.radius = radius;
 		gm = SIMPLE_G * mass;
+		this.energyFlow = energyFlow;
+	}
+
+	public float getEnergyFlow() {
+		return energyFlow;
 	}
 
 	public double getGm() {

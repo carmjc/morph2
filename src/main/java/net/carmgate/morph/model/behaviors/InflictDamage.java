@@ -8,7 +8,7 @@ import net.carmgate.morph.model.entities.orders.TakeDamage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Needs({ @Need(morphType = MorphType.LASER) })
+@Needs({ @ActivatedMorph(morphType = MorphType.LASER) })
 public class InflictDamage implements Behavior {
 	private final Logger LOGGER = LoggerFactory.getLogger(InflictDamage.class);
 
@@ -27,6 +27,11 @@ public class InflictDamage implements Behavior {
 		this.target = target;
 	}
 
+	public boolean consumeEnergy() {
+		return sourceOfDamage.consumeEnergy(Model.getModel().getSecondsSinceLastUpdate()
+				* MorphType.LASER.getEnergyConsumption());
+	}
+
 	@Override
 	public boolean isActive() {
 		return target != null;
@@ -39,8 +44,8 @@ public class InflictDamage implements Behavior {
 		// TODO This should also be updated to cope with the improbable possibility that the refresh rate is insufficient to handle
 		// the orders one by one. (currentTs - timeOfLastAction / rateOfFire > 2)
 		if (timeOfLastAction == 0 || (Model.getModel().getCurrentTS() - timeOfLastAction) * rateOfFire > 1) {
-			if (target.getPos().distance(sourceOfDamage.getPos()) < MAX_RANGE) {
-				target.fireOrder(new TakeDamage(0.1f));
+			if (target.getPos().distance(sourceOfDamage.getPos()) < MAX_RANGE && consumeEnergy()) {
+				target.fireOrder(new TakeDamage(1f));
 			} else {
 				LOGGER.debug("" + target.getPos().distance(sourceOfDamage.getPos()));
 			}

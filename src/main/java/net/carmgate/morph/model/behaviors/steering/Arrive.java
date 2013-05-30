@@ -1,8 +1,8 @@
 package net.carmgate.morph.model.behaviors.steering;
 
 import net.carmgate.morph.model.Model;
+import net.carmgate.morph.model.behaviors.ActivatedMorph;
 import net.carmgate.morph.model.behaviors.Movement;
-import net.carmgate.morph.model.behaviors.Need;
 import net.carmgate.morph.model.behaviors.Needs;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Morph.MorphType;
@@ -11,7 +11,7 @@ import net.carmgate.morph.model.entities.Ship;
 import org.lwjgl.opengl.GL11;
 import org.newdawn.slick.opengl.TextureImpl;
 
-@Needs({ @Need(morphType = MorphType.SIMPLE_PROPULSOR) })
+@Needs({ @ActivatedMorph(morphType = MorphType.SIMPLE_PROPULSOR) })
 public class Arrive extends Movement {
 
 	private static final int nbSegments = 200;
@@ -80,7 +80,7 @@ public class Arrive extends Movement {
 		}
 		GL11.glTranslatef(-pos.x, -pos.y, -pos.z);
 
-		if (target != null && shipToMove.isSelected() && Model.getModel().isDebugMode()) {
+		if (target != null && shipToMove.isSelected()) {
 			// Show target
 			GL11.glTranslatef(target.x, target.y, 0);
 
@@ -92,22 +92,25 @@ public class Arrive extends Movement {
 			GL11.glVertex2f(-16, 16);
 			GL11.glEnd();
 
-			// render limit of effect zone
-			GL11.glBegin(GL11.GL_LINES);
-			float t = 0; // temporary data holder
-			float x = slowingDistance; // radius
-			float y = 0;
-			for (int i = 0; i < nbSegments; i++) {
-				GL11.glColor4d(1, 1, 1, 0.15);
-				GL11.glVertex2d(x, y);
+			if (Model.getModel().isDebugMode()) {
+				// render limit of effect zone
+				GL11.glBegin(GL11.GL_LINES);
+				float t = 0; // temporary data holder
+				float x = slowingDistance; // radius
+				float y = 0;
+				for (int i = 0; i < nbSegments; i++) {
+					GL11.glColor4d(1, 1, 1, 0.15);
+					GL11.glVertex2d(x, y);
 
-				t = x;
-				x = cos * x - sin * y;
-				y = sin * t + cos * y;
+					t = x;
+					x = cos * x - sin * y;
+					y = sin * t + cos * y;
 
-				GL11.glVertex2d(x, y);
+					GL11.glVertex2d(x, y);
+				}
+				GL11.glEnd();
 			}
-			GL11.glEnd();
+
 			GL11.glTranslatef(-target.x, -target.y, 0);
 		}
 	}

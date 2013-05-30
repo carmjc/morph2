@@ -134,7 +134,7 @@ public class Main {
 
 	private void initModel() {
 
-		Star star = new Star(3000, -3000, 0, 5000, 100);
+		Star star = new Star(3000, -3000, 0, 5000, 100, 100);
 		Model.getModel().addEntity(star);
 
 		Player player = new Player(PlayerType.AI, "Nemesis", FOF.FOE);

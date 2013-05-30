@@ -5,5 +5,4 @@ public interface Behavior {
 	abstract boolean isActive();
 
 	abstract void run(float secondsSinceLastUpdate);
-
 }
