@@ -417,7 +417,8 @@ public class Ship extends Entity {
 		GL11.glTranslatef(pos.x, pos.y, pos.z);
 		GL11.glRotatef(heading, 0, 0, 1);
 		float massScale = mass / 10;
-		boolean maxZoom = 64f * massScale * Model.getModel().getViewport().getZoomFactor() > 15;
+		float zoomFactor = Model.getModel().getViewport().getZoomFactor();
+		boolean maxZoom = 64f * massScale * zoomFactor > 16;
 
 		// Render selection circle around the ship
 		renderSelection(massScale, maxZoom);
@@ -449,18 +450,19 @@ public class Ship extends Entity {
 			GL11.glEnd();
 			GL11.glScalef(1 / massScale, 1 / massScale, 0);
 		} else {
-			float adjustedSize = 15 / Model.getModel().getViewport().getZoomFactor();
+			GL11.glScalef(1f / (4 * zoomFactor), 1f / (4 * zoomFactor), 0);
 			zoomedOutTexture.bind();
 			GL11.glBegin(GL11.GL_QUADS);
 			GL11.glTexCoord2f(0, 0);
-			GL11.glVertex2f(-adjustedSize, adjustedSize);
+			GL11.glVertex2f(-64, 64);
 			GL11.glTexCoord2f(1, 0);
-			GL11.glVertex2f(adjustedSize, adjustedSize);
+			GL11.glVertex2f(64, 64);
 			GL11.glTexCoord2f(1, 1);
-			GL11.glVertex2f(adjustedSize, -adjustedSize);
+			GL11.glVertex2f(64, -64);
 			GL11.glTexCoord2f(0, 1);
-			GL11.glVertex2f(-adjustedSize, -adjustedSize);
+			GL11.glVertex2f(-64, -64);
 			GL11.glEnd();
+			GL11.glScalef(4 * zoomFactor, 4 * zoomFactor, 0);
 		}
 
 		GL11.glRotatef(-heading, 0, 0, 1);
@@ -472,8 +474,15 @@ public class Ship extends Entity {
 		}
 
 		// Render energy gauge
-		renderGauge(50, -64 * massScale - 10, Math.min(MAX_DAMAGE - damage, MAX_DAMAGE) / MAX_DAMAGE, 0.2f);
-		renderGauge(50, -64 * massScale + 10, Math.min(energy, 100) / 100, 0.05f);
+		if (maxZoom) {
+			renderGauge(25, -16 - 64 * zoomFactor * massScale - 5, Math.min(MAX_DAMAGE - damage, MAX_DAMAGE) / MAX_DAMAGE, 0.2f,
+					new float[] { 0.5f, 1, 0.5f,
+							1 });
+			renderGauge(25, -16 - 64 * zoomFactor * massScale + 5, Math.min(energy, 100) / 100, 0.05f, new float[] { 0.5f, 0.5f, 1, 1 });
+		} else {
+			renderGauge(25, -32 - 5, Math.min(MAX_DAMAGE - damage, MAX_DAMAGE) / MAX_DAMAGE, 0.2f, new float[] { 0.5f, 1, 0.5f, 1 });
+			renderGauge(25, -32 + 5, Math.min(energy, 100) / 100, 0.05f, new float[] { 0.5f, 0.5f, 1, 1 });
+		}
 
 		GL11.glTranslatef(-pos.x, -pos.y, -pos.z);
 
@@ -486,41 +495,46 @@ public class Ship extends Entity {
 
 	}
 
-	private void renderGauge(float xGaugePosition, float yGaugePosition, float percentage, float alarmThreshold) {
+	private void renderGauge(float xGaugePosition, float yGaugePosition, float percentage, float alarmThreshold, float[] color) {
+		float zoomFactor = Model.getModel().getViewport().getZoomFactor();
+		GL11.glScalef(1 / zoomFactor, 1 / zoomFactor, 1);
+
 		TextureImpl.bindNone();
 		GL11.glColor4f(0.5f, 0.5f, 0.5f, 10);
 		GL11.glBegin(GL11.GL_QUADS);
-		GL11.glVertex2f(xGaugePosition + 4, yGaugePosition - 9);
-		GL11.glVertex2f(xGaugePosition + 4, yGaugePosition + 9);
-		GL11.glVertex2f(-(xGaugePosition + 4), yGaugePosition + 9);
-		GL11.glVertex2f(-(xGaugePosition + 4), yGaugePosition - 9);
+		GL11.glVertex2f(xGaugePosition + 2, yGaugePosition - 5);
+		GL11.glVertex2f(xGaugePosition + 2, yGaugePosition + 5);
+		GL11.glVertex2f(-(xGaugePosition + 2), yGaugePosition + 5);
+		GL11.glVertex2f(-(xGaugePosition + 2), yGaugePosition - 5);
 		GL11.glEnd();
 
 		GL11.glColor4f(0, 0, 0, 1);
 		GL11.glBegin(GL11.GL_QUADS);
-		GL11.glVertex2f(xGaugePosition + 2, yGaugePosition - 7);
-		GL11.glVertex2f(xGaugePosition + 2, yGaugePosition + 7);
-		GL11.glVertex2f(-(xGaugePosition + 2), yGaugePosition + 7);
-		GL11.glVertex2f(-(xGaugePosition + 2), yGaugePosition - 7);
+		GL11.glVertex2f(xGaugePosition + 1, yGaugePosition - 4);
+		GL11.glVertex2f(xGaugePosition + 1, yGaugePosition + 4);
+		GL11.glVertex2f(-(xGaugePosition + 1), yGaugePosition + 4);
+		GL11.glVertex2f(-(xGaugePosition + 1), yGaugePosition - 4);
 		GL11.glEnd();
 
 		if (percentage < alarmThreshold) {
 			GL11.glColor4f(1, 0.5f, 0.5f, 0.5f);
 			GL11.glBegin(GL11.GL_QUADS);
-			GL11.glVertex2f(xGaugePosition, yGaugePosition - 5);
-			GL11.glVertex2f(xGaugePosition, yGaugePosition + 5);
-			GL11.glVertex2f(-xGaugePosition, yGaugePosition + 5);
-			GL11.glVertex2f(-xGaugePosition, yGaugePosition - 5);
+			GL11.glVertex2f(xGaugePosition, yGaugePosition - 3);
+			GL11.glVertex2f(xGaugePosition, yGaugePosition + 3);
+			GL11.glVertex2f(-xGaugePosition, yGaugePosition + 3);
+			GL11.glVertex2f(-xGaugePosition, yGaugePosition - 3);
 			GL11.glEnd();
 		}
 
-		GL11.glColor4f(0.5f, 1, 0.5f, 1);
+		GL11.glColor4f(color[0], color[1], color[2], color[3]);
 		GL11.glBegin(GL11.GL_QUADS);
-		GL11.glVertex2f(-xGaugePosition + percentage * xGaugePosition * 2, yGaugePosition - 5);
-		GL11.glVertex2f(-xGaugePosition + percentage * xGaugePosition * 2, yGaugePosition + 5);
-		GL11.glVertex2f(-xGaugePosition, yGaugePosition + 5);
-		GL11.glVertex2f(-xGaugePosition, yGaugePosition - 5);
+		GL11.glVertex2f(-xGaugePosition + percentage * xGaugePosition * 2, yGaugePosition - 3);
+		GL11.glVertex2f(-xGaugePosition + percentage * xGaugePosition * 2, yGaugePosition + 3);
+		GL11.glVertex2f(-xGaugePosition, yGaugePosition + 3);
+		GL11.glVertex2f(-xGaugePosition, yGaugePosition - 3);
 		GL11.glEnd();
+
+		GL11.glScalef(zoomFactor, zoomFactor, 1);
 	}
 
 	private void renderSelection(float massScale, boolean maxZoom) {
@@ -531,13 +545,16 @@ public class Ship extends Entity {
 			float tExt = 0; // temporary data holder
 			float xInt;
 			float xExt;
+			float zoomFactor = Model.getModel().getViewport().getZoomFactor();
+
 			if (maxZoom) {
-				xInt = 64 * massScale - 15; // radius
-				xExt = 64 * massScale - 15 + 6 / Model.getModel().getViewport().getZoomFactor(); // radius
+				xInt = 64 * massScale - 16; // radius
+				xExt = 64 * massScale - 16 + 6 / zoomFactor; // radius
 			} else {
-				xInt = 15f / Model.getModel().getViewport().getZoomFactor(); // radius
-				xExt = 21f / Model.getModel().getViewport().getZoomFactor(); // radius
+				xInt = 16 / zoomFactor; // radius
+				xExt = 16 / zoomFactor + 6 / zoomFactor; // radius
 			}
+
 			float xIntBackup = xInt; // radius
 			float xExtBackup = xExt; // radius
 			float yInt = 0;
