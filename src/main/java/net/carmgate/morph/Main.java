@@ -134,7 +134,7 @@ public class Main {
 
 	private void initModel() {
 
-		Star star = new Star(3000, -3000, 0, 5000, 100, 5000);
+		Star star = new Star(3000, -3000, 0, 5000, 100, 10000);
 		Model.getModel().addEntity(star);
 
 		Player player = new Player(PlayerType.AI, "Nemesis", FOF.FOE);
@@ -147,6 +147,7 @@ public class Main {
 		ship = new Ship(0, 0, 0, 10, 10, Model.getModel().getSelf());
 		ship.addMorph(new Morph(MorphType.OVERMIND));
 		ship.addMorph(new Morph(MorphType.SHIELD));
+		ship.addMorph(new Morph(MorphType.SIMPLE_PROPULSOR));
 		ship.addMorph(new Morph(MorphType.SIMPLE_PROPULSOR));
 		ship.addMorph(new Morph(MorphType.LASER));
 		Model.getModel().addEntity(ship);

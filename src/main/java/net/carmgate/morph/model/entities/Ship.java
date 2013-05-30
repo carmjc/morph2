@@ -730,10 +730,21 @@ public class Ship extends Entity {
 	private void updateMorphDependantValues() {
 		// Compute morphs level dependant values
 		// TODO Update these values each time a morph is upgraded
-		int maxSimplePropulsorLevel = getMaxLevelForMorphType(MorphType.SIMPLE_PROPULSOR);
-		maxSteeringForce = (float) (Conf.getIntProperty(ConfItem.MORPH_SIMPLEPROPULSOR_MAXFORCE)
-				* Math.pow(Conf.getFloatProperty(ConfItem.MORPH_SIMPLEPROPULSOR_MAXFORCE_FACTORPERLEVEL), maxSimplePropulsorLevel));
-		maxSpeed = (float) (Conf.getIntProperty(ConfItem.MORPH_SIMPLEPROPULSOR_MAXSPEED)
-				* Math.pow(Conf.getFloatProperty(ConfItem.MORPH_SIMPLEPROPULSOR_MAXSPEED_FACTORPERLEVEL), maxSimplePropulsorLevel));
+		// int maxSimplePropulsorLevel = getMaxLevelForMorphType(MorphType.SIMPLE_PROPULSOR);
+		maxSteeringForce = 0;
+		maxSpeed = 0;
+		float stackingPenalty = 1;
+		List<Morph> simplePropulsorMorphs = getMorphsByType(MorphType.SIMPLE_PROPULSOR);
+		if (simplePropulsorMorphs != null) {
+			for (Morph morph : simplePropulsorMorphs) {
+				maxSteeringForce += (float) (Conf.getIntProperty(ConfItem.MORPH_SIMPLEPROPULSOR_MAXFORCE)
+						* Math.pow(Conf.getFloatProperty(ConfItem.MORPH_SIMPLEPROPULSOR_MAXFORCE_FACTORPERLEVEL), morph.getLevel()));
+				maxSpeed += (float) (Conf.getIntProperty(ConfItem.MORPH_SIMPLEPROPULSOR_MAXSPEED)
+						* Math.pow(Conf.getFloatProperty(ConfItem.MORPH_SIMPLEPROPULSOR_MAXSPEED_FACTORPERLEVEL), morph.getLevel()));
+				stackingPenalty *= 0.75f;
+			}
+			maxSteeringForce *= stackingPenalty;
+			maxSpeed *= stackingPenalty;
+		}
 	}
 }

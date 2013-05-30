@@ -9,7 +9,11 @@ import java.util.Map;
 import java.util.Set;
 
 import net.carmgate.morph.actions.common.InteractionStack;
+import net.carmgate.morph.model.behaviors.steering.Wander;
 import net.carmgate.morph.model.common.Vect3D;
+import net.carmgate.morph.model.entities.Morph;
+import net.carmgate.morph.model.entities.Morph.MorphType;
+import net.carmgate.morph.model.entities.Ship;
 import net.carmgate.morph.model.entities.WorldArea;
 import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.model.entities.common.EntityHints;
@@ -68,6 +72,8 @@ public class Model {
 	private WorldArea rootWA;
 	private float secondsSinceLastUpdate;
 	private long lastUpdateTS;
+	private long seedNewEnemyLastTS;
+	private float secondsSinceLastEnemySeed;
 
 	private Model() {
 		self = new Player(PlayerType.HUMAN, "Carm", FOF.SELF);
@@ -254,7 +260,17 @@ public class Model {
 		// particle engin
 		particleEngine.update();
 
-		// long after = new GregorianCalendar().getTimeInMillis();
-		// LOGGER.debug("Time spent in world update: " + (after - before));
+		// Seed new enemies
+		if (secondsSinceLastEnemySeed >= 30) {
+			Player player = new Player(PlayerType.AI, "Nemesis", FOF.FOE);
+			Ship enemyShip = new Ship(128, 0, 0, 0, 20, player);
+			enemyShip.addMorph(new Morph(MorphType.OVERMIND));
+			enemyShip.addMorph(new Morph(MorphType.SIMPLE_PROPULSOR));
+			Model.getModel().addEntity(enemyShip);
+			enemyShip.addBehavior(new Wander(enemyShip, 100, 50));
+			secondsSinceLastEnemySeed = 0;
+		} else {
+			secondsSinceLastEnemySeed += Model.getModel().getSecondsSinceLastUpdate();
+		}
 	}
 }

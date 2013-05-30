@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 public class ZoomIn implements Action {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ZoomIn.class);
-	private static final float ZOOM_VARIATION = 1.1f;
+	private static final float ZOOM_VARIATION = 1.5f;
 
 	@Override
 	public void run() {
