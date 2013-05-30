@@ -5,7 +5,7 @@ import java.util.List;
 import net.carmgate.morph.actions.common.Action;
 import net.carmgate.morph.actions.common.ActionHints;
 import net.carmgate.morph.model.Model;
-import net.carmgate.morph.model.behaviors.InflictDamage;
+import net.carmgate.morph.model.behaviors.InflictLaserDamage;
 import net.carmgate.morph.model.behaviors.Movement;
 import net.carmgate.morph.model.behaviors.steering.Follow;
 import net.carmgate.morph.model.entities.Ship;
@@ -43,13 +43,13 @@ public class FollowAndInflictDamage implements Action {
 
 				// Remove existing arrive and combat behaviors
 				ship.removeBehaviorsByClass(Movement.class);
-				ship.removeBehaviorsByClass(InflictDamage.class);
+				ship.removeBehaviorsByClass(InflictLaserDamage.class);
 
 				// Add new arrive behavior
-				ship.addBehavior(new Follow((Ship) selectable, (Ship) targetShip, InflictDamage.MAX_RANGE * 0.5f));
+				ship.addBehavior(new Follow((Ship) selectable, (Ship) targetShip, InflictLaserDamage.MAX_RANGE * 0.5f));
 
 				// Add new combat behavior
-				ship.addBehavior(new InflictDamage(ship, (Ship) targetShip));
+				ship.addBehavior(new InflictLaserDamage(ship, (Ship) targetShip));
 			}
 		}
 	}

@@ -12,10 +12,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Needs({ @ActivatedMorph(morphType = MorphType.LASER) })
-public class InflictDamage implements Behavior {
+public class InflictLaserDamage implements Behavior {
 	private static final float MAX_DAMAGE_PER_HIT = 0.2f;
 
-	private final Logger LOGGER = LoggerFactory.getLogger(InflictDamage.class);
+	private final Logger LOGGER = LoggerFactory.getLogger(InflictLaserDamage.class);
 
 	/** rate of fire (nb/ms). */
 	private static final float rateOfFire = 0.005f;
@@ -27,7 +27,7 @@ public class InflictDamage implements Behavior {
 
 	private long timeOfLastAction;
 
-	public InflictDamage(Ship sourceOfDamage, Ship target) {
+	public InflictLaserDamage(Ship sourceOfDamage, Ship target) {
 		this.sourceOfDamage = sourceOfDamage;
 		this.target = target;
 	}
@@ -60,6 +60,10 @@ public class InflictDamage implements Behavior {
 					morph.increaseXp(Conf.getFloatProperty(ConfItem.MORPH_LASER_MAXXPPERHIT));
 				}
 			}
+
+			// TODO There seems to be an issue with this.
+			// It seems that if the ship has to run long before hitting the target, it hammers heavier on it ...
+			// Sometimes, it takes 20s to kill a target, sometimes it takes 3s to bring done a clone of the former.
 			timeOfLastAction += 1 / rateOfFire;
 		}
 	}

@@ -256,9 +256,11 @@ public class Main {
 		}
 
 		// TODO activate ship editor upon some action
-		// for (Morph morph : ship.getMorphs()) {
-		// morph.render(GL11.GL_RENDER);
-		// }
+		for (MorphType morphType : MorphType.values()) {
+			for (Morph morph : ((Ship) Model.getModel().getSimpleSelection().iterator().next()).getMorphsByType(morphType)) {
+				morph.render(GL11.GL_RENDER);
+			}
+		}
 
 		GL11.glScalef(1 / scale, 1 / scale, 1);
 		GL11.glRotatef(-model.getViewport().getRotation(), 0, 0, 1);
