@@ -111,8 +111,10 @@ public class Ship extends Entity {
 	private float maxSteeringForce;
 	private float maxSpeed;
 
+	// TODO put in conf the dimension of the table
 	private final Vect3D[] trail = new Vect3D[20];
 	private long trailLastUpdate;
+	// TODO put in conf the trail update interval
 	private final int trailUpdateInterval = 50;
 
 	/***

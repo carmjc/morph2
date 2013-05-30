@@ -2,6 +2,7 @@ package net.carmgate.morph.exception;
 
 import net.carmgate.morph.model.entities.common.Renderable;
 
+@SuppressWarnings("serial")
 public class ConcreteInitRendererInAbstractClassException extends Exception {
 
 	private final Class<? extends Renderable> renderable;
