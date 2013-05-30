@@ -6,6 +6,7 @@ import net.carmgate.morph.model.entities.Ship;
 import net.carmgate.morph.model.entities.Star;
 import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.model.entities.common.EntityType;
+import net.carmgate.morph.model.entities.orders.Die;
 
 public class StarsGravityPull implements ForceGeneratingBehavior {
 
@@ -38,7 +39,8 @@ public class StarsGravityPull implements ForceGeneratingBehavior {
 			// if the ship enters the star, it's destroyed
 			if (distance < star.getKillingRadius()) {
 				// TODO This might be better handled by a destruction order given to the ship
-				Model.getModel().removeEntity(ship);
+				ship.fireOrder(new Die());
+				;
 			}
 
 			force.normalize(1).mult((float) (star.getGm() * ship.getMass() / distance / distance));

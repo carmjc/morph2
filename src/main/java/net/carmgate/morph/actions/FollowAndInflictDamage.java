@@ -6,7 +6,7 @@ import net.carmgate.morph.actions.common.Action;
 import net.carmgate.morph.actions.common.ActionHints;
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.behaviors.InflictDamage;
-import net.carmgate.morph.model.behaviors.steering.Arrive;
+import net.carmgate.morph.model.behaviors.Movement;
 import net.carmgate.morph.model.behaviors.steering.Follow;
 import net.carmgate.morph.model.entities.Ship;
 import net.carmgate.morph.model.entities.common.Selectable;
@@ -42,8 +42,7 @@ public class FollowAndInflictDamage implements Action {
 				Ship ship = (Ship) selectable;
 
 				// Remove existing arrive and combat behaviors
-				ship.removeBehaviorsByClass(Follow.class);
-				ship.removeBehaviorsByClass(Arrive.class);
+				ship.removeBehaviorsByClass(Movement.class);
 				ship.removeBehaviorsByClass(InflictDamage.class);
 
 				// Add new arrive behavior

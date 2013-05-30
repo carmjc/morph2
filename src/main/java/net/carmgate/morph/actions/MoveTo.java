@@ -6,6 +6,7 @@ import net.carmgate.morph.actions.common.Action;
 import net.carmgate.morph.actions.common.ActionHints;
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.behaviors.InflictDamage;
+import net.carmgate.morph.model.behaviors.Movement;
 import net.carmgate.morph.model.behaviors.steering.Arrive;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Ship;
@@ -39,7 +40,7 @@ public class MoveTo implements Action {
 				Ship ship = (Ship) selectable;
 
 				// Remove existing arrive and combat behaviors
-				ship.removeBehaviorsByClass(Arrive.class);
+				ship.removeBehaviorsByClass(Movement.class);
 				ship.removeBehaviorsByClass(InflictDamage.class);
 
 				// Add new arrive behavior
@@ -50,5 +51,4 @@ public class MoveTo implements Action {
 			}
 		}
 	}
-
 }

@@ -111,6 +111,10 @@ public class Ship extends Entity {
 	private float maxSteeringForce;
 	private float maxSpeed;
 
+	private final Vect3D[] trail = new Vect3D[20];
+	private long trailLastUpdate;
+	private final int trailUpdateInterval = 50;
+
 	/***
 	 * Creates a new ship with position (0, 0, 0), mass = 10 assigned to player "self".
 	 */
@@ -178,15 +182,6 @@ public class Ship extends Entity {
 		list.add(morph);
 
 		updateMorphDependantValues();
-	}
-
-	private void addTrail() {
-		if (steeringForce.modulus() > maxSteeringForce * 0.002f) {
-			Model.getModel()
-					.getParticleEngine()
-					.addParticle(new Vect3D(pos), new Vect3D().substract(new Vect3D(steeringForce).mult(2)), 1f, 1f / 32,
-							steeringForce.modulus() / (maxSteeringForce / mass) * 0.2f, steeringForce.modulus() / (maxSteeringForce / mass) * 1f);
-		}
 	}
 
 	// IMPROVE remove effectiveForce from steeringForce management ?
@@ -261,9 +256,30 @@ public class Ship extends Entity {
 			if (damage > MAX_DAMAGE) {
 				fireOrder(new Die());
 			}
+
+			float explosionAngle = (float) (Math.random() * 180 + 90);
+			for (int i = 0; i < 5; i++) {
+				Model.getModel()
+						.getParticleEngine()
+						.addParticle(new Vect3D(pos), new Vect3D(speed).mult(0.25f).rotate((float) (explosionAngle + Math.random() * 5)).add(speed),
+								2, 0.125f,
+								0.5f, 0.2f);
+			}
+
 			LOGGER.debug("Damage at " + damage + " for " + this);
 		} else if (order instanceof Die) {
+			LOGGER.debug("Die !!!");
+
+			for (int i = 0; i < 200; i++) {
+				Model.getModel()
+						.getParticleEngine()
+						.addParticle(new Vect3D(pos), new Vect3D(200, 0, 0).rotate((float) (Math.random() * 360)).mult((float) Math.random()),
+								2, 0.5f,
+								0.5f, 0.05f);
+			}
+
 			Model.getModel().removeEntity(this);
+
 		}
 	}
 
@@ -327,12 +343,101 @@ public class Ship extends Entity {
 	@Override
 	public void render(int glMode) {
 
+		// render trail
+		if (trail[0] != null) {
+			Vect3D start = new Vect3D(pos);
+			Vect3D end = new Vect3D();
+			Vect3D startToEnd = new Vect3D();
+			for (int i = 0; i < trail.length; i++) {
+				if (trail[i] == null) {
+					break;
+				}
+
+				end.copy(start);
+				start.copy(trail[i]);
+				startToEnd.copy(start).substract(end).rotate(90).normalize(5);
+
+				GL11.glColor4f(1, 1, 1, ((float) trail.length - i) / trail.length);
+				TextureImpl.bindNone();
+				GL11.glBegin(GL11.GL_QUADS);
+				GL11.glVertex2f(start.x - startToEnd.x, start.y - startToEnd.y);
+				GL11.glVertex2f(end.x - startToEnd.x, end.y - startToEnd.y);
+				GL11.glVertex2f(end.x + startToEnd.x, end.y + startToEnd.y);
+				GL11.glVertex2f(start.x + startToEnd.x, start.y + startToEnd.y);
+				GL11.glEnd();
+
+			}
+		}
+
 		GL11.glTranslatef(pos.x, pos.y, pos.z);
 		GL11.glRotatef(heading, 0, 0, 1);
 		float massScale = mass / 10;
+		boolean maxZoom = 64f * massScale * Model.getModel().getViewport().getZoomFactor() > 15;
 
 		// Render selection circle around the ship
-		boolean maxZoom = 64f * massScale * Model.getModel().getViewport().getZoomFactor() > 15;
+		renderSelection(massScale, maxZoom);
+
+		// Render the ship in itself
+		if (Model.getModel().isDebugMode()) {
+			// IMPROVE replace this with some more proper mass rendering
+			float energyPercent = mass / 10;
+			if (energyPercent <= 0) {
+				GL11.glColor3f(0.1f, 0.1f, 0.1f);
+			} else {
+				GL11.glColor3f(1f - energyPercent, energyPercent, 0);
+			}
+		} else {
+			GL11.glColor3f(1f, 1f, 1f);
+		}
+		if (maxZoom) {
+			GL11.glScalef(massScale, massScale, 0);
+			baseTexture.bind();
+			GL11.glBegin(GL11.GL_QUADS);
+			GL11.glTexCoord2f(0, 0);
+			GL11.glVertex2f(-64, 64);
+			GL11.glTexCoord2f(1, 0);
+			GL11.glVertex2f(64, 64);
+			GL11.glTexCoord2f(1, 1);
+			GL11.glVertex2f(64, -64);
+			GL11.glTexCoord2f(0, 1);
+			GL11.glVertex2f(-64, -64);
+			GL11.glEnd();
+			GL11.glScalef(1 / massScale, 1 / massScale, 0);
+		} else {
+			float adjustedSize = 15 / Model.getModel().getViewport().getZoomFactor();
+			zoomedOutTexture.bind();
+			GL11.glBegin(GL11.GL_QUADS);
+			GL11.glTexCoord2f(0, 0);
+			GL11.glVertex2f(-adjustedSize, adjustedSize);
+			GL11.glTexCoord2f(1, 0);
+			GL11.glVertex2f(adjustedSize, adjustedSize);
+			GL11.glTexCoord2f(1, 1);
+			GL11.glVertex2f(adjustedSize, -adjustedSize);
+			GL11.glTexCoord2f(0, 1);
+			GL11.glVertex2f(-adjustedSize, -adjustedSize);
+			GL11.glEnd();
+		}
+
+		GL11.glRotatef(-heading, 0, 0, 1);
+
+		// Render ship forces
+		if (Model.getModel().isDebugMode()) {
+			GL11.glColor3f(1, 1, 0);
+			effectiveForce.render(glMode, 1);
+		}
+
+		GL11.glTranslatef(-pos.x, -pos.y, -pos.z);
+
+		// Render behaviors
+		for (Behavior behavior : behaviorSet) {
+			if (behavior instanceof Renderable) {
+				((Renderable) behavior).render(glMode);
+			}
+		}
+
+	}
+
+	private void renderSelection(float massScale, boolean maxZoom) {
 		if (selected) {
 			// render limit of effect zone
 			TextureImpl.bindNone();
@@ -388,63 +493,6 @@ public class Ship extends Entity {
 				yExtBackup = yExt;
 			}
 		}
-
-		// Render for show
-		if (Model.getModel().isDebugMode()) {
-			// IMPROVE replace this with some more proper mass rendering
-			float energyPercent = mass / 10;
-			if (energyPercent <= 0) {
-				GL11.glColor3f(0.1f, 0.1f, 0.1f);
-			} else {
-				GL11.glColor3f(1f - energyPercent, energyPercent, 0);
-			}
-		} else {
-			GL11.glColor3f(1f, 1f, 1f);
-		}
-		if (maxZoom) {
-			GL11.glScalef(massScale, massScale, 0);
-			baseTexture.bind();
-			GL11.glBegin(GL11.GL_QUADS);
-			GL11.glTexCoord2f(0, 0);
-			GL11.glVertex2f(-64, 64);
-			GL11.glTexCoord2f(1, 0);
-			GL11.glVertex2f(64, 64);
-			GL11.glTexCoord2f(1, 1);
-			GL11.glVertex2f(64, -64);
-			GL11.glTexCoord2f(0, 1);
-			GL11.glVertex2f(-64, -64);
-			GL11.glEnd();
-			GL11.glScalef(1 / massScale, 1 / massScale, 0);
-		} else {
-			float adjustedSize = 15 / Model.getModel().getViewport().getZoomFactor();
-			zoomedOutTexture.bind();
-			GL11.glBegin(GL11.GL_QUADS);
-			GL11.glTexCoord2f(0, 0);
-			GL11.glVertex2f(-adjustedSize, adjustedSize);
-			GL11.glTexCoord2f(1, 0);
-			GL11.glVertex2f(adjustedSize, adjustedSize);
-			GL11.glTexCoord2f(1, 1);
-			GL11.glVertex2f(adjustedSize, -adjustedSize);
-			GL11.glTexCoord2f(0, 1);
-			GL11.glVertex2f(-adjustedSize, -adjustedSize);
-			GL11.glEnd();
-		}
-
-		GL11.glRotatef(-heading, 0, 0, 1);
-
-		if (Model.getModel().isDebugMode()) {
-			GL11.glColor3f(1, 1, 0);
-			effectiveForce.render(glMode, 1);
-		}
-
-		GL11.glTranslatef(-pos.x, -pos.y, -pos.z);
-
-		for (Behavior behavior : behaviorSet) {
-			if (behavior instanceof Renderable) {
-				((Renderable) behavior).render(glMode);
-			}
-		}
-
 	}
 
 	private void rotateProperly() {
@@ -528,7 +576,6 @@ public class Ship extends Entity {
 
 		// rotate and add trail according to the steering force vector
 		rotateProperly();
-		addTrail();
 
 		// acceleration = steering_force / mass
 		accel.add(effectiveForce);
@@ -545,6 +592,15 @@ public class Ship extends Entity {
 		// If the mass of the current ship is null or below, remove it
 		if (mass <= 0) {
 			Model.getModel().removeEntity(this);
+		}
+
+		// update trail
+		if (trailLastUpdate == 0 || lastUpdateTS - trailLastUpdate > trailUpdateInterval) {
+			for (int i = trail.length - 2; i >= 0; i--) {
+				trail[i + 1] = trail[i];
+			}
+			trail[0] = new Vect3D(pos);
+			trailLastUpdate += trailUpdateInterval;
 		}
 
 		// Cleaning

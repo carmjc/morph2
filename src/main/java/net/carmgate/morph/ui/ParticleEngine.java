@@ -38,7 +38,7 @@ public class ParticleEngine implements Renderable, Updatable {
 		 * Create a new particle
 		 * @param pos
 		 * @param speed
-		 * @param life the time it takes for the particle to die
+		 * @param life the time it takes for the particle to die (in millis)
 		 * @param initialAlpha 
 		 */
 		public Particle(Vect3D pos, Vect3D speed, float initialLife, float initialLifeDeviation, float minInitialAlpha, float maxInitialAlpha) {
@@ -102,7 +102,9 @@ public class ParticleEngine implements Renderable, Updatable {
 	protected final Random random = new Random();
 
 	public void addParticle(Vect3D pos, Vect3D speed, float initialLife, float initialLifeDeviation, float minInitialAlpha, float maxInitialAlpha) {
-		speed.rotate((float) random.nextGaussian() * 2);
+		if (speed.modulus() != 0) {
+			speed.rotate((float) random.nextGaussian() * 2);
+		}
 		particles.add(new Particle(pos, speed, initialLife, initialLifeDeviation, minInitialAlpha, maxInitialAlpha));
 	}
 
@@ -121,7 +123,7 @@ public class ParticleEngine implements Renderable, Updatable {
 
 	@Override
 	public void render(int glMode) {
-		// GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
+		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
 		for (Particle particle : particles) {
 			// LOGGER.debug("Rendering particle: " + particle);
 			GL11.glTranslatef(particle.getPos().x, particle.getPos().y, 0);
@@ -129,9 +131,8 @@ public class ParticleEngine implements Renderable, Updatable {
 
 			float factor = 5;
 			float particleSize = (particle.getMaxLife() - particle.getLife()) * factor;
-			GL11.glScalef(particleSize, particleSize, 0);
+			GL11.glScalef(particleSize, particleSize, 1);
 
-			GL11.glEnable(GL11.GL_TEXTURE_2D);
 			GL11.glColor4f(1, 1, 1, particle.getLuminosity());
 			baseTexture.bind();
 			GL11.glBegin(GL11.GL_QUADS);
@@ -145,7 +146,7 @@ public class ParticleEngine implements Renderable, Updatable {
 			GL11.glVertex2f(-baseTexture.getTextureWidth() / 2, baseTexture.getTextureHeight() / 2);
 			GL11.glEnd();
 
-			GL11.glScalef(1f / particleSize, 1f / particleSize, 0);
+			GL11.glScalef(1f / particleSize, 1f / particleSize, 1);
 			GL11.glRotatef(-particle.getRot(), 0, 0, 1);
 			GL11.glTranslatef(-particle.getPos().x, -particle.getPos().y, 0);
 		}
