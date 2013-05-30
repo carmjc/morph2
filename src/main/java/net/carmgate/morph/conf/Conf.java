@@ -10,11 +10,13 @@ import org.slf4j.LoggerFactory;
 public class Conf {
 
 	public static enum ConfItem {
+		MORPH_LASER_MAXXPPERHIT("morph.laser.maxXpPerHit"),
 		MORPH_SIMPLEPROPULSOR_MAXFORCE("morph.simplePropulsor.maxForce"),
 		MORPH_SIMPLEPROPULSOR_MAXFORCE_FACTORPERLEVEL("morph.simplePropulsor.maxForce.factorPerLevel"),
 		MORPH_SIMPLEPROPULSOR_MAXSPEED("morph.simplePropulsor.maxSpeed"),
 		MORPH_SIMPLEPROPULSOR_MAXSPEED_FACTORPERLEVEL("morph.simplePropulsor.maxSpeed.factorPerLevel"),
-		MORPH_SIMPLEPROPULSOR_MAXANGLESPEEDPERMASSUNIT("morph.simplePropulsor.maxAngleSpeedPerMassUnit");
+		MORPH_SIMPLEPROPULSOR_MAXANGLESPEEDPERMASSUNIT("morph.simplePropulsor.maxAngleSpeedPerMassUnit"),
+		MORPH_SIMPLEPROPULSOR_MAXXPPERSECOND("morph.simplePropulsor.maxXpPerSecond");
 
 		private final String key;
 

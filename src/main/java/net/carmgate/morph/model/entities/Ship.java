@@ -34,7 +34,6 @@ import net.carmgate.morph.ui.rendering.RenderingSteps;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
-import org.apache.commons.collections.functors.NotPredicate;
 import org.lwjgl.opengl.GL11;
 import org.newdawn.slick.opengl.Texture;
 import org.newdawn.slick.opengl.TextureImpl;
@@ -100,21 +99,26 @@ public class Ship extends Entity {
 	private final Vect3D steeringForce = new Vect3D();
 
 	private final Set<Behavior> behaviorSet = new HashSet<>();
-	private final Set<Behavior> pendingRemovalBehaviors = new HashSet<>();
+	private final Set<Behavior> pendingBehaviorsRemoval = new HashSet<>();
+	private final Set<Behavior> pendingBehaviorsAddition = new HashSet<>();
 
 	private float damage = 0;
 	private float maxSteeringForce;
 	private float maxSpeed;
 
+	private boolean dead;
+
 	// TODO put in conf the dimension of the table
 	private final Vect3D[] trail = new Vect3D[20];
+
 	/** Stores last trail update. It occurred less than trailUpdateInterval ago. */
 	private long trailLastUpdate;
 	// TODO put in conf the trail update interval
 	private final int trailUpdateInterval = 50;
-
 	private float energy;
+
 	private final List<Order> newOrderList = new ArrayList<>();
+	private float realAccelModulus;
 
 	/***
 	 * Creates a new ship with position (0, 0, 0), mass = 10 assigned to player "self".
@@ -158,7 +162,7 @@ public class Ship extends Entity {
 			for (ActivatedMorph need : needs) {
 				for (Morph morph : morphs) {
 					if (morph.getMorphType() == need.morphType()) {
-						behaviorSet.add(behavior);
+						pendingBehaviorsAddition.add(behavior);
 						return;
 					}
 				}
@@ -167,7 +171,7 @@ public class Ship extends Entity {
 			return;
 		}
 
-		behaviorSet.add(behavior);
+		pendingBehaviorsAddition.add(behavior);
 	}
 
 	public void addEnergy(float energyInc) {
@@ -257,8 +261,21 @@ public class Ship extends Entity {
 		return maxSteeringForce;
 	}
 
+	/**
+	 * <b>Warning : Do not modify the resulting List</b>
+	 * @param morphType
+	 * @return a list containing all the morphs of a given type.
+	 */
+	public List<Morph> getMorphsByType(MorphType morphType) {
+		return morphsByType.get(morphType);
+	}
+
 	public Vect3D getPos() {
 		return pos;
+	}
+
+	public float getRealAccelModulus() {
+		return realAccelModulus;
 	}
 
 	public Vect3D getSpeed() {
@@ -292,6 +309,7 @@ public class Ship extends Entity {
 		} else if (order instanceof Die) {
 			LOGGER.debug("Die !!!");
 
+			dead = true;
 			for (int i = 0; i < 200; i++) {
 				Model.getModel()
 						.getParticleEngine()
@@ -328,6 +346,10 @@ public class Ship extends Entity {
 		}
 	}
 
+	public boolean isDead() {
+		return dead;
+	}
+
 	@Override
 	public boolean isSelected() {
 		return selected;
@@ -347,11 +369,12 @@ public class Ship extends Entity {
 	 * @param behavior to remove
 	 */
 	public void removeBehavior(Behavior behavior) {
-		pendingRemovalBehaviors.add(behavior);
+		pendingBehaviorsRemoval.add(behavior);
 	}
 
 	/**
-	 * Removes all the behaviors that are of the same type
+	 * Removes all the behaviors that are of the same type.
+	 * This method queues the behavior removal.
 	 * @param behaviorClass
 	 */
 	public void removeBehaviorsByClass(Class<?> behaviorClass) {
@@ -359,7 +382,7 @@ public class Ship extends Entity {
 			LOGGER.error("This method parameter should not be null");
 		}
 
-		CollectionUtils.filter(behaviorSet, NotPredicate.getInstance(new SameClassPredicate(behaviorClass)));
+		CollectionUtils.select(behaviorSet, new SameClassPredicate(behaviorClass), pendingBehaviorsRemoval);
 	}
 
 	@Override
@@ -629,6 +652,7 @@ public class Ship extends Entity {
 				// if the behavior is a movement, use the generated steering force
 				if (behavior instanceof Movement && ((Movement) behavior).consumeEnergy()) {
 					applySteeringForce(((Movement) behavior).getSteeringForce());
+					((Movement) behavior).rewardMorphs();
 				}
 
 				// if the behavior is generating a force, we must apply it
@@ -642,10 +666,17 @@ public class Ship extends Entity {
 		// rotate and add trail according to the steering force vector
 		rotateProperly();
 
+		// real accel is necessary to calculate propulsors energy consumption
+		// it is the difference between the speed in the new cycle and
+		// the speed in the previous cycle
+		Vect3D realAccel = new Vect3D(speed);
+
 		// acceleration = steering_force / mass
 		accel.add(effectiveForce);
 		// velocity = truncate (velocity + acceleration, max_speed)
 		speed.add(new Vect3D(accel).mult(secondsSinceLastUpdate)).truncate(maxSpeed);
+		realAccel.substract(speed);
+		realAccelModulus = realAccel.modulus();
 		// position = position + velocity
 		pos.add(new Vect3D(speed).mult(secondsSinceLastUpdate));
 
@@ -657,11 +688,6 @@ public class Ship extends Entity {
 		orderList.addAll(newOrderList);
 		newOrderList.clear();
 
-		// If the mass of the current ship is null or below, remove it
-		if (mass <= 0) {
-			Model.getModel().removeEntity(this);
-		}
-
 		// update trail
 		if (trailLastUpdate == 0 || Model.getModel().getLastUpdateTS() - trailLastUpdate > trailUpdateInterval) {
 			for (int i = trail.length - 2; i >= 0; i--) {
@@ -672,9 +698,16 @@ public class Ship extends Entity {
 		}
 
 		// Cleaning
-		for (Behavior behavior : pendingRemovalBehaviors) {
+		for (Behavior behavior : pendingBehaviorsRemoval) {
 			behaviorSet.remove(behavior);
 		}
+		pendingBehaviorsRemoval.clear();
+
+		// Executing pending behavior addition
+		for (Behavior behavior : pendingBehaviorsAddition) {
+			behaviorSet.add(behavior);
+		}
+		pendingBehaviorsAddition.clear();
 	}
 
 	private void updateMorphDependantValues() {

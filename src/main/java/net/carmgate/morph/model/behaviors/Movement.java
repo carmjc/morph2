@@ -1,12 +1,20 @@
 package net.carmgate.morph.model.behaviors;
 
+import net.carmgate.morph.conf.Conf;
+import net.carmgate.morph.conf.Conf.ConfItem;
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.common.Vect3D;
+import net.carmgate.morph.model.entities.Morph;
 import net.carmgate.morph.model.entities.Morph.MorphType;
 import net.carmgate.morph.model.entities.Ship;
 import net.carmgate.morph.model.entities.common.Renderable;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public abstract class Movement implements Behavior, Renderable {
+	private static final Logger LOGGER = LoggerFactory.getLogger(Movement.class);
+
 	protected final Ship shipToMove;
 
 	/**
@@ -21,12 +29,22 @@ public abstract class Movement implements Behavior, Renderable {
 		this.shipToMove = shipToMove;
 	}
 
+	// TODO the energy consumption should depend on the number and level of the propulsor morphs
 	public boolean consumeEnergy() {
-		return shipToMove.consumeEnergy(Model.getModel().getSecondsSinceLastUpdate()
+		float energyDec = Model.getModel().getSecondsSinceLastUpdate()
 				* MorphType.SIMPLE_PROPULSOR.getEnergyConsumption()
-				* getSteeringForce().modulus() / shipToMove.getMaxSteeringForce());
+				* shipToMove.getRealAccelModulus() / shipToMove.getMaxSteeringForce();
+		return shipToMove.consumeEnergy(energyDec);
 	}
 
 	public abstract Vect3D getSteeringForce();
+
+	public void rewardMorphs() {
+		for (Morph morph : shipToMove.getMorphsByType(MorphType.SIMPLE_PROPULSOR)) {
+			morph.increaseXp(shipToMove.getRealAccelModulus() / shipToMove.getMaxSteeringForce()
+					* Model.getModel().getSecondsSinceLastUpdate()
+					* Conf.getFloatProperty(ConfItem.MORPH_SIMPLEPROPULSOR_MAXXPPERSECOND));
+		}
+	}
 
 }

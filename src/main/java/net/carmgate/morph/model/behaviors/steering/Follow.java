@@ -1,8 +1,8 @@
 package net.carmgate.morph.model.behaviors.steering;
 
 import net.carmgate.morph.model.Model;
-import net.carmgate.morph.model.behaviors.Movement;
 import net.carmgate.morph.model.behaviors.ActivatedMorph;
+import net.carmgate.morph.model.behaviors.Movement;
 import net.carmgate.morph.model.behaviors.Needs;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Morph.MorphType;
@@ -20,7 +20,7 @@ public class Follow extends Movement {
 	private static final float sin = (float) Math.sin(deltaAngle);
 
 	// Be careful, this is the real instance of the ship's position
-	private Vect3D target;
+	private Ship target;
 	private final Vect3D desiredVelocity = new Vect3D();
 
 	private float slowingDistance;
@@ -41,7 +41,7 @@ public class Follow extends Movement {
 	public Follow(Ship shipToMove, Ship target, float maxDistance) {
 		super(shipToMove);
 		this.maxDistance = maxDistance;
-		this.target = target.getPos();
+		this.target = target;
 		targetSpeed = target.getSpeed();
 	}
 
@@ -81,7 +81,7 @@ public class Follow extends Movement {
 
 		if (target != null && shipToMove.isSelected() && Model.getModel().isDebugMode()) {
 			// Show target
-			GL11.glTranslatef(target.x, target.y, 0);
+			GL11.glTranslatef(target.getPos().x, target.getPos().y, 0);
 
 			TextureImpl.bindNone();
 			GL11.glBegin(GL11.GL_QUADS);
@@ -107,19 +107,30 @@ public class Follow extends Movement {
 				GL11.glVertex2d(x, y);
 			}
 			GL11.glEnd();
-			GL11.glTranslatef(-target.x, -target.y, 0);
+			GL11.glTranslatef(-target.getPos().x, -target.getPos().y, 0);
 		}
 	}
 
 	@Override
 	public void run(float secondsSinceLastUpdate) {
+		if (target.isDead()) {
+			// Remove existing arrive and combat behaviors
+			shipToMove.removeBehavior(this);
+
+			// Add new arrive behavior
+			// TODO Replace this with a simple break behavior
+			// TODO Add a break behavior triggered by KEY_ESCAPE ?
+			shipToMove.addBehavior(new Arrive(shipToMove, target.getPos()));
+
+			return;
+		}
 
 		// Get some ship variables (must be final)
 		final float mass = shipToMove.getMass();
 		final Vect3D pos = new Vect3D(shipToMove.getPos());
 		final Vect3D speed = new Vect3D(shipToMove.getSpeed());
 
-		Vect3D recomputedTarget = new Vect3D(target).add(new Vect3D(targetSpeed).truncate(targetSpeed.modulus() - maxDistance));
+		Vect3D recomputedTarget = new Vect3D(target.getPos()).add(new Vect3D(targetSpeed).truncate(targetSpeed.modulus() - maxDistance));
 		targetOffset.copy(recomputedTarget).substract(pos);
 
 		normalizedTargetOffset.copy(targetOffset).normalize(1);
@@ -141,19 +152,6 @@ public class Follow extends Movement {
 		desiredVelocity.copy(targetOffset).add(speedOpposition).normalize(distance);
 
 		steeringForce.copy(desiredVelocity).substract(speed);
-		// float factor = 1.35f;
-		// float sdmin = slowingDistance / factor;
-		// float sdmax = slowingDistance;
-		// float overdrive = 1.0f + speed.modulus() / Ship.MAX_SPEED;
-		// if (distance > sdmax) {
-		// steeringForce.truncate(Ship.MAX_FORCE / mass);
-		// } else if (distance > sdmin) {
-		// float stModulus = steeringForce.modulus();
-		// steeringForce.normalize((distance - sdmin) / (sdmax - sdmin) * stModulus + (sdmax - distance)
-		// / (sdmax - sdmin) * Ship.MAX_FORCE / mass * overdrive);
-		// } else {
-		// steeringForce.normalize(Ship.MAX_FORCE / mass * overdrive);
-		// }
 
 		// stop condition
 		if (new Vect3D(recomputedTarget).substract(pos).modulus() < 5 && speed.modulus() < 60) {

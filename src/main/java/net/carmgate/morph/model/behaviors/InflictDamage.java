@@ -1,6 +1,9 @@
 package net.carmgate.morph.model.behaviors;
 
+import net.carmgate.morph.conf.Conf;
+import net.carmgate.morph.conf.Conf.ConfItem;
 import net.carmgate.morph.model.Model;
+import net.carmgate.morph.model.entities.Morph;
 import net.carmgate.morph.model.entities.Morph.MorphType;
 import net.carmgate.morph.model.entities.Ship;
 import net.carmgate.morph.model.entities.orders.TakeDamage;
@@ -41,6 +44,10 @@ public class InflictDamage implements Behavior {
 
 	@Override
 	public void run(float secondsSinceLastUpdate) {
+		if (target.isDead()) {
+			sourceOfDamage.removeBehavior(this);
+		}
+
 		// TODO The damage amount taken from the target take into account the target's speed, distance and size.
 		// TODO The damage sent to the target should take into account current morphs' xp, level and type.
 		// TODO This should also be updated to cope with the improbable possibility that the refresh rate is insufficient to handle
@@ -48,8 +55,10 @@ public class InflictDamage implements Behavior {
 		if (timeOfLastAction == 0 || (Model.getModel().getCurrentTS() - timeOfLastAction) * rateOfFire > 1) {
 			if (target.getPos().distance(sourceOfDamage.getPos()) < MAX_RANGE && consumeEnergy()) {
 				target.fireOrder(new TakeDamage(MAX_DAMAGE_PER_HIT));
-			} else {
-				LOGGER.debug("" + target.getPos().distance(sourceOfDamage.getPos()));
+
+				for (Morph morph : sourceOfDamage.getMorphsByType(MorphType.LASER)) {
+					morph.increaseXp(Conf.getFloatProperty(ConfItem.MORPH_LASER_MAXXPPERHIT));
+				}
 			}
 			timeOfLastAction += 1 / rateOfFire;
 		}
