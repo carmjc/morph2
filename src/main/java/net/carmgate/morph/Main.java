@@ -139,15 +139,16 @@ public class Main {
 
 		Player player = new Player(PlayerType.AI, "Nemesis", FOF.FOE);
 		Ship enemyShip = new Ship(128, 0, 0, 0, 20, player);
-		enemyShip.getMorphs().add(new Morph(MorphType.PROPULSOR));
+		enemyShip.addMorph(new Morph(MorphType.OVERMIND));
+		enemyShip.addMorph(new Morph(MorphType.SIMPLE_PROPULSOR));
 		Model.getModel().addEntity(enemyShip);
 		enemyShip.addBehavior(new Wander(enemyShip, 100, 50));
 
 		ship = new Ship(0, 0, 0, 10, 10, Model.getModel().getSelf());
-		ship.getMorphs().add(new Morph(MorphType.OVERMIND));
-		ship.getMorphs().add(new Morph(MorphType.SHIELD));
-		ship.getMorphs().add(new Morph(MorphType.PROPULSOR));
-		ship.getMorphs().add(new Morph(MorphType.LASER));
+		ship.addMorph(new Morph(MorphType.OVERMIND));
+		ship.addMorph(new Morph(MorphType.SHIELD));
+		ship.addMorph(new Morph(MorphType.SIMPLE_PROPULSOR));
+		ship.addMorph(new Morph(MorphType.LASER));
 		Model.getModel().addEntity(ship);
 
 	}

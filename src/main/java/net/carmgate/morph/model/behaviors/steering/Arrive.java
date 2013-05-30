@@ -11,7 +11,7 @@ import net.carmgate.morph.model.entities.Ship;
 import org.lwjgl.opengl.GL11;
 import org.newdawn.slick.opengl.TextureImpl;
 
-@Needs({ @Need(morphType = MorphType.PROPULSOR) })
+@Needs({ @Need(morphType = MorphType.SIMPLE_PROPULSOR) })
 public class Arrive extends Movement {
 
 	private static final int nbSegments = 200;
@@ -135,12 +135,12 @@ public class Arrive extends Movement {
 
 		// Optimal slowing distance when cruising at MAX_SPEED before entering the slowing radius
 		// Optimal slowing distance is computed for debugging purposes only
-		slowingDistance = 0.00001f + (float) (Math.pow(speed.modulus(), 2) / (2 * Ship.MAX_FORCE / mass * cosSpeedToTO));
+		slowingDistance = 0.00001f + (float) (Math.pow(speed.modulus(), 2) / (2 * shipToMove.getMaxSteeringForce() / mass * cosSpeedToTO));
 
 		// Ramped speed is the optimal target speed modulus
-		float rampedSpeed = (float) Math.sqrt(2 * Ship.MAX_FORCE / mass * distance);
+		float rampedSpeed = (float) Math.sqrt(2 * shipToMove.getMaxSteeringForce() / mass * distance);
 		// clipped_speed clips the speed to max speed
-		float clippedSpeed = Math.min(rampedSpeed, Ship.MAX_SPEED);
+		float clippedSpeed = Math.min(rampedSpeed, shipToMove.getMaxSpeed());
 		// desired_velocity would be the optimal speed vector if we had unlimited thrust
 		desiredVelocity.copy(targetOffset).add(speedOpposition).mult(clippedSpeed / distance);
 
@@ -148,15 +148,15 @@ public class Arrive extends Movement {
 		float factor = 1.35f;
 		float sdmin = slowingDistance / factor;
 		float sdmax = slowingDistance;
-		float overdrive = 1.0f + speed.modulus() / Ship.MAX_SPEED;
+		float overdrive = 1.0f + speed.modulus() / shipToMove.getMaxSpeed();
 		if (distance > sdmax) {
-			steeringForce.truncate(Ship.MAX_FORCE / mass);
+			steeringForce.truncate(shipToMove.getMaxSteeringForce() / mass);
 		} else if (distance > sdmin) {
 			float stModulus = steeringForce.modulus();
 			steeringForce.normalize((distance - sdmin) / (sdmax - sdmin) * stModulus + (sdmax - distance)
-					/ (sdmax - sdmin) * Ship.MAX_FORCE / mass * overdrive);
+					/ (sdmax - sdmin) * shipToMove.getMaxSteeringForce() / mass * overdrive);
 		} else {
-			steeringForce.normalize(Ship.MAX_FORCE / mass * overdrive);
+			steeringForce.normalize(shipToMove.getMaxSteeringForce() / mass * overdrive);
 		}
 
 		// stop condition

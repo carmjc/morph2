@@ -82,7 +82,7 @@ public class Star extends Entity {
 	public void initRenderer() {
 		// load texture from PNG file if needed
 		if (baseTexture == null) {
-			try (FileInputStream fileInputStream = new FileInputStream(ClassLoader.getSystemResource("stars/blue.png").getPath())) {
+			try (FileInputStream fileInputStream = new FileInputStream(ClassLoader.getSystemResource("img/stars/blue.png").getPath())) {
 				baseTexture = TextureLoader.getTexture("PNG", fileInputStream);
 			} catch (IOException e) {
 				LOGGER.error("Exception raised while loading texture", e);

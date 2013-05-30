@@ -11,7 +11,7 @@ import net.carmgate.morph.model.entities.Ship;
 import org.lwjgl.opengl.GL11;
 import org.newdawn.slick.opengl.TextureImpl;
 
-@Needs({ @Need(morphType = MorphType.PROPULSOR) })
+@Needs({ @Need(morphType = MorphType.SIMPLE_PROPULSOR) })
 public class Follow extends Movement {
 
 	private static final int nbSegments = 200;
@@ -135,7 +135,7 @@ public class Follow extends Movement {
 
 		// Optimal slowing distance when cruising at MAX_SPEED before entering the slowing radius
 		// Optimal slowing distance is computed for debugging purposes only
-		slowingDistance = 0.00001f + (float) (Math.pow(speed.modulus(), 2) / (2 * Ship.MAX_FORCE / mass * cosSpeedToTO));
+		slowingDistance = 0.00001f + (float) (Math.pow(speed.modulus(), 2) / (2 * shipToMove.getMaxSteeringForce() / mass * cosSpeedToTO));
 
 		// desired_velocity would be the optimal speed vector if we had unlimited thrust
 		desiredVelocity.copy(targetOffset).add(speedOpposition).normalize(distance);

@@ -217,7 +217,7 @@ public class WorldArea implements Renderable {
 	@Override
 	public void initRenderer() {
 		for (int i = 0; i < textures.length; i++) {
-			try (FileInputStream fileInputStream = new FileInputStream(ClassLoader.getSystemResource("stars" + (i + 1) + ".png").getPath())) {
+			try (FileInputStream fileInputStream = new FileInputStream(ClassLoader.getSystemResource("img/stars" + (i + 1) + ".png").getPath())) {
 				textures[i] = TextureLoader.getTexture("PNG", fileInputStream);
 			} catch (IOException e) {
 				LOGGER.error("Exception raised while loading texture", e);

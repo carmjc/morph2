@@ -20,7 +20,7 @@ public class Morph implements Renderable, Selectable {
 		OVERMIND,
 		SHIELD,
 		LASER,
-		PROPULSOR;
+		SIMPLE_PROPULSOR;
 	}
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(Morph.class);
@@ -31,8 +31,7 @@ public class Morph implements Renderable, Selectable {
 
 	// Morph characteristics
 	private final MorphType morphType;
-	private int level = 1;
-
+	private int level = 0;
 	private float xp = 0;
 
 	public Morph() {
@@ -41,6 +40,15 @@ public class Morph implements Renderable, Selectable {
 
 	public Morph(MorphType morphType) {
 		this.morphType = morphType;
+		synchronized (nextId) {
+			selectionId = nextId++;
+		}
+	}
+
+	public Morph(MorphType morphType, int level, float xp) {
+		this.morphType = morphType;
+		this.level = level;
+		this.xp = xp;
 		synchronized (nextId) {
 			selectionId = nextId++;
 		}
@@ -75,7 +83,7 @@ public class Morph implements Renderable, Selectable {
 	public void initRenderer() {
 		// load texture from PNG file if needed
 		if (baseTexture == null) {
-			try (FileInputStream fileInputStream = new FileInputStream(ClassLoader.getSystemResource("morphEditor1-64.png").getPath())) {
+			try (FileInputStream fileInputStream = new FileInputStream(ClassLoader.getSystemResource("img/morphEditor1-64.png").getPath())) {
 				baseTexture = TextureLoader.getTexture("PNG", fileInputStream);
 			} catch (IOException e) {
 				LOGGER.error("Exception raised while loading texture", e);
@@ -84,7 +92,7 @@ public class Morph implements Renderable, Selectable {
 
 		for (MorphType tmpMorphType : MorphType.values()) {
 			// morphTypeTextures.put(morphType, baseTexture)
-			try (FileInputStream fileInputStream = new FileInputStream(ClassLoader.getSystemResource("morph_" + tmpMorphType.name().toLowerCase() + ".png")
+			try (FileInputStream fileInputStream = new FileInputStream(ClassLoader.getSystemResource("img/morph_" + tmpMorphType.name().toLowerCase() + ".png")
 					.getPath())) {
 				morphTypeTextures.put(tmpMorphType, TextureLoader.getTexture("PNG", fileInputStream));
 			} catch (IOException e) {

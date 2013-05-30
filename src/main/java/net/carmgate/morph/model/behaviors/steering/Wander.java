@@ -7,7 +7,7 @@ import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Morph.MorphType;
 import net.carmgate.morph.model.entities.Ship;
 
-@Needs({ @Need(morphType = MorphType.PROPULSOR) })
+@Needs({ @Need(morphType = MorphType.SIMPLE_PROPULSOR) })
 public class Wander extends Movement {
 
 	private final float wanderFocusDistance;
@@ -70,7 +70,7 @@ public class Wander extends Movement {
 			wanderTarget.copy(Vect3D.NULL);
 		}
 
-		steeringForce.copy(new Vect3D(wanderFocus).substract(pos).add(wanderTarget)).truncate(Ship.MAX_FORCE / shipToMove.getMass());
+		steeringForce.copy(new Vect3D(wanderFocus).substract(pos).add(wanderTarget)).truncate(shipToMove.getMaxSteeringForce() / shipToMove.getMass());
 	}
 
 }

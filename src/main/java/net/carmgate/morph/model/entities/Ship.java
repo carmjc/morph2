@@ -3,10 +3,14 @@ package net.carmgate.morph.model.entities;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import net.carmgate.morph.conf.Conf;
+import net.carmgate.morph.conf.Conf.ConfItem;
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.behaviors.Behavior;
 import net.carmgate.morph.model.behaviors.ForceGeneratingBehavior;
@@ -15,6 +19,7 @@ import net.carmgate.morph.model.behaviors.Need;
 import net.carmgate.morph.model.behaviors.Needs;
 import net.carmgate.morph.model.behaviors.StarsGravityPull;
 import net.carmgate.morph.model.common.Vect3D;
+import net.carmgate.morph.model.entities.Morph.MorphType;
 import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.model.entities.common.EntityHints;
 import net.carmgate.morph.model.entities.common.EntityType;
@@ -69,14 +74,9 @@ public class Ship extends Entity {
 	private static Texture baseTexture;
 	private static Texture zoomedOutTexture;
 
-	/** The ship max speed. */
-	// IMPROVE All these values should depend on the ship's fitting.
-	public static final float MAX_SPEED = 1000;
-	public static final float MAX_FORCE = 3000f;
-	private static final float MAX_ANGLE_SPEED_PER_MASS_UNIT = 3600f;
 	private static final float MAX_DAMAGE = 10;
-	public static final float MAX_RANGE = 300;
 	private final List<Morph> morphs = new ArrayList<>();
+	private final Map<MorphType, List<Morph>> morphsByType = new HashMap<>();
 
 	/** The ship position in the world. */
 	private final Vect3D pos = new Vect3D();
@@ -108,6 +108,8 @@ public class Ship extends Entity {
 	private final Set<Behavior> pendingRemovalBehaviors = new HashSet<>();
 
 	private float damage = 0;
+	private float maxSteeringForce;
+	private float maxSpeed;
 
 	/***
 	 * Creates a new ship with position (0, 0, 0), mass = 10 assigned to player "self".
@@ -139,6 +141,11 @@ public class Ship extends Entity {
 		addBehavior(new StarsGravityPull(this));
 	}
 
+	/**
+	 * Adds a behavior to the ship if the needed morphs are present is the ship
+	 * @param behavior
+	 * @return true if it was possible to add the behavior
+	 */
 	public void addBehavior(Behavior behavior) {
 		// Checks that the behavior can be added to the ship
 		if (behavior != null
@@ -158,15 +165,27 @@ public class Ship extends Entity {
 		}
 
 		behaviorSet.add(behavior);
+	}
 
+	public void addMorph(Morph morph) {
+		morphs.add(morph);
+
+		List<Morph> list = morphsByType.get(morph.getMorphType());
+		if (list == null) {
+			list = new ArrayList<>();
+			morphsByType.put(morph.getMorphType(), list);
+		}
+		list.add(morph);
+
+		updateMorphDependantValues();
 	}
 
 	private void addTrail() {
-		if (steeringForce.modulus() > MAX_FORCE * 0.002) {
+		if (steeringForce.modulus() > maxSteeringForce * 0.002f) {
 			Model.getModel()
 					.getParticleEngine()
 					.addParticle(new Vect3D(pos), new Vect3D().substract(new Vect3D(steeringForce).mult(2)), 1f, 1f / 32,
-							steeringForce.modulus() / (MAX_FORCE / mass) * 0.2f, steeringForce.modulus() / (MAX_FORCE / mass) * 1f);
+							steeringForce.modulus() / (maxSteeringForce / mass) * 0.2f, steeringForce.modulus() / (maxSteeringForce / mass) * 1f);
 		}
 	}
 
@@ -198,8 +217,27 @@ public class Ship extends Entity {
 		return mass;
 	}
 
-	public List<Morph> getMorphs() {
-		return morphs;
+	private int getMaxLevelForMorphType(final MorphType morphType) {
+		int maxLevel = 0;
+
+		if (morphsByType.get(morphType) == null) {
+			return 0;
+		}
+
+		for (Morph morph : morphsByType.get(morphType)) {
+			if (morph.getLevel() > maxLevel) {
+				maxLevel = morph.getLevel();
+			}
+		}
+		return maxLevel;
+	}
+
+	public float getMaxSpeed() {
+		return maxSpeed;
+	}
+
+	public float getMaxSteeringForce() {
+		return maxSteeringForce;
 	}
 
 	public Vect3D getPos() {
@@ -236,7 +274,7 @@ public class Ship extends Entity {
 	public void initRenderer() {
 		// load texture from PNG file if needed
 		if (baseTexture == null) {
-			try (FileInputStream fileInputStream = new FileInputStream(ClassLoader.getSystemResource("spaceship.png").getPath())) {
+			try (FileInputStream fileInputStream = new FileInputStream(ClassLoader.getSystemResource("img/spaceship.png").getPath())) {
 				baseTexture = TextureLoader.getTexture("PNG", fileInputStream);
 			} catch (IOException e) {
 				LOGGER.error("Exception raised while loading texture", e);
@@ -244,7 +282,7 @@ public class Ship extends Entity {
 		}
 
 		if (zoomedOutTexture == null) {
-			try (FileInputStream fileInputStream = new FileInputStream(ClassLoader.getSystemResource("spaceshipZoomedOut.png").getPath())) {
+			try (FileInputStream fileInputStream = new FileInputStream(ClassLoader.getSystemResource("img/spaceshipZoomedOut.png").getPath())) {
 				zoomedOutTexture = TextureLoader.getTexture("PNG", fileInputStream);
 			} catch (IOException e) {
 				LOGGER.error("Exception raised while loading texture", e);
@@ -420,7 +458,7 @@ public class Ship extends Entity {
 
 		// rotate properly along the speed vector (historically along the steering force vector)
 		float newHeading;
-		float headingFactor = steeringForce.modulus() / MAX_FORCE * mass * 4;
+		float headingFactor = steeringForce.modulus() / maxSteeringForce * mass * 4;
 		if (headingFactor > 3) {
 			newHeading = new Vect3D(0, 1, 0).angleWith(steeringForce);
 		} else if (headingFactor > 0) {
@@ -431,7 +469,7 @@ public class Ship extends Entity {
 
 		// heading = newHeading;
 		float angleDiff = (newHeading - heading + 360) % 360;
-		float maxAngleSpeed = MAX_ANGLE_SPEED_PER_MASS_UNIT / mass;
+		float maxAngleSpeed = Conf.getIntProperty(ConfItem.MORPH_SIMPLEPROPULSOR_MAXANGLESPEEDPERMASSUNIT) / mass;
 		if (angleDiff < maxAngleSpeed * Math.max(1, angleDiff / 180) * secondsSinceLastUpdate) {
 			heading = newHeading;
 		} else if (angleDiff < 180) {
@@ -495,7 +533,7 @@ public class Ship extends Entity {
 		// acceleration = steering_force / mass
 		accel.add(effectiveForce);
 		// velocity = truncate (velocity + acceleration, max_speed)
-		speed.add(new Vect3D(accel).mult(secondsSinceLastUpdate)).truncate(Ship.MAX_SPEED);
+		speed.add(new Vect3D(accel).mult(secondsSinceLastUpdate)).truncate(maxSpeed);
 		// position = position + velocity
 		pos.add(new Vect3D(speed).mult(secondsSinceLastUpdate));
 
@@ -513,5 +551,15 @@ public class Ship extends Entity {
 		for (Behavior behavior : pendingRemovalBehaviors) {
 			behaviorSet.remove(behavior);
 		}
+	}
+
+	private void updateMorphDependantValues() {
+		// Compute morphs level dependant values
+		// TODO Update these values each time a morph is upgraded
+		int maxSimplePropulsorLevel = getMaxLevelForMorphType(MorphType.SIMPLE_PROPULSOR);
+		maxSteeringForce = (float) (Conf.getIntProperty(ConfItem.MORPH_SIMPLEPROPULSOR_MAXFORCE)
+				* Math.pow(Conf.getFloatProperty(ConfItem.MORPH_SIMPLEPROPULSOR_MAXFORCE_FACTORPERLEVEL), maxSimplePropulsorLevel));
+		maxSpeed = (float) (Conf.getIntProperty(ConfItem.MORPH_SIMPLEPROPULSOR_MAXSPEED)
+				* Math.pow(Conf.getFloatProperty(ConfItem.MORPH_SIMPLEPROPULSOR_MAXSPEED_FACTORPERLEVEL), maxSimplePropulsorLevel));
 	}
 }
