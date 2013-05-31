@@ -52,7 +52,9 @@ public class DraggingWorld implements Action {
 			ViewPort viewport = Model.getModel().getViewport();
 			Vect3D fp = viewport.getFocalPoint();
 			fp.x = oldFP.x + (Mouse.getX() - oldMousePosInWindow.x);// / Model.getModel().getViewport().getZoomFactor();
-			fp.y = oldFP.y + (Mouse.getY() - oldMousePosInWindow.y);// / Model.getModel().getViewport().getZoomFactor();
+			fp.y = oldFP.y - (Mouse.getY() - oldMousePosInWindow.y);// / Model.getModel().getViewport().getZoomFactor();
 		}
+
+		LOGGER.debug(Model.getModel().getViewport().getFocalPoint() + " - " + GameMouse.getPosInWord());
 	}
 }

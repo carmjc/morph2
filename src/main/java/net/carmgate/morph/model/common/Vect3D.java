@@ -79,9 +79,9 @@ public class Vect3D implements Renderable {
 	}
 
 	public void copy(float newX, float newY, float newZ) {
-		this.x = newX;
-		this.y = newY;
-		this.z = newZ;
+		x = newX;
+		y = newY;
+		z = newZ;
 	}
 
 	/**

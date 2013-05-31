@@ -6,8 +6,8 @@ import java.util.List;
 import net.carmgate.morph.actions.common.Action;
 import net.carmgate.morph.actions.common.ActionHints;
 import net.carmgate.morph.actions.common.Event;
-import net.carmgate.morph.actions.common.SelectionType;
 import net.carmgate.morph.actions.common.Event.EventType;
+import net.carmgate.morph.actions.common.SelectionType;
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.common.Entity;
@@ -125,7 +125,7 @@ public class WorldSelect implements Action {
 		GLU.gluPickMatrix(x, y, 6.0f, 6.0f, viewport);
 
 		Window window = Model.getModel().getWindow();
-		GL11.glOrtho(0, window.getWidth(), 0, window.getHeight(), 1, -1);
+		GL11.glOrtho(0, window.getWidth(), 0, -window.getHeight(), 1, -1);
 		GL11.glViewport(0, 0, window.getWidth(), window.getHeight());
 
 		render(GL11.GL_SELECT);

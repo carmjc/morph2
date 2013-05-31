@@ -186,7 +186,7 @@ public class Main {
 
 	private void initModel() {
 
-		Star star = new Star(3000, -3000, 0, 5000, 100, 10000);
+		Star star = new Star(3000, 3000, 0, 5000, 100, 10000);
 		Model.getModel().addEntity(star);
 
 		Player player = new Player(PlayerType.AI, "Nemesis", FOF.FOE);
@@ -194,7 +194,7 @@ public class Main {
 		enemyShip.addMorph(new Morph(MorphType.OVERMIND));
 		enemyShip.addMorph(new Morph(MorphType.SIMPLE_PROPULSOR));
 		Model.getModel().addEntity(enemyShip);
-		enemyShip.addBehavior(new Wander(enemyShip, 100, 50));
+		enemyShip.addBehavior(new Wander(enemyShip, 200, 50));
 
 	}
 
@@ -261,7 +261,7 @@ public class Main {
 		GL11.glMatrixMode(GL11.GL_PROJECTION);
 		GL11.glLoadIdentity();
 
-		GL11.glOrtho(-width / 2, width / 2, -height / 2, height / 2, 1, -1);
+		GL11.glOrtho(-width / 2, width / 2, height / 2, -height / 2, 1, 1);
 		GL11.glViewport(0, 0, width, height);
 
 		GL11.glMatrixMode(GL11.GL_MODELVIEW);
@@ -393,7 +393,7 @@ public class Main {
 
 			int width = Display.getWidth();
 			int height = Display.getHeight();
-			GL11.glOrtho(-width / 2, width / 2, -height / 2, height / 2, 1, -1);
+			GL11.glOrtho(-width / 2, width / 2, height / 2, -height / 2, 1, -1);
 			GL11.glViewport(0, 0, width, height);
 
 			GL11.glMatrixMode(GL11.GL_MODELVIEW);

@@ -450,13 +450,13 @@ public class Ship extends Entity {
 			baseTexture.bind();
 			GL11.glBegin(GL11.GL_QUADS);
 			GL11.glTexCoord2f(0, 0);
-			GL11.glVertex2f(-64, 64);
-			GL11.glTexCoord2f(1, 0);
-			GL11.glVertex2f(64, 64);
-			GL11.glTexCoord2f(1, 1);
-			GL11.glVertex2f(64, -64);
-			GL11.glTexCoord2f(0, 1);
 			GL11.glVertex2f(-64, -64);
+			GL11.glTexCoord2f(1, 0);
+			GL11.glVertex2f(64, -64);
+			GL11.glTexCoord2f(1, 1);
+			GL11.glVertex2f(64, 64);
+			GL11.glTexCoord2f(0, 1);
+			GL11.glVertex2f(-64, 64);
 			GL11.glEnd();
 			GL11.glScalef(1 / massScale, 1 / massScale, 0);
 		} else {
@@ -464,13 +464,13 @@ public class Ship extends Entity {
 			zoomedOutTexture.bind();
 			GL11.glBegin(GL11.GL_QUADS);
 			GL11.glTexCoord2f(0, 0);
-			GL11.glVertex2f(-64, 64);
-			GL11.glTexCoord2f(1, 0);
-			GL11.glVertex2f(64, 64);
-			GL11.glTexCoord2f(1, 1);
-			GL11.glVertex2f(64, -64);
-			GL11.glTexCoord2f(0, 1);
 			GL11.glVertex2f(-64, -64);
+			GL11.glTexCoord2f(1, 0);
+			GL11.glVertex2f(64, -64);
+			GL11.glTexCoord2f(1, 1);
+			GL11.glVertex2f(64, 64);
+			GL11.glTexCoord2f(0, 1);
+			GL11.glVertex2f(-64, 64);
 			GL11.glEnd();
 			GL11.glScalef(4 * zoomFactor, 4 * zoomFactor, 0);
 		}
@@ -486,13 +486,13 @@ public class Ship extends Entity {
 		// Render energy gauge
 		GL11.glScalef(1 / zoomFactor, 1 / zoomFactor, 1);
 		if (maxZoom) {
-			RenderUtils.renderGauge(50, -16 - 64 * zoomFactor * massScale - 5, Math.min(MAX_DAMAGE - damage, MAX_DAMAGE) / MAX_DAMAGE, 0.2f,
+			RenderUtils.renderGauge(50, 16 + 64 * zoomFactor * massScale + 5, Math.min(MAX_DAMAGE - damage, MAX_DAMAGE) / MAX_DAMAGE, 0.2f,
 					new float[] { 0.5f, 1, 0.5f,
 							1 });
-			RenderUtils.renderGauge(50, -16 - 64 * zoomFactor * massScale + 5, Math.min(energy, 100) / 100, 0.05f, new float[] { 0.5f, 0.5f, 1, 1 });
+			RenderUtils.renderGauge(50, 16 + 64 * zoomFactor * massScale - 5, Math.min(energy, 100) / 100, 0.05f, new float[] { 0.5f, 0.5f, 1, 1 });
 		} else {
-			RenderUtils.renderGauge(50, -32 - 5, Math.min(MAX_DAMAGE - damage, MAX_DAMAGE) / MAX_DAMAGE, 0.2f, new float[] { 0.5f, 1, 0.5f, 1 });
-			RenderUtils.renderGauge(50, -32 + 5, Math.min(energy, 100) / 100, 0.05f, new float[] { 0.5f, 0.5f, 1, 1 });
+			RenderUtils.renderGauge(50, 32 + 5, Math.min(MAX_DAMAGE - damage, MAX_DAMAGE) / MAX_DAMAGE, 0.2f, new float[] { 0.5f, 1, 0.5f, 1 });
+			RenderUtils.renderGauge(50, 32 - 5, Math.min(energy, 100) / 100, 0.05f, new float[] { 0.5f, 0.5f, 1, 1 });
 		}
 		GL11.glScalef(zoomFactor, zoomFactor, 1);
 
@@ -590,11 +590,11 @@ public class Ship extends Entity {
 		float newHeading;
 		float headingFactor = steeringForce.modulus() / maxSteeringForce * mass * 4;
 		if (headingFactor > 3) {
-			newHeading = new Vect3D(0, 1, 0).angleWith(steeringForce);
+			newHeading = new Vect3D(Vect3D.NORTH).angleWith(steeringForce);
 		} else if (headingFactor > 0) {
-			newHeading = new Vect3D(0, 1, 0).angleWith(new Vect3D(steeringForce).mult(headingFactor).add(new Vect3D(speed).mult(1 - headingFactor / 3)));
+			newHeading = new Vect3D(Vect3D.NORTH).angleWith(new Vect3D(steeringForce).mult(headingFactor).add(new Vect3D(speed).mult(1 - headingFactor / 3)));
 		} else {
-			newHeading = new Vect3D(0, 1, 0).angleWith(speed);
+			newHeading = new Vect3D(Vect3D.NORTH).angleWith(speed);
 		}
 
 		// heading = newHeading;

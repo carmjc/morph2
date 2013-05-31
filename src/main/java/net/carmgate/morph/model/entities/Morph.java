@@ -1,5 +1,6 @@
 package net.carmgate.morph.model.entities;
 
+import java.awt.Font;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.GregorianCalendar;
@@ -11,6 +12,8 @@ import net.carmgate.morph.model.entities.common.Selectable;
 import net.carmgate.morph.ui.common.RenderUtils;
 
 import org.lwjgl.opengl.GL11;
+import org.newdawn.slick.Color;
+import org.newdawn.slick.TrueTypeFont;
 import org.newdawn.slick.opengl.Texture;
 import org.newdawn.slick.opengl.TextureLoader;
 import org.slf4j.Logger;
@@ -34,6 +37,8 @@ public class Morph implements Renderable, Selectable {
 			return energyConsumption;
 		}
 	}
+
+	private static TrueTypeFont font;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(Morph.class);
 	private static Integer nextId = 0;
@@ -112,6 +117,9 @@ public class Morph implements Renderable, Selectable {
 				LOGGER.error("Exception raised while loading texture", e);
 			}
 		}
+
+		Font awtFont = new Font("Tahoma", Font.BOLD, 14);
+		font = new TrueTypeFont(awtFont, true);
 	}
 
 	@Override
@@ -122,7 +130,7 @@ public class Morph implements Renderable, Selectable {
 	@Override
 	public void render(int glMode) {
 		float scale = 1.2f;
-		float typeScale = 0.5f;
+		float typeScale = 0.4f;
 
 		GL11.glColor4f(1, 1, 1, 1);
 		GL11.glScalef(scale, scale, scale);
@@ -155,20 +163,22 @@ public class Morph implements Renderable, Selectable {
 			morphTypeTextures.get(morphType).bind();
 			GL11.glBegin(GL11.GL_QUADS);
 			GL11.glTexCoord2f(0, 1);
-			GL11.glVertex2f(-32, -32);
-			GL11.glTexCoord2f(1, 1);
-			GL11.glVertex2f(32, -32);
-			GL11.glTexCoord2f(1, 0);
-			GL11.glVertex2f(32, 32);
-			GL11.glTexCoord2f(0, 0);
 			GL11.glVertex2f(-32, 32);
+			GL11.glTexCoord2f(1, 1);
+			GL11.glVertex2f(32, 32);
+			GL11.glTexCoord2f(1, 0);
+			GL11.glVertex2f(32, -32);
+			GL11.glTexCoord2f(0, 0);
+			GL11.glVertex2f(-32, -32);
 			GL11.glEnd();
 			GL11.glScalef(1 / typeScale, 1 / typeScale, 1);
 		}
 
 		GL11.glScalef(1 / scale, 1 / scale, 1 / scale);
 
-		RenderUtils.renderGauge(30, -20, Math.min(1, xp / 100), 0, new float[] { 1, 1, 0.5f, 1 });
+		String str = "" + level;
+		font.drawString(-font.getWidth(str) / 2, -32, str, Color.white);
+		RenderUtils.renderGauge(30, 20, Math.min(1, xp / 100), 0, new float[] { 1, 1, 0.5f, 1 });
 	}
 
 	@Override

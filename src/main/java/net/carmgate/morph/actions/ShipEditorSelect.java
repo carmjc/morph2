@@ -74,7 +74,7 @@ public class ShipEditorSelect implements Action {
 		GLU.gluPickMatrix(x, y, 6.0f, 6.0f, viewport);
 
 		Window window = Model.getModel().getWindow();
-		GL11.glOrtho(0, window.getWidth(), 0, window.getHeight(), 1, -1);
+		GL11.glOrtho(0, window.getWidth(), 0, -window.getHeight(), 1, -1);
 		GL11.glViewport(0, 0, window.getWidth(), window.getHeight());
 
 		Main.shipEditorRender(Model.getModel().getSelfShip(), GL11.GL_SELECT);
