@@ -2,12 +2,15 @@ package net.carmgate.morph;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import net.carmgate.morph.actions.MultiSelect;
-import net.carmgate.morph.actions.Select;
+import net.carmgate.morph.actions.ShipEditorSelect;
+import net.carmgate.morph.actions.WorldMultiSelect;
+import net.carmgate.morph.actions.WorldSelect;
 import net.carmgate.morph.actions.common.Action;
 import net.carmgate.morph.actions.common.ActionHints;
 import net.carmgate.morph.actions.drag.DragContext;
@@ -51,15 +54,65 @@ public class Main {
 		sample.start();
 	}
 
-	private final Model model = Model.getModel();
+	public static void shipEditorRender(int glMode) {
+		if (Model.getModel().isMorphEditorActivated()) {
+			List<Morph> morphsToDraw = new ArrayList<>();
+			Ship selectedShip = (Ship) Model.getModel().getSimpleSelection().iterator().next();
+			for (MorphType morphType : MorphType.values()) {
+				List<Morph> morphsByType = selectedShip.getMorphsByType(morphType);
+				if (morphsByType != null) {
+					morphsToDraw.addAll(morphsByType);
+				}
+			}
 
+			int layer = 0;
+			Iterator<Morph> morphIt = morphsToDraw.iterator();
+			while (morphIt.hasNext()) {
+
+				// draw the most centric one
+				if (layer == 0) {
+					if (morphIt.hasNext()) {
+						Morph morph = morphIt.next();
+						GL11.glPushName(morph.getId());
+						morph.render(glMode);
+						GL11.glPopName();
+						GL11.glTranslatef(-64, 0, 0);
+					}
+				}
+
+				GL11.glTranslatef(64, 0, 0);
+				GL11.glRotatef(60, 0, 0, 1);
+				for (int i = 0; i < 6; i++) {
+					GL11.glRotatef(60, 0, 0, 1);
+					for (int j = 0; j < layer; j++) {
+						if (morphIt.hasNext()) {
+							Morph morph = morphIt.next();
+							GL11.glRotatef(-(i + 2) * 60, 0, 0, 1);
+							GL11.glPushName(morph.getId());
+							morph.render(glMode);
+							GL11.glPopName();
+							GL11.glRotatef((i + 2) * 60, 0, 0, 1);
+						}
+						GL11.glTranslatef(64, 0, 0);
+					}
+				}
+				GL11.glRotatef(-60, 0, 0, 1);
+
+				layer++;
+			}
+			GL11.glTranslatef(-layer * 64, 0, 0);
+		}
+	}
+
+	private final Model model = Model.getModel();
 	private final List<Action> mouseActions = new LinkedList<>();
+
 	private final List<Action> keyboardActions = new LinkedList<>();
 
 	private Ship ship;
-
 	private int fpsCounter = 0;
 	private float meanFpsCounter = 0;
+
 	private long lastFpsResetTs = 0;
 
 	/**
@@ -72,8 +125,9 @@ public class Main {
 
 		// select actions have to be handled before anything else
 		// because some other actions (like MoveTo or Attack) need the result of the action selection
-		mouseActions.add(new Select());
-		mouseActions.add(new MultiSelect());
+		mouseActions.add(new WorldSelect());
+		mouseActions.add(new WorldMultiSelect());
+		mouseActions.add(new ShipEditorSelect());
 
 		// Look for the action classes
 		Set<Class<? extends Action>> actions = new Reflections("net.carmgate.morph.actions").getSubTypesOf(Action.class);
@@ -230,16 +284,16 @@ public class Main {
 	public void render() {
 
 		Vect3D focalPoint = model.getViewport().getFocalPoint();
-		float scale = model.getViewport().getZoomFactor();
+		float zoomFactor = model.getViewport().getZoomFactor();
 		if (model.getViewport().getLockedOnShip() != null) {
 			Vect3D shipPos = null;
-			shipPos = new Vect3D(model.getViewport().getLockedOnShip().getPos()).mult(scale);
+			shipPos = new Vect3D(model.getViewport().getLockedOnShip().getPos()).mult(zoomFactor);
 			focalPoint.copy(new Vect3D().substract(shipPos));
 		}
 		GL11.glTranslatef(focalPoint.x, focalPoint.y, focalPoint.z);
 
 		GL11.glRotatef(model.getViewport().getRotation(), 0, 0, 1);
-		GL11.glScalef(scale, scale, 1);
+		GL11.glScalef(zoomFactor, zoomFactor, 1);
 
 		Model.getModel().getRootWA().render(GL11.GL_RENDER);
 
@@ -255,16 +309,12 @@ public class Main {
 			}
 		}
 
-		// TODO activate ship editor upon some action
-		for (MorphType morphType : MorphType.values()) {
-			for (Morph morph : ((Ship) Model.getModel().getSimpleSelection().iterator().next()).getMorphsByType(morphType)) {
-				morph.render(GL11.GL_RENDER);
-			}
-		}
-
-		GL11.glScalef(1 / scale, 1 / scale, 1);
+		GL11.glScalef(1 / zoomFactor, 1 / zoomFactor, 1);
 		GL11.glRotatef(-model.getViewport().getRotation(), 0, 0, 1);
 		GL11.glTranslatef(-focalPoint.x, -focalPoint.y, -focalPoint.z);
+
+		// TODO activate ship editor upon some action
+		shipEditorRender(GL11.GL_RENDER);
 
 		// IMPROVE Interface rendering
 		// GL11.glTranslatef(WorldRenderer.focalPoint.x,
@@ -321,7 +371,7 @@ public class Main {
 			if (!Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) {
 				render();
 			} else {
-				new Select().render(GL11.GL_SELECT);
+				new WorldSelect().render(GL11.GL_SELECT);
 			}
 
 			// updates display and sets frame rate

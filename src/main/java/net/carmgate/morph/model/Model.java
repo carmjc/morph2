@@ -74,6 +74,8 @@ public class Model {
 	private long lastUpdateTS;
 	private long seedNewEnemyLastTS;
 	private float secondsSinceLastEnemySeed;
+	private boolean morphEditorActivated;
+	private final Set<Morph> morphSelection = new HashSet<>();
 
 	private Model() {
 		self = new Player(PlayerType.HUMAN, "Carm", FOF.SELF);
@@ -100,6 +102,14 @@ public class Model {
 	// IMPROVE We must fix the temptation to use getSelection.clear() instead
 	public void clearActionSelection() {
 		actionSelection.clear();
+	}
+
+	// IMPROVE We must fix the temptation to use getSelection.clear() instead
+	public void clearMorphSelection() {
+		for (Morph morph : morphSelection) {
+			morph.setSelected(false);
+		}
+		morphSelection.clear();
 	}
 
 	// IMPROVE We must fix the temptation to use getSelection.clear() instead
@@ -141,6 +151,10 @@ public class Model {
 		return lastUpdateTS;
 	}
 
+	public Set<Morph> getMorphSelection() {
+		return morphSelection;
+	}
+
 	public ParticleEngine getParticleEngine() {
 		return particleEngine;
 	}
@@ -177,12 +191,20 @@ public class Model {
 		return debugMode;
 	}
 
+	public boolean isMorphEditorActivated() {
+		return morphEditorActivated;
+	}
+
 	public void removeEntity(Entity entity) {
 		entitiesToRemove.add(entity);
 	}
 
 	public void toggleDebugMode() {
 		debugMode = !debugMode;
+	}
+
+	public void toggleMorphEditor() {
+		morphEditorActivated = !morphEditorActivated;
 	}
 
 	public void togglePause() {

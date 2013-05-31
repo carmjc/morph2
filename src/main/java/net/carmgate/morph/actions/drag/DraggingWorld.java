@@ -34,6 +34,11 @@ public class DraggingWorld implements Action {
 
 	@Override
 	public void run() {
+		// No world drag while morph editor is activated
+		if (Model.getModel().isMorphEditorActivated()) {
+			return;
+		}
+
 		List<Event> lastEvents = Model.getModel().getInteractionStack().getLastEvents(2);
 		if (lastEvents.get(1).getEventType() != EventType.MOUSE_BUTTON_DOWN
 				|| lastEvents.get(1).getButton() != 0

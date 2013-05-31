@@ -2,6 +2,7 @@ package net.carmgate.morph.model.entities;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -43,6 +44,7 @@ public class Morph implements Renderable, Selectable {
 	private final MorphType morphType;
 	private int level = 0;
 	private float xp = 0;
+	private boolean selected;
 
 	public Morph() {
 		this(null);
@@ -113,50 +115,62 @@ public class Morph implements Renderable, Selectable {
 
 	@Override
 	public boolean isSelected() {
-		// TODO implement this in the ship editor
-		return false;
+		return selected;
 	}
 
 	@Override
 	public void render(int glMode) {
-		GL11.glScalef(1.2f, 1.2f, 1.2f);
+		float scale = 1.2f;
+		float typeScale = 0.5f;
+
+		GL11.glScalef(scale, scale, scale);
+		GL11.glColor4f(1, 1, 1, 1);
 
 		// TODO the hexagons must be drawn in a form of hexagon to ensure picking will be done properly.
 		GL11.glEnable(GL11.GL_TEXTURE_2D);
 		baseTexture.bind();
 		GL11.glBegin(GL11.GL_QUADS);
 		GL11.glTexCoord2f(0, 0);
-		GL11.glVertex2f(-baseTexture.getTextureWidth() / 2, -baseTexture.getTextureWidth() / 2);
+		GL11.glVertex2f(-32, -32);
 		GL11.glTexCoord2f(1, 0);
-		GL11.glVertex2f(baseTexture.getTextureWidth() / 2, -baseTexture.getTextureWidth() / 2);
+		GL11.glVertex2f(32, -32);
 		GL11.glTexCoord2f(1, 1);
-		GL11.glVertex2f(baseTexture.getTextureWidth() / 2, baseTexture.getTextureHeight() / 2);
+		GL11.glVertex2f(32, 32);
 		GL11.glTexCoord2f(0, 1);
-		GL11.glVertex2f(-baseTexture.getTextureWidth() / 2, baseTexture.getTextureHeight() / 2);
+		GL11.glVertex2f(-32, 32);
 		GL11.glEnd();
 
 		if (morphType != null) {
-			GL11.glScalef(0.5f, 0.5f, 1);
+			if (selected) {
+				long ts = new GregorianCalendar().getTimeInMillis();
+				final int blinkPeriod = 500;
+				float millis = ts % blinkPeriod;
+				if (millis > blinkPeriod / 2) {
+					millis = blinkPeriod - millis;
+				}
+				GL11.glColor4f(1, 1, 1, millis / (blinkPeriod / 2));
+			}
+			GL11.glScalef(typeScale, typeScale, 1);
 			morphTypeTextures.get(morphType).bind();
 			GL11.glBegin(GL11.GL_QUADS);
 			GL11.glTexCoord2f(0, 1);
-			GL11.glVertex2f(-baseTexture.getTextureWidth() / 2, -baseTexture.getTextureWidth() / 2);
+			GL11.glVertex2f(-32, -32);
 			GL11.glTexCoord2f(1, 1);
-			GL11.glVertex2f(baseTexture.getTextureWidth() / 2, -baseTexture.getTextureWidth() / 2);
+			GL11.glVertex2f(32, -32);
 			GL11.glTexCoord2f(1, 0);
-			GL11.glVertex2f(baseTexture.getTextureWidth() / 2, baseTexture.getTextureHeight() / 2);
+			GL11.glVertex2f(32, 32);
 			GL11.glTexCoord2f(0, 0);
-			GL11.glVertex2f(-baseTexture.getTextureWidth() / 2, baseTexture.getTextureHeight() / 2);
+			GL11.glVertex2f(-32, 32);
 			GL11.glEnd();
 			GL11.glScalef(2, 2, 1);
 		}
 
-		GL11.glScalef(1 / 1.2f, 1 / 1.2f, 1 / 1.2f);
+		GL11.glScalef(1 / scale, 1 / scale, 1 / scale);
 	}
 
 	@Override
 	public void setSelected(boolean selected) {
-		// TODO implement this with ship editor
+		this.selected = selected;
 	}
 
 }

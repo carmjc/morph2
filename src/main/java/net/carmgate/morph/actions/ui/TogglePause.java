@@ -9,7 +9,7 @@ import net.carmgate.morph.ui.Event.EventType;
 import org.lwjgl.input.Keyboard;
 
 @ActionHints(keyboardActionAutoload = true)
-public class Pause implements Action {
+public class TogglePause implements Action {
 
 	@Override
 	public void run() {

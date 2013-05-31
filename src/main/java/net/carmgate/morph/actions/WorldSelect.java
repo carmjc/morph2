@@ -22,16 +22,16 @@ import org.lwjgl.util.glu.GLU;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Select implements Action {
+public class WorldSelect implements Action {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(Select.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(WorldSelect.class);
 
-	public Select() {
+	public WorldSelect() {
 	}
 
 	/** 
 	 * Renders the scene for selection.
-	 * Can be used directly for debugging purposes to show the pickable areas.
+	 * Can also be used directly for debugging purposes to show the pickable areas.
 	 * @param zoomFactor
 	 * @param glMode
 	 */
@@ -64,6 +64,12 @@ public class Select implements Action {
 
 	@Override
 	public void run() {
+		// No world selection while morph editor is activated
+		if (Model.getModel().isMorphEditorActivated()) {
+			return;
+		}
+
+		// Simple selection
 		List<Event> lastEvents = Model.getModel().getInteractionStack().getLastEvents(2);
 		if (lastEvents.get(1).getEventType() == EventType.MOUSE_BUTTON_DOWN
 				&& lastEvents.get(1).getButton() == 0
@@ -79,6 +85,7 @@ public class Select implements Action {
 			LOGGER.debug("New simple selection: " + Model.getModel().getSimpleSelection().toString());
 		}
 
+		// Action selection
 		if (lastEvents.get(1).getEventType() == EventType.MOUSE_BUTTON_DOWN
 				&& lastEvents.get(1).getButton() == 1
 				&& lastEvents.get(0).getEventType() == EventType.MOUSE_BUTTON_UP

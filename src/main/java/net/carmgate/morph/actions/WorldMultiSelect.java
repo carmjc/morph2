@@ -12,15 +12,20 @@ import org.lwjgl.input.Mouse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MultiSelect extends Select {
+public class WorldMultiSelect extends WorldSelect {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(MultiSelect.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(WorldMultiSelect.class);
 
-	public MultiSelect() {
+	public WorldMultiSelect() {
 	}
 
 	@Override
 	public void run() {
+		// No world selection while morph editor is activated
+		if (Model.getModel().isMorphEditorActivated()) {
+			return;
+		}
+
 		List<Event> lastEvents = Model.getModel().getInteractionStack().getLastEvents(2);
 		if (lastEvents.get(1).getEventType() != EventType.MOUSE_BUTTON_DOWN
 				|| lastEvents.get(1).getButton() != 0

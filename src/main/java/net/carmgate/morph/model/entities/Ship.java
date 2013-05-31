@@ -74,7 +74,7 @@ public class Ship extends Entity {
 	private static Texture zoomedOutTexture;
 
 	private static final float MAX_DAMAGE = 10;
-	private final List<Morph> morphs = new ArrayList<>();
+	private final Map<Integer, Morph> morphsById = new HashMap<>();
 	private final Map<MorphType, List<Morph>> morphsByType = new HashMap<>();
 
 	/** The ship position in the world. */
@@ -160,7 +160,7 @@ public class Ship extends Entity {
 			ActivatedMorph[] needs = behavior.getClass().getAnnotation(Needs.class).value();
 
 			for (ActivatedMorph need : needs) {
-				for (Morph morph : morphs) {
+				for (Morph morph : morphsById.values()) {
 					if (morph.getMorphType() == need.morphType()) {
 						pendingBehaviorsAddition.add(behavior);
 						return;
@@ -180,7 +180,7 @@ public class Ship extends Entity {
 	}
 
 	public void addMorph(Morph morph) {
-		morphs.add(morph);
+		morphsById.put(morph.getId(), morph);
 
 		List<Morph> list = morphsByType.get(morph.getMorphType());
 		if (list == null) {
@@ -261,6 +261,10 @@ public class Ship extends Entity {
 		return maxSteeringForce;
 	}
 
+	public Morph getMorphById(int id) {
+		return morphsById.get(id);
+	}
+
 	/**
 	 * <b>Warning : Do not modify the resulting List</b>
 	 * @param morphType
@@ -268,6 +272,10 @@ public class Ship extends Entity {
 	 */
 	public List<Morph> getMorphsByType(MorphType morphType) {
 		return morphsByType.get(morphType);
+	}
+
+	public Player getPlayer() {
+		return player;
 	}
 
 	public Vect3D getPos() {
