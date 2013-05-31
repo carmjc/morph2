@@ -1,4 +1,4 @@
-package net.carmgate.morph.ui.rendering;
+package net.carmgate.morph.ui.common;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

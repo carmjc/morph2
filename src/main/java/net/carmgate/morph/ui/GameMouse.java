@@ -2,7 +2,7 @@ package net.carmgate.morph.ui;
 
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.common.Vect3D;
-import net.carmgate.morph.model.view.ViewPort;
+import net.carmgate.morph.model.ui.ViewPort;
 
 import org.lwjgl.input.Mouse;
 

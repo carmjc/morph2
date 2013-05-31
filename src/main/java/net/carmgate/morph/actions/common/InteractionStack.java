@@ -5,8 +5,7 @@ import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
 
-import net.carmgate.morph.ui.Event;
-import net.carmgate.morph.ui.Event.EventType;
+import net.carmgate.morph.actions.common.Event.EventType;
 
 public class InteractionStack {
 	private static final int STACK_SIZE = 10;

@@ -6,7 +6,7 @@ import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.entities.Morph;
 import net.carmgate.morph.model.entities.Morph.MorphType;
 import net.carmgate.morph.model.entities.Ship;
-import net.carmgate.morph.model.entities.orders.TakeDamage;
+import net.carmgate.morph.model.orders.TakeDamage;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

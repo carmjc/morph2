@@ -2,9 +2,9 @@ package net.carmgate.morph.actions.ui;
 
 import net.carmgate.morph.actions.common.Action;
 import net.carmgate.morph.actions.common.ActionHints;
+import net.carmgate.morph.actions.common.Event;
+import net.carmgate.morph.actions.common.Event.EventType;
 import net.carmgate.morph.model.Model;
-import net.carmgate.morph.ui.Event;
-import net.carmgate.morph.ui.Event.EventType;
 
 import org.lwjgl.input.Keyboard;
 import org.slf4j.Logger;

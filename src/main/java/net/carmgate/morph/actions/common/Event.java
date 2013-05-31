@@ -1,4 +1,4 @@
-package net.carmgate.morph.ui;
+package net.carmgate.morph.actions.common;
 
 import java.util.Calendar;
 import java.util.TimeZone;

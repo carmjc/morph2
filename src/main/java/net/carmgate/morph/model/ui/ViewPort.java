@@ -1,4 +1,4 @@
-package net.carmgate.morph.model.view;
+package net.carmgate.morph.model.ui;
 
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Ship;

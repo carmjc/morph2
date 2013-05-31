@@ -22,11 +22,11 @@ import net.carmgate.morph.model.entities.common.Selectable;
 import net.carmgate.morph.model.player.Player;
 import net.carmgate.morph.model.player.Player.FOF;
 import net.carmgate.morph.model.player.Player.PlayerType;
-import net.carmgate.morph.model.view.ViewPort;
-import net.carmgate.morph.model.view.Window;
+import net.carmgate.morph.model.ui.ViewPort;
+import net.carmgate.morph.model.ui.Window;
 import net.carmgate.morph.ui.ParticleEngine;
-import net.carmgate.morph.ui.rendering.RenderingHints;
-import net.carmgate.morph.ui.rendering.RenderingSteps;
+import net.carmgate.morph.ui.common.RenderingHints;
+import net.carmgate.morph.ui.common.RenderingSteps;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

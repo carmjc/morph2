@@ -1,4 +1,4 @@
-package net.carmgate.morph.model.entities.orders;
+package net.carmgate.morph.model.orders;
 
 public class TakeDamage implements Order {
 

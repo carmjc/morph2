@@ -6,7 +6,7 @@ import net.carmgate.morph.model.entities.Ship;
 import net.carmgate.morph.model.entities.Star;
 import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.model.entities.common.EntityType;
-import net.carmgate.morph.model.entities.orders.Die;
+import net.carmgate.morph.model.orders.Die;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

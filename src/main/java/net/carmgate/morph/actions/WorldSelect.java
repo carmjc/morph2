@@ -5,15 +5,15 @@ import java.util.List;
 
 import net.carmgate.morph.actions.common.Action;
 import net.carmgate.morph.actions.common.ActionHints;
+import net.carmgate.morph.actions.common.Event;
 import net.carmgate.morph.actions.common.SelectionType;
+import net.carmgate.morph.actions.common.Event.EventType;
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.model.entities.common.EntityHints;
-import net.carmgate.morph.model.view.Window;
-import net.carmgate.morph.ui.Event;
-import net.carmgate.morph.ui.Event.EventType;
-import net.carmgate.morph.ui.rendering.RenderingSteps;
+import net.carmgate.morph.model.ui.Window;
+import net.carmgate.morph.ui.common.RenderingSteps;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.input.Keyboard;

@@ -7,8 +7,8 @@ import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.model.entities.common.EntityHints;
 import net.carmgate.morph.model.entities.common.EntityType;
-import net.carmgate.morph.ui.rendering.RenderingHints;
-import net.carmgate.morph.ui.rendering.RenderingSteps;
+import net.carmgate.morph.ui.common.RenderingHints;
+import net.carmgate.morph.ui.common.RenderingSteps;
 
 import org.lwjgl.opengl.GL11;
 import org.newdawn.slick.opengl.Texture;

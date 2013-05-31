@@ -1,7 +1,7 @@
 package net.carmgate.morph.actions.drag;
 
+import net.carmgate.morph.actions.common.Event;
 import net.carmgate.morph.model.common.Vect3D;
-import net.carmgate.morph.ui.Event;
 
 public class DragContext {
 	private Vect3D oldFP;

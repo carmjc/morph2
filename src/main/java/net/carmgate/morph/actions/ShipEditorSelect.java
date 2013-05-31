@@ -6,12 +6,12 @@ import java.util.List;
 import net.carmgate.morph.Main;
 import net.carmgate.morph.actions.common.Action;
 import net.carmgate.morph.actions.common.ActionHints;
+import net.carmgate.morph.actions.common.Event;
+import net.carmgate.morph.actions.common.Event.EventType;
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.UiState;
 import net.carmgate.morph.model.entities.Morph;
-import net.carmgate.morph.model.view.Window;
-import net.carmgate.morph.ui.Event;
-import net.carmgate.morph.ui.Event.EventType;
+import net.carmgate.morph.model.ui.Window;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.input.Mouse;

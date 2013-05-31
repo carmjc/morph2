@@ -25,13 +25,13 @@ import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.model.entities.common.EntityHints;
 import net.carmgate.morph.model.entities.common.EntityType;
 import net.carmgate.morph.model.entities.common.Renderable;
-import net.carmgate.morph.model.entities.orders.Die;
-import net.carmgate.morph.model.entities.orders.Order;
-import net.carmgate.morph.model.entities.orders.TakeDamage;
+import net.carmgate.morph.model.orders.Die;
+import net.carmgate.morph.model.orders.Order;
+import net.carmgate.morph.model.orders.TakeDamage;
 import net.carmgate.morph.model.player.Player;
 import net.carmgate.morph.model.player.Player.PlayerType;
-import net.carmgate.morph.ui.rendering.RenderingHints;
-import net.carmgate.morph.ui.rendering.RenderingSteps;
+import net.carmgate.morph.ui.common.RenderingHints;
+import net.carmgate.morph.ui.common.RenderingSteps;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
