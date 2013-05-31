@@ -7,9 +7,8 @@ import net.carmgate.morph.Main;
 import net.carmgate.morph.actions.common.Action;
 import net.carmgate.morph.actions.common.ActionHints;
 import net.carmgate.morph.model.Model;
-import net.carmgate.morph.model.UiContext;
+import net.carmgate.morph.model.UiState;
 import net.carmgate.morph.model.entities.Morph;
-import net.carmgate.morph.model.entities.Ship;
 import net.carmgate.morph.model.view.Window;
 import net.carmgate.morph.ui.Event;
 import net.carmgate.morph.ui.Event.EventType;
@@ -21,7 +20,7 @@ import org.lwjgl.util.glu.GLU;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@ActionHints(uiContext = UiContext.SHIP_EDITOR)
+@ActionHints(uiState = UiState.SHIP_EDITOR)
 public class ShipEditorSelect implements Action {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ShipEditorSelect.class);
@@ -78,7 +77,7 @@ public class ShipEditorSelect implements Action {
 		GL11.glOrtho(0, window.getWidth(), 0, window.getHeight(), 1, -1);
 		GL11.glViewport(0, 0, window.getWidth(), window.getHeight());
 
-		Main.selfShipEditorRender(GL11.GL_SELECT);
+		Main.shipEditorRender(Model.getModel().getSelfShip(), GL11.GL_SELECT);
 
 		GL11.glMatrixMode(GL11.GL_PROJECTION);
 		GL11.glPopMatrix();

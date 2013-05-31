@@ -66,7 +66,7 @@ public class Follow extends Movement {
 		final Vect3D speed = shipToMove.getSpeed();
 
 		GL11.glTranslatef(pos.x, pos.y, pos.z);
-		if (Model.getModel().isDebugMode()) {
+		if (Model.getModel().getUiContext().isDebugMode()) {
 			speed.render(1);
 			GL11.glColor3f(1, 0, 0);
 			desiredVelocity.render(1);
@@ -79,7 +79,7 @@ public class Follow extends Movement {
 		}
 		GL11.glTranslatef(-pos.x, -pos.y, -pos.z);
 
-		if (target != null && shipToMove.isSelected() && Model.getModel().isDebugMode()) {
+		if (target != null && shipToMove.isSelected() && Model.getModel().getUiContext().isDebugMode()) {
 			// Show target
 			GL11.glTranslatef(target.getPos().x, target.getPos().y, 0);
 

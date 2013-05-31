@@ -3,13 +3,13 @@ package net.carmgate.morph.actions.ui;
 import net.carmgate.morph.actions.common.Action;
 import net.carmgate.morph.actions.common.ActionHints;
 import net.carmgate.morph.model.Model;
-import net.carmgate.morph.model.UiContext;
+import net.carmgate.morph.model.UiState;
 import net.carmgate.morph.ui.Event;
 import net.carmgate.morph.ui.Event.EventType;
 
 import org.lwjgl.input.Keyboard;
 
-@ActionHints(keyboardActionAutoload = true, uiContext = { UiContext.NORMAL, UiContext.SHIP_EDITOR })
+@ActionHints(keyboardActionAutoload = true, uiState = { UiState.NORMAL, UiState.SHIP_EDITOR })
 public class ToggleMorphEditor implements Action {
 
 	private boolean alreadyPaused = false;
@@ -22,17 +22,17 @@ public class ToggleMorphEditor implements Action {
 			return;
 		}
 
-		if (Model.getModel().getUiContext() == UiContext.NORMAL) {
-			alreadyPaused = Model.getModel().isPaused();
+		if (Model.getModel().getUiContext().getUiState() == UiState.NORMAL) {
+			alreadyPaused = Model.getModel().getUiContext().isPaused();
 			if (!alreadyPaused) {
-				Model.getModel().togglePaused();
+				Model.getModel().getUiContext().togglePaused();
 			}
-			Model.getModel().setUiContext(UiContext.SHIP_EDITOR);
+			Model.getModel().getUiContext().setUiState(UiState.SHIP_EDITOR);
 		} else {
 			if (!alreadyPaused) {
-				Model.getModel().togglePaused();
+				Model.getModel().getUiContext().togglePaused();
 			}
-			Model.getModel().setUiContext(UiContext.NORMAL);
+			Model.getModel().getUiContext().setUiState(UiState.NORMAL);
 		}
 	}
 

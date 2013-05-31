@@ -17,7 +17,7 @@ import net.carmgate.morph.actions.drag.DragContext;
 import net.carmgate.morph.conf.Conf;
 import net.carmgate.morph.exception.ConcreteInitRendererInAbstractClassException;
 import net.carmgate.morph.model.Model;
-import net.carmgate.morph.model.UiContext;
+import net.carmgate.morph.model.UiState;
 import net.carmgate.morph.model.behaviors.steering.Wander;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Morph;
@@ -55,53 +55,51 @@ public class Main {
 		sample.start();
 	}
 
-	public static void selfShipEditorRender(int glMode) {
-		if (Model.getModel().getUiContext() == UiContext.SHIP_EDITOR) {
-			List<Morph> morphsToDraw = new ArrayList<>();
-			for (MorphType morphType : MorphType.values()) {
-				List<Morph> morphsByType = Model.getModel().getSelfShip().getMorphsByType(morphType);
-				if (morphsByType != null) {
-					morphsToDraw.addAll(morphsByType);
+	public static void shipEditorRender(Ship ship, int glMode) {
+		List<Morph> morphsToDraw = new ArrayList<>();
+		for (MorphType morphType : MorphType.values()) {
+			List<Morph> morphsByType = ship.getMorphsByType(morphType);
+			if (morphsByType != null) {
+				morphsToDraw.addAll(morphsByType);
+			}
+		}
+
+		int layer = 0;
+		Iterator<Morph> morphIt = morphsToDraw.iterator();
+		while (morphIt.hasNext()) {
+
+			// draw the most centric one
+			if (layer == 0) {
+				if (morphIt.hasNext()) {
+					Morph morph = morphIt.next();
+					GL11.glPushName(morph.getId());
+					morph.render(glMode);
+					GL11.glPopName();
+					GL11.glTranslatef(-64, 0, 0);
 				}
 			}
 
-			int layer = 0;
-			Iterator<Morph> morphIt = morphsToDraw.iterator();
-			while (morphIt.hasNext()) {
-
-				// draw the most centric one
-				if (layer == 0) {
+			GL11.glTranslatef(64, 0, 0);
+			GL11.glRotatef(60, 0, 0, 1);
+			for (int i = 0; i < 6; i++) {
+				GL11.glRotatef(60, 0, 0, 1);
+				for (int j = 0; j < layer; j++) {
 					if (morphIt.hasNext()) {
 						Morph morph = morphIt.next();
+						GL11.glRotatef(-(i + 2) * 60, 0, 0, 1);
 						GL11.glPushName(morph.getId());
 						morph.render(glMode);
 						GL11.glPopName();
-						GL11.glTranslatef(-64, 0, 0);
+						GL11.glRotatef((i + 2) * 60, 0, 0, 1);
 					}
+					GL11.glTranslatef(64, 0, 0);
 				}
-
-				GL11.glTranslatef(64, 0, 0);
-				GL11.glRotatef(60, 0, 0, 1);
-				for (int i = 0; i < 6; i++) {
-					GL11.glRotatef(60, 0, 0, 1);
-					for (int j = 0; j < layer; j++) {
-						if (morphIt.hasNext()) {
-							Morph morph = morphIt.next();
-							GL11.glRotatef(-(i + 2) * 60, 0, 0, 1);
-							GL11.glPushName(morph.getId());
-							morph.render(glMode);
-							GL11.glPopName();
-							GL11.glRotatef((i + 2) * 60, 0, 0, 1);
-						}
-						GL11.glTranslatef(64, 0, 0);
-					}
-				}
-				GL11.glRotatef(-60, 0, 0, 1);
-
-				layer++;
 			}
-			GL11.glTranslatef(-layer * 64, 0, 0);
+			GL11.glRotatef(-60, 0, 0, 1);
+
+			layer++;
 		}
+		GL11.glTranslatef(-(layer - 1) * 64, 0, 0);
 	}
 
 	private final Model model = Model.getModel();
@@ -306,7 +304,9 @@ public class Main {
 		GL11.glTranslatef(-focalPoint.x, -focalPoint.y, -focalPoint.z);
 
 		// TODO activate ship editor upon some action
-		selfShipEditorRender(GL11.GL_RENDER);
+		if (Model.getModel().getUiContext().getUiState() == UiState.SHIP_EDITOR) {
+			shipEditorRender(Model.getModel().getSelfShip(), GL11.GL_RENDER);
+		}
 
 		// IMPROVE Interface rendering
 		// GL11.glTranslatef(WorldRenderer.focalPoint.x,
@@ -342,8 +342,8 @@ public class Main {
 
 	private void runAction(Action action) {
 		ActionHints actionHints = action.getClass().getAnnotation(ActionHints.class);
-		for (UiContext uiContext : actionHints.uiContext()) {
-			if (uiContext == Model.getModel().getUiContext()) {
+		for (UiState uiState : actionHints.uiState()) {
+			if (uiState == Model.getModel().getUiContext().getUiState()) {
 				action.run();
 				break;
 			}

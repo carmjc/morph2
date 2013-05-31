@@ -123,8 +123,8 @@ public class Morph implements Renderable, Selectable {
 		float scale = 1.2f;
 		float typeScale = 0.5f;
 
-		GL11.glScalef(scale, scale, scale);
 		GL11.glColor4f(1, 1, 1, 1);
+		GL11.glScalef(scale, scale, scale);
 
 		// TODO the hexagons must be drawn in a form of hexagon to ensure picking will be done properly.
 		GL11.glEnable(GL11.GL_TEXTURE_2D);

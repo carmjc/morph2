@@ -19,7 +19,7 @@ public class TogglePause implements Action {
 			return;
 		}
 
-		Model.getModel().togglePaused();
+		Model.getModel().getUiContext().togglePaused();
 	}
 
 }

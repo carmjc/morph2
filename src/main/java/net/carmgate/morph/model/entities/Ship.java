@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import net.carmgate.morph.Main;
 import net.carmgate.morph.conf.Conf;
 import net.carmgate.morph.conf.Conf.ConfItem;
 import net.carmgate.morph.model.Model;
@@ -432,7 +433,7 @@ public class Ship extends Entity {
 		renderSelection(massScale, maxZoom);
 
 		// Render the ship in itself
-		if (Model.getModel().isDebugMode()) {
+		if (Model.getModel().getUiContext().isDebugMode()) {
 			// IMPROVE replace this with some more proper mass rendering
 			float energyPercent = energy / 100;
 			if (energyPercent <= 0) {
@@ -476,7 +477,7 @@ public class Ship extends Entity {
 		GL11.glRotatef(-heading, 0, 0, 1);
 
 		// Render ship forces
-		if (Model.getModel().isDebugMode()) {
+		if (Model.getModel().getUiContext().isDebugMode()) {
 			GL11.glColor3f(1, 1, 0);
 			effectiveForce.render(glMode, 1);
 		}
@@ -490,6 +491,13 @@ public class Ship extends Entity {
 		} else {
 			renderGauge(25, -32 - 5, Math.min(MAX_DAMAGE - damage, MAX_DAMAGE) / MAX_DAMAGE, 0.2f, new float[] { 0.5f, 1, 0.5f, 1 });
 			renderGauge(25, -32 + 5, Math.min(energy, 100) / 100, 0.05f, new float[] { 0.5f, 0.5f, 1, 1 });
+		}
+
+		// Render morphs
+		if (Model.getModel().getUiContext().isMorphsShown()) {
+			GL11.glScalef(1 / (2 * zoomFactor), 1 / (2 * zoomFactor), 1);
+			Main.shipEditorRender(this, glMode);
+			GL11.glScalef(2 * zoomFactor, 2 * zoomFactor, 1);
 		}
 
 		GL11.glTranslatef(-pos.x, -pos.y, -pos.z);

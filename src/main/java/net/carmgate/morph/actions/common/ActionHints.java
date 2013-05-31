@@ -3,11 +3,11 @@ package net.carmgate.morph.actions.common;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-import net.carmgate.morph.model.UiContext;
+import net.carmgate.morph.model.UiState;
 
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ActionHints {
-	UiContext[] uiContext() default { UiContext.NORMAL };
+	UiState[] uiState() default { UiState.NORMAL };
 
 	boolean dragAction() default false;
 

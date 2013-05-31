@@ -67,7 +67,7 @@ public class Arrive extends Movement {
 		final Vect3D speed = shipToMove.getSpeed();
 
 		GL11.glTranslatef(pos.x, pos.y, pos.z);
-		if (Model.getModel().isDebugMode()) {
+		if (Model.getModel().getUiContext().isDebugMode()) {
 			speed.render(1);
 			GL11.glColor3f(1, 0, 0);
 			desiredVelocity.render(1);
@@ -92,7 +92,7 @@ public class Arrive extends Movement {
 			GL11.glVertex2f(-16, 16);
 			GL11.glEnd();
 
-			if (Model.getModel().isDebugMode()) {
+			if (Model.getModel().getUiContext().isDebugMode()) {
 				// render limit of effect zone
 				GL11.glBegin(GL11.GL_LINES);
 				float t = 0; // temporary data holder

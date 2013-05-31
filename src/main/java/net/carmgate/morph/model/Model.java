@@ -45,8 +45,6 @@ public class Model {
 		return _instance;
 	}
 
-	private boolean debugMode = false;
-
 	/** number of millis since game start. */
 	private long currentTS = 0;
 
@@ -68,8 +66,6 @@ public class Model {
 	private final Map<RenderingSteps, EntityMap> entitiesByRenderingStep = new HashMap<>();
 
 	private final ParticleEngine particleEngine = new ParticleEngine();
-	private boolean paused;
-
 	private final Set<Entity> entitiesToRemove = new HashSet<>();
 
 	private final Player self;
@@ -78,10 +74,9 @@ public class Model {
 	private WorldArea rootWA;
 	private float secondsSinceLastUpdate;
 	private long lastUpdateTS;
-	private long seedNewEnemyLastTS;
 	private float secondsSinceLastEnemySeed;
 	private final Set<Morph> morphSelection = new HashSet<>();
-	private UiContext uiContext = UiContext.NORMAL;
+	private final UiContext uiContext = new UiContext();
 
 	private Model() {
 		self = new Player(PlayerType.HUMAN, "Carm", FOF.SELF);
@@ -211,28 +206,8 @@ public class Model {
 		Model.getModel().addEntity(selfShip);
 	}
 
-	public boolean isDebugMode() {
-		return debugMode;
-	}
-
-	public boolean isPaused() {
-		return paused;
-	}
-
 	public void removeEntity(Entity entity) {
 		entitiesToRemove.add(entity);
-	}
-
-	public void setUiContext(UiContext uiContext) {
-		this.uiContext = uiContext;
-	}
-
-	public void toggleDebugMode() {
-		debugMode = !debugMode;
-	}
-
-	public void togglePaused() {
-		paused = !paused;
 	}
 
 	public void update() {
@@ -241,7 +216,7 @@ public class Model {
 		// update the number of millis since game start
 		long tmpMsec = new Date().getTime() - gameStartMsec;
 		lastUpdateTS = currentTS;
-		if (paused) {
+		if (uiContext.isPaused()) {
 			gameStartMsec += tmpMsec - currentTS;
 		} else {
 			currentTS = tmpMsec;
