@@ -162,7 +162,7 @@ public class Morph implements Renderable, Selectable {
 			GL11.glTexCoord2f(0, 0);
 			GL11.glVertex2f(-32, 32);
 			GL11.glEnd();
-			GL11.glScalef(2, 2, 1);
+			GL11.glScalef(1 / typeScale, 1 / typeScale, 1);
 		}
 
 		GL11.glScalef(1 / scale, 1 / scale, 1 / scale);
