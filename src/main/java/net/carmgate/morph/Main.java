@@ -278,9 +278,9 @@ public class Main {
 		if (model.getViewport().getLockedOnShip() != null) {
 			Vect3D shipPos = null;
 			shipPos = new Vect3D(model.getViewport().getLockedOnShip().getPos()).mult(zoomFactor);
-			focalPoint.copy(new Vect3D().substract(shipPos));
+			focalPoint.copy(new Vect3D().add(shipPos));
 		}
-		GL11.glTranslatef(focalPoint.x, focalPoint.y, focalPoint.z);
+		GL11.glTranslatef(-focalPoint.x, -focalPoint.y, -focalPoint.z);
 
 		GL11.glRotatef(model.getViewport().getRotation(), 0, 0, 1);
 		GL11.glScalef(zoomFactor, zoomFactor, 1);
@@ -301,7 +301,7 @@ public class Main {
 
 		GL11.glScalef(1 / zoomFactor, 1 / zoomFactor, 1);
 		GL11.glRotatef(-model.getViewport().getRotation(), 0, 0, 1);
-		GL11.glTranslatef(-focalPoint.x, -focalPoint.y, -focalPoint.z);
+		GL11.glTranslatef(focalPoint.x, focalPoint.y, focalPoint.z);
 
 		// TODO activate ship editor upon some action
 		if (Model.getModel().getUiContext().getUiState() == UiState.SHIP_EDITOR) {

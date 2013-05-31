@@ -229,7 +229,7 @@ public class Model {
 			float zoomFactor = Model.getModel().getViewport().getZoomFactor();
 			float windowWidthInWorld = window.getWidth() / zoomFactor;
 			float windowHeightInWorld = window.getHeight() / zoomFactor;
-			Vect3D focalPointInWorld = new Vect3D().substract(new Vect3D(viewport.getFocalPoint())).mult(1f / zoomFactor);
+			Vect3D focalPointInWorld = new Vect3D().add(new Vect3D(viewport.getFocalPoint())).mult(1f / zoomFactor);
 			for (float x = focalPointInWorld.x - windowWidthInWorld / 2; x < focalPointInWorld.x + windowWidthInWorld + 512 / zoomFactor; x += 512 / zoomFactor) {
 				for (float y = focalPointInWorld.y - windowHeightInWorld / 2; y < focalPointInWorld.y + windowHeightInWorld + 512 / zoomFactor; y += 512 / zoomFactor) {
 

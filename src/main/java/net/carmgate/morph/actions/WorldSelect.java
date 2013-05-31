@@ -41,7 +41,7 @@ public class WorldSelect implements Action {
 
 		Vect3D focalPoint = Model.getModel().getViewport().getFocalPoint();
 		float zoomFactor = Model.getModel().getViewport().getZoomFactor();
-		GL11.glTranslatef(focalPoint.x, focalPoint.y, focalPoint.z);
+		GL11.glTranslatef(-focalPoint.x, -focalPoint.y, -focalPoint.z);
 		GL11.glRotatef(Model.getModel().getViewport().getRotation(), 0, 0, 1);
 		GL11.glScalef(zoomFactor, zoomFactor, 1);
 
@@ -61,7 +61,7 @@ public class WorldSelect implements Action {
 
 		GL11.glScalef(1 / zoomFactor, 1 / zoomFactor, 1);
 		GL11.glRotatef(-Model.getModel().getViewport().getRotation(), 0, 0, 1);
-		GL11.glTranslatef(-focalPoint.x, -focalPoint.y, -focalPoint.z);
+		GL11.glTranslatef(focalPoint.x, focalPoint.y, focalPoint.z);
 	}
 
 	@Override
