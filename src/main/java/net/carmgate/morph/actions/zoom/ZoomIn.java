@@ -31,7 +31,7 @@ public class ZoomIn implements Action {
 
 		ViewPort viewport = Model.getModel().getViewport();
 		viewport.setZoomFactor(viewport.getZoomFactor() * ZOOM_VARIATION);
-		Vect3D fromWindowCenterToMouse = new Vect3D(-Model.getModel().getWindow().getWidth() / 2 + GameMouse.getX(),
+		Vect3D fromWindowCenterToMouse = new Vect3D(Model.getModel().getWindow().getWidth() / 2 - GameMouse.getX(),
 				-Model.getModel().getWindow().getHeight() / 2 + GameMouse.getY(), 0);
 		Model.getModel().getViewport().getFocalPoint().add(new Vect3D(fromWindowCenterToMouse).mult(1f / ZOOM_VARIATION)).mult(ZOOM_VARIATION)
 				.substract(new Vect3D(fromWindowCenterToMouse).mult(ZOOM_VARIATION));

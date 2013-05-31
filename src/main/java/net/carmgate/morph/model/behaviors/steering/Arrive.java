@@ -84,20 +84,39 @@ public class Arrive extends Movement {
 			// Show target
 			GL11.glTranslatef(target.x, target.y, 0);
 
+			float zoomFactor = Model.getModel().getViewport().getZoomFactor();
+			GL11.glScalef(1 / zoomFactor, 1 / zoomFactor, 1);
 			TextureImpl.bindNone();
 			GL11.glBegin(GL11.GL_QUADS);
-			GL11.glVertex2f(-16, -16);
-			GL11.glVertex2f(16, -16);
-			GL11.glVertex2f(16, 16);
-			GL11.glVertex2f(-16, 16);
+			GL11.glVertex2f(-3, -3);
+			GL11.glVertex2f(3, -3);
+			GL11.glVertex2f(3, 3);
+			GL11.glVertex2f(-3, 3);
+			GL11.glEnd();
+
+			// render limit of effect zone
+			GL11.glBegin(GL11.GL_LINES);
+			float t = 0; // temporary data holder
+			float x = 15; // radius
+			float y = 0;
+			for (int i = 0; i < nbSegments; i++) {
+				GL11.glColor4d(1, 1, 1, 0.15);
+				GL11.glVertex2d(x, y);
+
+				t = x;
+				x = cos * x - sin * y;
+				y = sin * t + cos * y;
+
+				GL11.glVertex2d(x, y);
+			}
 			GL11.glEnd();
 
 			if (Model.getModel().getUiContext().isDebugMode()) {
 				// render limit of effect zone
 				GL11.glBegin(GL11.GL_LINES);
-				float t = 0; // temporary data holder
-				float x = slowingDistance; // radius
-				float y = 0;
+				t = 0; // temporary data holder
+				x = slowingDistance; // radius
+				y = 0;
 				for (int i = 0; i < nbSegments; i++) {
 					GL11.glColor4d(1, 1, 1, 0.15);
 					GL11.glVertex2d(x, y);
@@ -111,6 +130,7 @@ public class Arrive extends Movement {
 				GL11.glEnd();
 			}
 
+			GL11.glScalef(zoomFactor, zoomFactor, 1);
 			GL11.glTranslatef(-target.x, -target.y, 0);
 		}
 	}
