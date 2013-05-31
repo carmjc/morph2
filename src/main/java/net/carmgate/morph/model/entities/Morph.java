@@ -8,6 +8,7 @@ import java.util.Map;
 
 import net.carmgate.morph.model.entities.common.Renderable;
 import net.carmgate.morph.model.entities.common.Selectable;
+import net.carmgate.morph.ui.common.RenderUtils;
 
 import org.lwjgl.opengl.GL11;
 import org.newdawn.slick.opengl.Texture;
@@ -166,6 +167,8 @@ public class Morph implements Renderable, Selectable {
 		}
 
 		GL11.glScalef(1 / scale, 1 / scale, 1 / scale);
+
+		RenderUtils.renderGauge(30, -20, Math.min(1, xp / 100), 0, new float[] { 1, 1, 0.5f, 1 });
 	}
 
 	@Override

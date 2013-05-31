@@ -30,6 +30,7 @@ import net.carmgate.morph.model.orders.Order;
 import net.carmgate.morph.model.orders.TakeDamage;
 import net.carmgate.morph.model.player.Player;
 import net.carmgate.morph.model.player.Player.PlayerType;
+import net.carmgate.morph.ui.common.RenderUtils;
 import net.carmgate.morph.ui.common.RenderingHints;
 import net.carmgate.morph.ui.common.RenderingSteps;
 
@@ -69,13 +70,13 @@ public class Ship extends Entity {
 	private static Integer nextId = 1;
 
 	private final int id;
-
 	/** The texture under the morph image. */
 	private static Texture baseTexture;
-	private static Texture zoomedOutTexture;
 
+	private static Texture zoomedOutTexture;
 	private static final float MAX_DAMAGE = 10;
 	private final Map<Integer, Morph> morphsById = new HashMap<>();
+
 	private final Map<MorphType, List<Morph>> morphsByType = new HashMap<>();
 
 	/** The ship position in the world. */
@@ -95,30 +96,30 @@ public class Ship extends Entity {
 	private final Vect3D accel = new Vect3D();
 
 	private final Vect3D effectiveForce = new Vect3D();
-
 	private final Player player;
-	private final Vect3D steeringForce = new Vect3D();
 
+	private final Vect3D steeringForce = new Vect3D();
 	private final Set<Behavior> behaviorSet = new HashSet<>();
 	private final Set<Behavior> pendingBehaviorsRemoval = new HashSet<>();
-	private final Set<Behavior> pendingBehaviorsAddition = new HashSet<>();
 
+	private final Set<Behavior> pendingBehaviorsAddition = new HashSet<>();
 	private float damage = 0;
 	private float maxSteeringForce;
+
 	private float maxSpeed;
 
 	private boolean dead;
 
 	// TODO put in conf the dimension of the table
 	private final Vect3D[] trail = new Vect3D[20];
-
 	/** Stores last trail update. It occurred less than trailUpdateInterval ago. */
 	private long trailLastUpdate;
 	// TODO put in conf the trail update interval
 	private final int trailUpdateInterval = 50;
-	private float energy;
 
+	private float energy;
 	private final List<Order> newOrderList = new ArrayList<>();
+
 	private float realAccelModulus;
 
 	/***
@@ -483,15 +484,17 @@ public class Ship extends Entity {
 		}
 
 		// Render energy gauge
+		GL11.glScalef(1 / zoomFactor, 1 / zoomFactor, 1);
 		if (maxZoom) {
-			renderGauge(25, -16 - 64 * zoomFactor * massScale - 5, Math.min(MAX_DAMAGE - damage, MAX_DAMAGE) / MAX_DAMAGE, 0.2f,
+			RenderUtils.renderGauge(50, -16 - 64 * zoomFactor * massScale - 5, Math.min(MAX_DAMAGE - damage, MAX_DAMAGE) / MAX_DAMAGE, 0.2f,
 					new float[] { 0.5f, 1, 0.5f,
 							1 });
-			renderGauge(25, -16 - 64 * zoomFactor * massScale + 5, Math.min(energy, 100) / 100, 0.05f, new float[] { 0.5f, 0.5f, 1, 1 });
+			RenderUtils.renderGauge(50, -16 - 64 * zoomFactor * massScale + 5, Math.min(energy, 100) / 100, 0.05f, new float[] { 0.5f, 0.5f, 1, 1 });
 		} else {
-			renderGauge(25, -32 - 5, Math.min(MAX_DAMAGE - damage, MAX_DAMAGE) / MAX_DAMAGE, 0.2f, new float[] { 0.5f, 1, 0.5f, 1 });
-			renderGauge(25, -32 + 5, Math.min(energy, 100) / 100, 0.05f, new float[] { 0.5f, 0.5f, 1, 1 });
+			RenderUtils.renderGauge(50, -32 - 5, Math.min(MAX_DAMAGE - damage, MAX_DAMAGE) / MAX_DAMAGE, 0.2f, new float[] { 0.5f, 1, 0.5f, 1 });
+			RenderUtils.renderGauge(50, -32 + 5, Math.min(energy, 100) / 100, 0.05f, new float[] { 0.5f, 0.5f, 1, 1 });
 		}
+		GL11.glScalef(zoomFactor, zoomFactor, 1);
 
 		// Render morphs
 		if (Model.getModel().getUiContext().isMorphsShown()) {
@@ -509,48 +512,6 @@ public class Ship extends Entity {
 			}
 		}
 
-	}
-
-	private void renderGauge(float xGaugePosition, float yGaugePosition, float percentage, float alarmThreshold, float[] color) {
-		float zoomFactor = Model.getModel().getViewport().getZoomFactor();
-		GL11.glScalef(1 / zoomFactor, 1 / zoomFactor, 1);
-
-		TextureImpl.bindNone();
-		GL11.glColor4f(0.5f, 0.5f, 0.5f, 10);
-		GL11.glBegin(GL11.GL_QUADS);
-		GL11.glVertex2f(xGaugePosition + 2, yGaugePosition - 5);
-		GL11.glVertex2f(xGaugePosition + 2, yGaugePosition + 5);
-		GL11.glVertex2f(-(xGaugePosition + 2), yGaugePosition + 5);
-		GL11.glVertex2f(-(xGaugePosition + 2), yGaugePosition - 5);
-		GL11.glEnd();
-
-		GL11.glColor4f(0, 0, 0, 1);
-		GL11.glBegin(GL11.GL_QUADS);
-		GL11.glVertex2f(xGaugePosition + 1, yGaugePosition - 4);
-		GL11.glVertex2f(xGaugePosition + 1, yGaugePosition + 4);
-		GL11.glVertex2f(-(xGaugePosition + 1), yGaugePosition + 4);
-		GL11.glVertex2f(-(xGaugePosition + 1), yGaugePosition - 4);
-		GL11.glEnd();
-
-		if (percentage < alarmThreshold) {
-			GL11.glColor4f(1, 0.5f, 0.5f, 0.5f);
-			GL11.glBegin(GL11.GL_QUADS);
-			GL11.glVertex2f(xGaugePosition, yGaugePosition - 3);
-			GL11.glVertex2f(xGaugePosition, yGaugePosition + 3);
-			GL11.glVertex2f(-xGaugePosition, yGaugePosition + 3);
-			GL11.glVertex2f(-xGaugePosition, yGaugePosition - 3);
-			GL11.glEnd();
-		}
-
-		GL11.glColor4f(color[0], color[1], color[2], color[3]);
-		GL11.glBegin(GL11.GL_QUADS);
-		GL11.glVertex2f(-xGaugePosition + percentage * xGaugePosition * 2, yGaugePosition - 3);
-		GL11.glVertex2f(-xGaugePosition + percentage * xGaugePosition * 2, yGaugePosition + 3);
-		GL11.glVertex2f(-xGaugePosition, yGaugePosition + 3);
-		GL11.glVertex2f(-xGaugePosition, yGaugePosition - 3);
-		GL11.glEnd();
-
-		GL11.glScalef(zoomFactor, zoomFactor, 1);
 	}
 
 	private void renderSelection(float massScale, boolean maxZoom) {
