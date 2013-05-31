@@ -36,6 +36,10 @@ public class Model {
 	private static final Logger LOGGER = LoggerFactory.getLogger(Model.class);
 	private static final Model _instance = new Model();
 
+	static {
+		Model.getModel().init();
+	}
+
 	/** Singleton instance getter. */
 	public static Model getModel() {
 		return _instance;
@@ -64,18 +68,20 @@ public class Model {
 	private final Map<RenderingSteps, EntityMap> entitiesByRenderingStep = new HashMap<>();
 
 	private final ParticleEngine particleEngine = new ParticleEngine();
-	private boolean pause;
+	private boolean paused;
 
 	private final Set<Entity> entitiesToRemove = new HashSet<>();
+
 	private final Player self;
+	private Ship selfShip;
 	private final Set<Player> players = new HashSet<>();
 	private WorldArea rootWA;
 	private float secondsSinceLastUpdate;
 	private long lastUpdateTS;
 	private long seedNewEnemyLastTS;
 	private float secondsSinceLastEnemySeed;
-	private boolean morphEditorActivated;
 	private final Set<Morph> morphSelection = new HashSet<>();
+	private UiContext uiContext = UiContext.NORMAL;
 
 	private Model() {
 		self = new Player(PlayerType.HUMAN, "Carm", FOF.SELF);
@@ -175,8 +181,16 @@ public class Model {
 		return self;
 	}
 
+	public Ship getSelfShip() {
+		return selfShip;
+	}
+
 	public Set<Selectable> getSimpleSelection() {
 		return simpleSelection;
+	}
+
+	public UiContext getUiContext() {
+		return uiContext;
 	}
 
 	public ViewPort getViewport() {
@@ -187,28 +201,38 @@ public class Model {
 		return window;
 	}
 
+	private void init() {
+		selfShip = new Ship(0, 0, 0, 10, 10, self);
+		selfShip.addMorph(new Morph(MorphType.OVERMIND));
+		selfShip.addMorph(new Morph(MorphType.SHIELD));
+		selfShip.addMorph(new Morph(MorphType.SIMPLE_PROPULSOR));
+		selfShip.addMorph(new Morph(MorphType.SIMPLE_PROPULSOR));
+		selfShip.addMorph(new Morph(MorphType.LASER));
+		Model.getModel().addEntity(selfShip);
+	}
+
 	public boolean isDebugMode() {
 		return debugMode;
 	}
 
-	public boolean isMorphEditorActivated() {
-		return morphEditorActivated;
+	public boolean isPaused() {
+		return paused;
 	}
 
 	public void removeEntity(Entity entity) {
 		entitiesToRemove.add(entity);
 	}
 
+	public void setUiContext(UiContext uiContext) {
+		this.uiContext = uiContext;
+	}
+
 	public void toggleDebugMode() {
 		debugMode = !debugMode;
 	}
 
-	public void toggleMorphEditor() {
-		morphEditorActivated = !morphEditorActivated;
-	}
-
-	public void togglePause() {
-		pause = !pause;
+	public void togglePaused() {
+		paused = !paused;
 	}
 
 	public void update() {
@@ -217,7 +241,7 @@ public class Model {
 		// update the number of millis since game start
 		long tmpMsec = new Date().getTime() - gameStartMsec;
 		lastUpdateTS = currentTS;
-		if (pause) {
+		if (paused) {
 			gameStartMsec += tmpMsec - currentTS;
 		} else {
 			currentTS = tmpMsec;

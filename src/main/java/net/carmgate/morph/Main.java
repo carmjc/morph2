@@ -17,6 +17,7 @@ import net.carmgate.morph.actions.drag.DragContext;
 import net.carmgate.morph.conf.Conf;
 import net.carmgate.morph.exception.ConcreteInitRendererInAbstractClassException;
 import net.carmgate.morph.model.Model;
+import net.carmgate.morph.model.UiContext;
 import net.carmgate.morph.model.behaviors.steering.Wander;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Morph;
@@ -54,12 +55,11 @@ public class Main {
 		sample.start();
 	}
 
-	public static void shipEditorRender(int glMode) {
-		if (Model.getModel().isMorphEditorActivated()) {
+	public static void selfShipEditorRender(int glMode) {
+		if (Model.getModel().getUiContext() == UiContext.SHIP_EDITOR) {
 			List<Morph> morphsToDraw = new ArrayList<>();
-			Ship selectedShip = (Ship) Model.getModel().getSimpleSelection().iterator().next();
 			for (MorphType morphType : MorphType.values()) {
-				List<Morph> morphsByType = selectedShip.getMorphsByType(morphType);
+				List<Morph> morphsByType = Model.getModel().getSelfShip().getMorphsByType(morphType);
 				if (morphsByType != null) {
 					morphsToDraw.addAll(morphsByType);
 				}
@@ -109,7 +109,6 @@ public class Main {
 
 	private final List<Action> keyboardActions = new LinkedList<>();
 
-	private Ship ship;
 	private int fpsCounter = 0;
 	private float meanFpsCounter = 0;
 
@@ -134,20 +133,21 @@ public class Main {
 		for (Class<? extends Action> action : actions) {
 			try {
 				Action actionInstance;
-				// in some special actions, there are no action hints.
-				if (action.getAnnotation(ActionHints.class) == null) {
-					continue;
-				}
 
 				// Handle actions hints
+				// Instanciate drag actions with common drag context
 				if (action.getAnnotation(ActionHints.class).dragAction()) {
 					actionInstance = action.getConstructor(DragContext.class).newInstance(dragContext);
 				} else {
 					actionInstance = action.newInstance();
 				}
+
+				// autoload mouse actions if requested
 				if (action.getAnnotation(ActionHints.class).mouseActionAutoload()) {
 					mouseActions.add(actionInstance);
 				}
+
+				// autoload keyboard actions if requested
 				if (action.getAnnotation(ActionHints.class).keyboardActionAutoload()) {
 					keyboardActions.add(actionInstance);
 				}
@@ -197,14 +197,6 @@ public class Main {
 		enemyShip.addMorph(new Morph(MorphType.SIMPLE_PROPULSOR));
 		Model.getModel().addEntity(enemyShip);
 		enemyShip.addBehavior(new Wander(enemyShip, 100, 50));
-
-		ship = new Ship(0, 0, 0, 10, 10, Model.getModel().getSelf());
-		ship.addMorph(new Morph(MorphType.OVERMIND));
-		ship.addMorph(new Morph(MorphType.SHIELD));
-		ship.addMorph(new Morph(MorphType.SIMPLE_PROPULSOR));
-		ship.addMorph(new Morph(MorphType.SIMPLE_PROPULSOR));
-		ship.addMorph(new Morph(MorphType.LASER));
-		Model.getModel().addEntity(ship);
 
 	}
 
@@ -314,7 +306,7 @@ public class Main {
 		GL11.glTranslatef(-focalPoint.x, -focalPoint.y, -focalPoint.z);
 
 		// TODO activate ship editor upon some action
-		shipEditorRender(GL11.GL_RENDER);
+		selfShipEditorRender(GL11.GL_RENDER);
 
 		// IMPROVE Interface rendering
 		// GL11.glTranslatef(WorldRenderer.focalPoint.x,
@@ -346,6 +338,16 @@ public class Main {
 		// }
 		// iasToRemove.clear();
 		// }
+	}
+
+	private void runAction(Action action) {
+		ActionHints actionHints = action.getClass().getAnnotation(ActionHints.class);
+		for (UiContext uiContext : actionHints.uiContext()) {
+			if (uiContext == Model.getModel().getUiContext()) {
+				action.run();
+				break;
+			}
+		}
 	}
 
 	/**
@@ -405,7 +407,7 @@ public class Main {
 					Model.getModel().getInteractionStack()
 							.addEvent(new Event(EventType.MOUSE_WHEEL, dWheel, new int[] { Mouse.getEventX(), Mouse.getEventY() }));
 					for (Action action : mouseActions) {
-						action.run();
+						runAction(action);
 					}
 				}
 
@@ -420,7 +422,7 @@ public class Main {
 					Event event = new Event(evtType, Mouse.getEventButton(), new int[] { Mouse.getEventX(), Mouse.getEventY() });
 					Model.getModel().getInteractionStack().addEvent(event);
 					for (Action action : mouseActions) {
-						action.run();
+						runAction(action);
 					}
 				}
 
@@ -437,7 +439,7 @@ public class Main {
 				Model.getModel().getInteractionStack().addEvent(event);
 				LOGGER.debug("Sending keyboard event " + Keyboard.getEventKey());
 				for (Action action : keyboardActions) {
-					action.run();
+					runAction(action);
 				}
 			}
 
@@ -449,7 +451,7 @@ public class Main {
 					if (Model.getModel().getInteractionStack().getLastEvent().getEventType() != EventType.MOUSE_MOVE) {
 						Model.getModel().getInteractionStack().addEvent(event);
 					}
-					action.run();
+					runAction(action);
 				}
 			}
 

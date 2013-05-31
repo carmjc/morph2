@@ -5,7 +5,9 @@ import java.util.List;
 
 import net.carmgate.morph.Main;
 import net.carmgate.morph.actions.common.Action;
+import net.carmgate.morph.actions.common.ActionHints;
 import net.carmgate.morph.model.Model;
+import net.carmgate.morph.model.UiContext;
 import net.carmgate.morph.model.entities.Morph;
 import net.carmgate.morph.model.entities.Ship;
 import net.carmgate.morph.model.view.Window;
@@ -19,6 +21,7 @@ import org.lwjgl.util.glu.GLU;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@ActionHints(uiContext = UiContext.SHIP_EDITOR)
 public class ShipEditorSelect implements Action {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ShipEditorSelect.class);
@@ -28,11 +31,6 @@ public class ShipEditorSelect implements Action {
 
 	@Override
 	public void run() {
-		// No world selection while morph editor is activated
-		if (!Model.getModel().isMorphEditorActivated()) {
-			return;
-		}
-
 		// Simple selection
 		List<Event> lastEvents = Model.getModel().getInteractionStack().getLastEvents(2);
 		if (lastEvents.get(1).getEventType() == EventType.MOUSE_BUTTON_DOWN
@@ -80,7 +78,7 @@ public class ShipEditorSelect implements Action {
 		GL11.glOrtho(0, window.getWidth(), 0, window.getHeight(), 1, -1);
 		GL11.glViewport(0, 0, window.getWidth(), window.getHeight());
 
-		Main.shipEditorRender(GL11.GL_SELECT);
+		Main.selfShipEditorRender(GL11.GL_SELECT);
 
 		GL11.glMatrixMode(GL11.GL_PROJECTION);
 		GL11.glPopMatrix();
@@ -105,7 +103,6 @@ public class ShipEditorSelect implements Action {
 		Morph pickedMorph = null;
 
 		// Iterate over the hits
-		Ship selectedShip = (Ship) Model.getModel().getSimpleSelection().iterator().next();
 		for (int i = 0; i < hits; i++) {
 			// get the number of names on this part of the stack
 			int nbNames = selectBuf.get(selectBufIndex++);
@@ -114,7 +111,7 @@ public class ShipEditorSelect implements Action {
 			selectBufIndex += 2;
 
 			// get the matching element in the model
-			pickedMorph = selectedShip.getMorphById(selectBuf.get(selectBufIndex++));
+			pickedMorph = Model.getModel().getSelfShip().getMorphById(selectBuf.get(selectBufIndex++));
 
 			// Jump over the other ones if needed
 			for (int j = 2; j < nbNames; j++) {

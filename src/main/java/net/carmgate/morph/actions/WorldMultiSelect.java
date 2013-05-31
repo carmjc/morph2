@@ -2,6 +2,7 @@ package net.carmgate.morph.actions;
 
 import java.util.List;
 
+import net.carmgate.morph.actions.common.ActionHints;
 import net.carmgate.morph.actions.common.SelectionType;
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.ui.Event;
@@ -12,6 +13,7 @@ import org.lwjgl.input.Mouse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@ActionHints
 public class WorldMultiSelect extends WorldSelect {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(WorldMultiSelect.class);
@@ -21,11 +23,6 @@ public class WorldMultiSelect extends WorldSelect {
 
 	@Override
 	public void run() {
-		// No world selection while morph editor is activated
-		if (Model.getModel().isMorphEditorActivated()) {
-			return;
-		}
-
 		List<Event> lastEvents = Model.getModel().getInteractionStack().getLastEvents(2);
 		if (lastEvents.get(1).getEventType() != EventType.MOUSE_BUTTON_DOWN
 				|| lastEvents.get(1).getButton() != 0

@@ -4,6 +4,7 @@ import java.nio.IntBuffer;
 import java.util.List;
 
 import net.carmgate.morph.actions.common.Action;
+import net.carmgate.morph.actions.common.ActionHints;
 import net.carmgate.morph.actions.common.SelectionType;
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.common.Vect3D;
@@ -22,6 +23,7 @@ import org.lwjgl.util.glu.GLU;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@ActionHints
 public class WorldSelect implements Action {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(WorldSelect.class);
@@ -64,11 +66,6 @@ public class WorldSelect implements Action {
 
 	@Override
 	public void run() {
-		// No world selection while morph editor is activated
-		if (Model.getModel().isMorphEditorActivated()) {
-			return;
-		}
-
 		// Simple selection
 		List<Event> lastEvents = Model.getModel().getInteractionStack().getLastEvents(2);
 		if (lastEvents.get(1).getEventType() == EventType.MOUSE_BUTTON_DOWN
