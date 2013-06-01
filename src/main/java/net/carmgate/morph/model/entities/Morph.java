@@ -25,7 +25,8 @@ public class Morph implements Renderable, Selectable {
 		OVERMIND(0),
 		SHIELD(20),
 		LASER(100),
-		SIMPLE_PROPULSOR(10);
+		SIMPLE_PROPULSOR(10),
+		CARGO(0);
 
 		private final float energyConsumption;
 
@@ -114,7 +115,7 @@ public class Morph implements Renderable, Selectable {
 					.getPath())) {
 				morphTypeTextures.put(tmpMorphType, TextureLoader.getTexture("PNG", fileInputStream));
 			} catch (IOException e) {
-				LOGGER.error("Exception raised while loading texture", e);
+				LOGGER.error("Exception raised while loading texture for " + tmpMorphType, e);
 			}
 		}
 

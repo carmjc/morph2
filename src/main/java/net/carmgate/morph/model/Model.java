@@ -282,7 +282,7 @@ public class Model {
 		particleEngine.update();
 
 		// Seed new enemies
-		if (secondsSinceLastEnemySeed >= 30) {
+		if (secondsSinceLastEnemySeed >= 10) {
 			Player player = new Player(PlayerType.AI, "Nemesis", FOF.FOE);
 			Ship enemyShip = new Ship(128, 0, 0, 0, 20, player);
 			enemyShip.addMorph(new Morph(MorphType.OVERMIND));
