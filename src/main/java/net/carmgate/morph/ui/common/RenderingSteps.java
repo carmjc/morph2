@@ -5,6 +5,7 @@ import org.apache.commons.collections.CollectionUtils;
 public enum RenderingSteps {
 	WORLDAREA,
 	STAR,
+	PLANET,
 	SHIP;
 
 	private static RenderingSteps[] reverseValuesArray;

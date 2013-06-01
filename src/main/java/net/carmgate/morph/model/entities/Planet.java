@@ -16,90 +16,70 @@ import org.newdawn.slick.opengl.TextureLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@EntityHints(entityType = EntityType.STAR, selectable = false)
-@RenderingHints(renderingStep = RenderingSteps.STAR)
-public class Star extends Entity {
+@EntityHints(entityType = EntityType.PLANET, selectable = false)
+@RenderingHints(renderingStep = RenderingSteps.PLANET)
+public class Planet extends Entity {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(Star.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(Planet.class);
 	private static Texture baseTexture;
+	private static Integer nextId = 0;
 
 	private final Vect3D pos = new Vect3D();
+	private final Star star;
 	private int id;
-
-	private static Integer nextId = 0;
 	private final float mass;
-	public static double SIMPLE_G = 6.67259 * Math.pow(10, 3); // normal one is .. * Math.pow(10, -11)
-	private final double gm;
 
+	private final float mu;
 	private final float radius;
-	private final float energyFlow;
+	private final float orbit;
 
-	/**
-	 * Do not use this constructor.
-	 */
-	public Star() {
-		this(0, 0, 0, 0, 0, 0);
+	@Deprecated
+	public Planet() {
+		this(null, 0, 0, 0);
 	}
 
-	public Star(float x, float y, float z, float mass, float radius, float energyFlow) {
+	public Planet(Star star, float mass, float radius, float orbit) {
+
+		this.star = star;
+		this.mass = mass;
+		this.radius = radius;
+		this.orbit = orbit;
+		mu = (float) Math.sqrt(Star.SIMPLE_G * (star.getMass() + mass) / orbit);
+		// TODO compute random first position
+		if (star != null) {
+			pos.copy(new Vect3D(star.getPos()).add(new Vect3D(Vect3D.NORTH).rotate((float) (Math.random() * 360)).mult(orbit)));
+		}
+
 		synchronized (nextId) {
 			id = nextId++;
 		}
-
-		pos.x = x;
-		pos.y = y;
-		pos.z = z;
-		this.mass = mass;
-		this.radius = radius;
-		gm = SIMPLE_G * mass;
-		this.energyFlow = energyFlow;
-	}
-
-	public float getEnergyFlow() {
-		return energyFlow;
-	}
-
-	public double getGm() {
-		return gm;
 	}
 
 	@Override
 	public int getId() {
-		return id;
-	}
-
-	public float getKillingRadius() {
-		return radius * 3;
-	}
-
-	public float getMass() {
-		return mass;
+		// TODO Auto-generated method stub
+		return 0;
 	}
 
 	public Vect3D getPos() {
 		return pos;
 	}
 
-	public float getRadius() {
-		return radius;
-	}
-
 	@Override
 	public void initRenderer() {
 		// load texture from PNG file if needed
 		if (baseTexture == null) {
-			try (FileInputStream fileInputStream = new FileInputStream(ClassLoader.getSystemResource("img/stars/blue.png").getPath())) {
+			try (FileInputStream fileInputStream = new FileInputStream(ClassLoader.getSystemResource("img/planet/planet1.png").getPath())) {
 				baseTexture = TextureLoader.getTexture("PNG", fileInputStream);
 			} catch (IOException e) {
 				LOGGER.error("Exception raised while loading texture", e);
 			}
 		}
-
 	}
 
 	@Override
 	public boolean isSelected() {
-		// Stars are not selectable
+		// TODO Auto-generated method stub
 		return false;
 	}
 
@@ -145,14 +125,20 @@ public class Star extends Entity {
 		GL11.glTranslatef(-pos.x, -pos.y, -pos.z);
 	}
 
+	public void setId(int id) {
+		this.id = id;
+	}
+
 	@Override
 	public void setSelected(boolean selected) {
-		// Stars are not selectable
+		// TODO Auto-generated method stub
+
 	}
 
 	@Override
 	public void update() {
-		// Nothing to do
+		// TODO Auto-generated method stub
+
 	}
 
 }

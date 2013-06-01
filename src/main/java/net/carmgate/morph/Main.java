@@ -24,6 +24,7 @@ import net.carmgate.morph.model.behaviors.steering.Wander;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Morph;
 import net.carmgate.morph.model.entities.Morph.MorphType;
+import net.carmgate.morph.model.entities.Planet;
 import net.carmgate.morph.model.entities.Ship;
 import net.carmgate.morph.model.entities.Star;
 import net.carmgate.morph.model.entities.common.Entity;
@@ -186,8 +187,10 @@ public class Main {
 
 	private void initModel() {
 
-		Star star = new Star(3000, 3000, 0, 5000, 100, 10000);
+		Star star = new Star(3000, 3000, 0, 5000, 500, 10000);
 		Model.getModel().addEntity(star);
+		Planet planet = new Planet(star, 1000, 100, 5000);
+		Model.getModel().addEntity(planet);
 
 		Player player = new Player(PlayerType.AI, "Nemesis", FOF.FOE);
 		Ship enemyShip = new Ship(128, 0, 0, 0, 20, player);
