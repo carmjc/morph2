@@ -59,7 +59,7 @@ public class WorldSelect implements Action {
 			}
 		}
 
-		GL11.glScalef(1 / zoomFactor, 1 / zoomFactor, 1);
+		GL11.glScalef(1f / zoomFactor, 1f / zoomFactor, 1);
 		GL11.glRotatef(-Model.getModel().getViewport().getRotation(), 0, 0, 1);
 		GL11.glTranslatef(focalPoint.x, focalPoint.y, focalPoint.z);
 	}

@@ -125,6 +125,7 @@ public class Star extends Entity {
 		GL11.glVertex2f(-halfWidth, -halfWidth);
 		GL11.glEnd();
 		GL11.glScalef(1 / radiusScale, 1 / radiusScale, 0);
+
 		// } else {
 		// float adjustedSize = 15 / Model.getModel().getViewport().getZoomFactor();
 		// // zoomedOutTexture.bind();

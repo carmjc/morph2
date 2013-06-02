@@ -458,7 +458,7 @@ public class Ship extends Entity {
 			GL11.glTexCoord2f(0, 1);
 			GL11.glVertex2f(-64, 64);
 			GL11.glEnd();
-			GL11.glScalef(1 / massScale, 1 / massScale, 0);
+			GL11.glScalef(1f / massScale, 1f / massScale, 0);
 		} else {
 			GL11.glScalef(1f / (4 * zoomFactor), 1f / (4 * zoomFactor), 0);
 			zoomedOutTexture.bind();
@@ -484,7 +484,7 @@ public class Ship extends Entity {
 		}
 
 		// Render energy gauge
-		GL11.glScalef(1 / zoomFactor, 1 / zoomFactor, 1);
+		GL11.glScalef(1f / zoomFactor, 1f / zoomFactor, 1);
 		if (maxZoom) {
 			RenderUtils.renderGauge(50, 16 + 64 * zoomFactor * massScale + 5, Math.min(MAX_DAMAGE - damage, MAX_DAMAGE) / MAX_DAMAGE, 0.2f,
 					new float[] { 0.5f, 1, 0.5f,
@@ -498,7 +498,7 @@ public class Ship extends Entity {
 
 		// Render morphs
 		if (Model.getModel().getUiContext().isMorphsShown()) {
-			GL11.glScalef(1 / (2 * zoomFactor), 1 / (2 * zoomFactor), 1);
+			GL11.glScalef(1f / (2 * zoomFactor), 1f / (2 * zoomFactor), 1);
 			Main.shipEditorRender(this, glMode);
 			GL11.glScalef(2 * zoomFactor, 2 * zoomFactor, 1);
 		}
@@ -623,11 +623,6 @@ public class Ship extends Entity {
 
 	@Override
 	public void update() {
-		float secondsSinceLastUpdate = Model.getModel().getSecondsSinceLastUpdate();
-		if (secondsSinceLastUpdate == 0f) {
-			return;
-		}
-
 		// TODO Is this really the proper way to do it ?
 		accel.nullify();
 		effectiveForce.nullify();
@@ -641,7 +636,7 @@ public class Ship extends Entity {
 		// if no movement needed, no update needed
 		for (Behavior behavior : behaviorSet) {
 			if (behavior.isActive()) {
-				behavior.run(secondsSinceLastUpdate);
+				behavior.run(Model.getModel().getSecondsSinceLastUpdate());
 
 				// if the behavior is a movement, use the generated steering force
 				if (behavior instanceof Movement && ((Movement) behavior).consumeEnergy()) {
@@ -668,11 +663,11 @@ public class Ship extends Entity {
 		// acceleration = steering_force / mass
 		accel.add(effectiveForce);
 		// velocity = truncate (velocity + acceleration, max_speed)
-		speed.add(new Vect3D(accel).mult(secondsSinceLastUpdate)).truncate(maxSpeed);
+		speed.add(new Vect3D(accel).mult(Model.getModel().getSecondsSinceLastUpdate())).truncate(maxSpeed);
 		realAccel.substract(speed);
 		realAccelModulus = realAccel.modulus();
 		// position = position + velocity
-		pos.add(new Vect3D(speed).mult(secondsSinceLastUpdate));
+		pos.add(new Vect3D(speed).mult(Model.getModel().getSecondsSinceLastUpdate()));
 
 		// Handle orders
 		for (Order order : orderList) {

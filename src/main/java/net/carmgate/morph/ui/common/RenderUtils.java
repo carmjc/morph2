@@ -1,9 +1,69 @@
 package net.carmgate.morph.ui.common;
 
+import net.carmgate.morph.model.Model;
+
 import org.lwjgl.opengl.GL11;
 import org.newdawn.slick.opengl.TextureImpl;
 
 public class RenderUtils {
+
+	private static final int nbSegments = 200;
+	private static final double deltaAngle = (float) (2 * Math.PI / nbSegments);
+	private static final float cos = (float) Math.cos(deltaAngle);
+	private static final float sin = (float) Math.sin(deltaAngle);
+
+	public static void renderCircle(float radius, float lineWidth, Float[] colorInt, Float[] colorMiddle, Float[] colorExt) {
+		// render limit of effect zone
+		TextureImpl.bindNone();
+		float tInt = 0; // temporary data holder
+		float tExt = 0; // temporary data holder
+		float xInt;
+		float xExt;
+		float zoomFactor = Model.getModel().getViewport().getZoomFactor();
+
+		xInt = radius; // radius
+		xExt = radius + lineWidth / zoomFactor; // radius
+
+		float xIntBackup = xInt; // radius
+		float xExtBackup = xExt; // radius
+		float yInt = 0;
+		float yExt = 0;
+		float yIntBackup = 0;
+		float yExtBackup = 0;
+		for (int i = 0; i < nbSegments; i++) {
+
+			tInt = xInt;
+			tExt = xExt;
+			xInt = cos * xInt - sin * yInt;
+			xExt = cos * xExt - sin * yExt;
+			yInt = sin * tInt + cos * yInt;
+			yExt = sin * tExt + cos * yExt;
+
+			GL11.glBegin(GL11.GL_QUADS);
+			GL11.glColor4f(colorInt[0], colorInt[1], colorInt[2], colorInt[3]);
+			GL11.glVertex2f(xInt, yInt);
+			GL11.glColor4f(colorInt[0], colorInt[1], colorInt[2], colorInt[3]);
+			GL11.glVertex2f(xIntBackup, yIntBackup);
+			GL11.glColor4f(colorMiddle[0], colorMiddle[1], colorMiddle[2], colorMiddle[3]);
+			GL11.glVertex2f((xExtBackup + xIntBackup) / 2, (yExtBackup + yIntBackup) / 2);
+			GL11.glColor4f(colorMiddle[0], colorMiddle[1], colorMiddle[2], colorMiddle[3]);
+			GL11.glVertex2f((xExt + xInt) / 2, (yExt + yInt) / 2);
+			GL11.glColor4f(colorMiddle[0], colorMiddle[1], colorMiddle[2], colorMiddle[3]);
+			GL11.glVertex2f((xExtBackup + xIntBackup) / 2, (yExtBackup + yIntBackup) / 2);
+			GL11.glColor4f(colorMiddle[0], colorMiddle[1], colorMiddle[2], colorMiddle[3]);
+			GL11.glVertex2f((xExt + xInt) / 2, (yExt + yInt) / 2);
+			GL11.glColor4f(colorExt[0], colorExt[1], colorExt[2], colorExt[3]);
+			GL11.glVertex2f(xExt, yExt);
+			GL11.glColor4f(colorExt[0], colorExt[1], colorExt[2], colorExt[3]);
+			GL11.glVertex2f(xExtBackup, yExtBackup);
+			GL11.glEnd();
+
+			xIntBackup = xInt;
+			xExtBackup = xExt;
+			yIntBackup = yInt;
+			yExtBackup = yExt;
+		}
+	}
 
 	/**
 	 * Renders a gauge at the given position

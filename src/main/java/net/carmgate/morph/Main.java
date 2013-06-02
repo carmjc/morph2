@@ -20,6 +20,7 @@ import net.carmgate.morph.conf.Conf;
 import net.carmgate.morph.exception.ConcreteInitRendererInAbstractClassException;
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.UiState;
+import net.carmgate.morph.model.behaviors.steering.Orbit;
 import net.carmgate.morph.model.behaviors.steering.Wander;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Morph;
@@ -191,6 +192,7 @@ public class Main {
 		Model.getModel().addEntity(star);
 		Planet planet = new Planet(star, 1000, 100, 5000);
 		Model.getModel().addEntity(planet);
+		planet.addBehavior(new Orbit(planet, star, 10000));
 
 		Player player = new Player(PlayerType.AI, "Nemesis", FOF.FOE);
 		Ship enemyShip = new Ship(128, 0, 0, 0, 20, player);
@@ -264,7 +266,7 @@ public class Main {
 		GL11.glMatrixMode(GL11.GL_PROJECTION);
 		GL11.glLoadIdentity();
 
-		GL11.glOrtho(-width / 2, width / 2, height / 2, -height / 2, 1, 1);
+		GL11.glOrtho(-width / 2, width / 2, height / 2, -height / 2, 1, -1);
 		GL11.glViewport(0, 0, width, height);
 
 		GL11.glMatrixMode(GL11.GL_MODELVIEW);
@@ -297,12 +299,14 @@ public class Main {
 		for (RenderingSteps renderingStep : RenderingSteps.values()) {
 			if (Model.getModel().getEntitiesByRenderingType(renderingStep) != null) {
 				for (Entity renderable : Model.getModel().getEntitiesByRenderingType(renderingStep).values()) {
+					// if (renderable instanceof Planet) {
 					renderable.render(GL11.GL_RENDER);
+					// }
 				}
 			}
 		}
 
-		GL11.glScalef(1 / zoomFactor, 1 / zoomFactor, 1);
+		GL11.glScalef(1f / zoomFactor, 1f / zoomFactor, 1);
 		GL11.glRotatef(-model.getViewport().getRotation(), 0, 0, 1);
 		GL11.glTranslatef(focalPoint.x, focalPoint.y, focalPoint.z);
 
@@ -311,36 +315,6 @@ public class Main {
 			shipEditorRender(Model.getModel().getSelfShip(), GL11.GL_RENDER);
 		}
 
-		// IMPROVE Interface rendering
-		// GL11.glTranslatef(WorldRenderer.focalPoint.x,
-		// WorldRenderer.focalPoint.y, WorldRenderer.focalPoint.z);
-		// interfaceRenderer.render(GL11.GL_RENDER, WorldRenderer.debugDisplay ?
-		// RenderStyle.DEBUG : RenderStyle.NORMAL);
-		// GL11.glTranslatef(-WorldRenderer.focalPoint.x,
-		// -WorldRenderer.focalPoint.y, -WorldRenderer.focalPoint.z);
-
-		// move world
-		// NEEDED ?
-		// globalModel.update();
-
-		// udpate IAs
-		// MOVE THIS SOMEWHERE ELSE
-		// for (Ship ship : globalModel.getShipList()) {
-		// List<IA> iasToRemove = new ArrayList<IA>();
-		// for (IA ia : ship.getIAList()) {
-		// if (ia != null) {
-		// if (ia.done()) {
-		// iasToRemove.add(ia);
-		// } else {
-		// ia.compute();
-		// }
-		// }
-		// }
-		// for (IA ia : iasToRemove) {
-		// ship.getIAList().remove(ia);
-		// }
-		// iasToRemove.clear();
-		// }
 	}
 
 	private void runAction(Action action) {
@@ -391,16 +365,16 @@ public class Main {
 				initView();
 			}
 
-			GL11.glMatrixMode(GL11.GL_PROJECTION);
-			GL11.glLoadIdentity();
-
-			int width = Display.getWidth();
-			int height = Display.getHeight();
-			GL11.glOrtho(-width / 2, width / 2, height / 2, -height / 2, 1, -1);
-			GL11.glViewport(0, 0, width, height);
-
-			GL11.glMatrixMode(GL11.GL_MODELVIEW);
-			GL11.glLoadIdentity();
+			// GL11.glMatrixMode(GL11.GL_PROJECTION);
+			// GL11.glLoadIdentity();
+			//
+			// int width = Display.getWidth();
+			// int height = Display.getHeight();
+			// GL11.glOrtho(-width / 2, width / 2, height / 2, -height / 2, 1, -1);
+			// GL11.glViewport(0, 0, width, height);
+			//
+			// GL11.glMatrixMode(GL11.GL_MODELVIEW);
+			// GL11.glLoadIdentity();
 
 			// Fire events accordingly
 			if (Mouse.next()) {

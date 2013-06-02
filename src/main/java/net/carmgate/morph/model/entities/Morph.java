@@ -134,7 +134,7 @@ public class Morph implements Renderable, Selectable {
 		float typeScale = 0.4f;
 
 		GL11.glColor4f(1, 1, 1, 1);
-		GL11.glScalef(scale, scale, scale);
+		GL11.glScalef(scale, scale, 1);
 
 		// TODO the hexagons must be drawn in a form of hexagon to ensure picking will be done properly.
 		GL11.glEnable(GL11.GL_TEXTURE_2D);
@@ -172,10 +172,10 @@ public class Morph implements Renderable, Selectable {
 			GL11.glTexCoord2f(0, 0);
 			GL11.glVertex2f(-32, -32);
 			GL11.glEnd();
-			GL11.glScalef(1 / typeScale, 1 / typeScale, 1);
+			GL11.glScalef(1f / typeScale, 1f / typeScale, 1);
 		}
 
-		GL11.glScalef(1 / scale, 1 / scale, 1 / scale);
+		GL11.glScalef(1f / scale, 1f / scale, 1);
 
 		String str = "" + level;
 		font.drawString(-font.getWidth(str) / 2, -32, str, Color.white);
