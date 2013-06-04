@@ -67,19 +67,19 @@ public class Follow extends Movement {
 
 		GL11.glTranslatef(pos.x, pos.y, pos.z);
 		if (Model.getModel().getUiContext().isDebugMode()) {
-			speed.render(1);
+			speed.render(glMode);
 			GL11.glColor3f(1, 0, 0);
-			desiredVelocity.render(1);
+			desiredVelocity.render(glMode);
 			GL11.glTranslated(desiredVelocity.x, desiredVelocity.y, 0);
 			GL11.glColor3f(0, 0, 1);
-			steeringForce.render(1);
+			steeringForce.render(glMode);
 			GL11.glTranslated(-desiredVelocity.x, -desiredVelocity.y, 0);
 			GL11.glColor3f(0, 1, 0);
-			speedOpposition.render(1);
+			speedOpposition.render(glMode);
 		}
 		GL11.glTranslatef(-pos.x, -pos.y, -pos.z);
 
-		if (target != null && shipToMove.isSelected() && Model.getModel().getUiContext().isDebugMode()) {
+		if (target != null && shipToMove instanceof Ship && ((Ship) shipToMove).isSelected() && Model.getModel().getUiContext().isDebugMode()) {
 			// Show target
 			GL11.glTranslatef(target.getPos().x, target.getPos().y, 0);
 
@@ -151,7 +151,7 @@ public class Follow extends Movement {
 		// desired_velocity would be the optimal speed vector if we had unlimited thrust
 		desiredVelocity.copy(targetOffset).add(speedOpposition).normalize(distance);
 
-		steeringForce.copy(desiredVelocity).substract(speed);
+		steeringForce.copy(desiredVelocity).substract(speed).mult(mass);
 
 		// stop condition
 		if (new Vect3D(recomputedTarget).substract(pos).modulus() < 5 && speed.modulus() < 60) {

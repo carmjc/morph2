@@ -63,9 +63,9 @@ public class Wander extends Movement {
 
 		if (Model.getModel().getUiContext().isDebugMode()) {
 			GL11.glTranslatef(pos.x, pos.y, pos.z);
-			speed.render(1);
+			speed.render(glMode);
 			GL11.glColor3f(0, 0, 1);
-			steeringForce.render(1);
+			steeringForce.render(glMode);
 
 			// render limit of effect zone
 			GL11.glBegin(GL11.GL_LINES);
@@ -141,7 +141,6 @@ public class Wander extends Movement {
 			wanderTarget.copy(Vect3D.NULL);
 		}
 
-		steeringForce.copy(new Vect3D(wanderFocus).substract(pos).add(wanderTarget)).truncate(shipToMove.getMaxSteeringForce() / shipToMove.getMass());
+		steeringForce.copy(new Vect3D(wanderFocus).substract(pos).add(wanderTarget)).truncate(shipToMove.getMaxSteeringForce()).mult(shipToMove.getMass());
 	}
-
 }

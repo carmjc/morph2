@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.Set;
 
 import net.carmgate.morph.actions.common.InteractionStack;
-import net.carmgate.morph.model.behaviors.steering.Wander;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Morph;
 import net.carmgate.morph.model.entities.Morph.MorphType;
@@ -283,12 +282,12 @@ public class Model {
 
 		// Seed new enemies
 		if (secondsSinceLastEnemySeed >= 10) {
-			Player player = new Player(PlayerType.AI, "Nemesis", FOF.FOE);
-			Ship enemyShip = new Ship(128, 0, 0, 0, 20, player);
-			enemyShip.addMorph(new Morph(MorphType.OVERMIND));
-			enemyShip.addMorph(new Morph(MorphType.SIMPLE_PROPULSOR));
-			Model.getModel().addEntity(enemyShip);
-			enemyShip.addBehavior(new Wander(enemyShip, 100, 50));
+			// Player player = new Player(PlayerType.AI, "Nemesis", FOF.FOE);
+			// Ship enemyShip = new Ship(128, 0, 0, 0, 20, player);
+			// enemyShip.addMorph(new Morph(MorphType.OVERMIND));
+			// enemyShip.addMorph(new Morph(MorphType.SIMPLE_PROPULSOR));
+			// Model.getModel().addEntity(enemyShip);
+			// enemyShip.addBehavior(new Wander(enemyShip, 100, 50));
 			secondsSinceLastEnemySeed = 0;
 		} else {
 			secondsSinceLastEnemySeed += Model.getModel().getSecondsSinceLastUpdate();

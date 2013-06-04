@@ -2,14 +2,21 @@ package net.carmgate.morph.model.entities;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 
 import net.carmgate.morph.model.Model;
-import net.carmgate.morph.model.behaviors.steering.ArriveForPlanet;
+import net.carmgate.morph.model.behaviors.Behavior;
+import net.carmgate.morph.model.behaviors.ForceGeneratingBehavior;
+import net.carmgate.morph.model.behaviors.Movement;
+import net.carmgate.morph.model.behaviors.StarsContribution;
 import net.carmgate.morph.model.behaviors.steering.Orbit;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.model.entities.common.EntityHints;
 import net.carmgate.morph.model.entities.common.EntityType;
+import net.carmgate.morph.model.entities.common.Movable;
+import net.carmgate.morph.model.entities.common.Renderable;
 import net.carmgate.morph.ui.common.RenderingHints;
 import net.carmgate.morph.ui.common.RenderingSteps;
 
@@ -21,7 +28,7 @@ import org.slf4j.LoggerFactory;
 
 @EntityHints(entityType = EntityType.PLANET, selectable = false)
 @RenderingHints(renderingStep = RenderingSteps.PLANET)
-public class Planet extends Entity {
+public class Planet extends Entity implements Movable {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(Planet.class);
 	private static Texture baseTexture;
@@ -38,7 +45,10 @@ public class Planet extends Entity {
 	private final float radius;
 
 	private final float orbit;
-	private Orbit behavior;
+	private final Set<Behavior> behaviorSet = new HashSet<>();
+	private final Vect3D steeringForce = new Vect3D();
+	private final Vect3D effectiveForce = new Vect3D();
+	private final StarsContribution starsContribution;
 
 	@Deprecated
 	public Planet() {
@@ -62,26 +72,60 @@ public class Planet extends Entity {
 		synchronized (nextId) {
 			id = nextId++;
 		}
-	}
 
-	public void addBehavior(Orbit behavior) {
-		this.behavior = behavior;
+		starsContribution = new StarsContribution(this);
+		addBehavior(starsContribution);
 	}
 
 	@Override
-	public int getId() {
+	public void addBehavior(Behavior behavior) {
+		behaviorSet.add(behavior);
+		if (behavior instanceof Orbit) {
+			((Orbit) behavior).setStarsContribution(starsContribution);
+		}
+	}
+
+	// IMPROVE remove effectiveForce from steeringForce management ?
+	// movements should add a propulsion force to the ship
+	private void applySteeringForce(Vect3D force) {
+		steeringForce.add(force);
+		effectiveForce.add(force);
+	}
+
+	@Override
+	public float getHeading() {
 		// TODO Auto-generated method stub
 		return 0;
 	}
 
+	@Override
+	public int getId() {
+		return id;
+	}
+
+	@Override
 	public float getMass() {
 		return mass;
 	}
 
+	@Override
+	public float getMaxSpeed() {
+		// TODO Auto-generated method stub
+		return 100000;
+	}
+
+	@Override
+	public float getMaxSteeringForce() {
+		// TODO Auto-generated method stub
+		return 100000;
+	}
+
+	@Override
 	public Vect3D getPos() {
 		return pos;
 	}
 
+	@Override
 	public Vect3D getSpeed() {
 		return speed;
 	}
@@ -102,6 +146,12 @@ public class Planet extends Entity {
 	public boolean isSelected() {
 		// TODO Auto-generated method stub
 		return false;
+	}
+
+	@Override
+	public void removeBehavior(Behavior behavior) {
+		// TODO Auto-generated method stub
+
 	}
 
 	@Override
@@ -143,9 +193,20 @@ public class Planet extends Entity {
 		// GL11.glEnd();
 		// }
 
+		if (Model.getModel().getUiContext().isDebugMode()) {
+			GL11.glColor4f(0, 1, 0, 1);
+			speed.render(glMode);
+		}
+
 		GL11.glTranslatef(-pos.x, -pos.y, -pos.z);
 
-		behavior.render(glMode);
+		// Render behaviors
+		for (Behavior behavior : behaviorSet) {
+			if (behavior instanceof Renderable) {
+				((Renderable) behavior).render(glMode);
+			}
+		}
+
 	}
 
 	public void setId(int id) {
@@ -160,13 +221,37 @@ public class Planet extends Entity {
 
 	@Override
 	public void update() {
-		behavior.run(Model.getModel().getSecondsSinceLastUpdate());
+
+		effectiveForce.nullify();
+		steeringForce.nullify();
+
+		// if no movement needed, no update needed
+		for (Behavior behavior : behaviorSet) {
+			if (behavior.isActive()) {
+				behavior.run(Model.getModel().getSecondsSinceLastUpdate());
+
+				// if the behavior is a movement, use the generated steering force
+				if (behavior instanceof Movement) {
+					applySteeringForce(((Movement) behavior).getSteeringForce());
+				}
+
+				// if the behavior is generating a force, we must apply it
+				if (behavior instanceof ForceGeneratingBehavior) {
+					effectiveForce.add(((ForceGeneratingBehavior) behavior).getNonSteeringForce());
+				}
+
+			}
+		}
 
 		// velocity = truncate (velocity + acceleration, max_speed)
-		speed.add(new Vect3D(behavior.getSteeringForce()).mult(Model.getModel().getSecondsSinceLastUpdate())).truncate(ArriveForPlanet.MAX_SPEED);
+		// TODO fix this magic number
+		Vect3D accel = new Vect3D(effectiveForce).mult(1f / mass);
+		// LOGGER.debug("planet: " + accel);
+		speed.add(accel.mult(Model.getModel().getSecondsSinceLastUpdate())).truncate(getMaxSpeed());
 		// position = position + velocity
 		pos.add(new Vect3D(speed).mult(Model.getModel().getSecondsSinceLastUpdate()));
 
+		// LOGGER.debug("planet effective force: " + effectiveForce);
 	}
 
 }

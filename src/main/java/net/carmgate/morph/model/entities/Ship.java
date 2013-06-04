@@ -19,11 +19,13 @@ import net.carmgate.morph.model.behaviors.ForceGeneratingBehavior;
 import net.carmgate.morph.model.behaviors.Movement;
 import net.carmgate.morph.model.behaviors.Needs;
 import net.carmgate.morph.model.behaviors.StarsContribution;
+import net.carmgate.morph.model.behaviors.steering.Orbit;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Morph.MorphType;
 import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.model.entities.common.EntityHints;
 import net.carmgate.morph.model.entities.common.EntityType;
+import net.carmgate.morph.model.entities.common.Movable;
 import net.carmgate.morph.model.entities.common.Renderable;
 import net.carmgate.morph.model.orders.Die;
 import net.carmgate.morph.model.orders.Order;
@@ -45,7 +47,7 @@ import org.slf4j.LoggerFactory;
 
 @EntityHints(entityType = EntityType.SHIP)
 @RenderingHints(renderingStep = RenderingSteps.SHIP)
-public class Ship extends Entity {
+public class Ship extends Entity implements Movable {
 
 	private static final class SameClassPredicate implements Predicate {
 		private final Class<?> behaviorClass;
@@ -121,6 +123,7 @@ public class Ship extends Entity {
 	private final List<Order> newOrderList = new ArrayList<>();
 
 	private float realAccelModulus;
+	private final StarsContribution starsContribution;
 
 	/***
 	 * Creates a new ship with position (0, 0, 0), mass = 10 assigned to player "self".
@@ -146,8 +149,8 @@ public class Ship extends Entity {
 		// TODO This should be a function of the ship's fitting
 		energy = 100;
 
-		// Add always active behaviors
-		addBehavior(new StarsContribution(this));
+		starsContribution = new StarsContribution(this);
+		addBehavior(starsContribution);
 	}
 
 	/**
@@ -155,6 +158,7 @@ public class Ship extends Entity {
 	 * @param behavior
 	 * @return true if it was possible to add the behavior
 	 */
+	@Override
 	public void addBehavior(Behavior behavior) {
 		// Checks that the behavior can be added to the ship
 		if (behavior != null
@@ -165,6 +169,11 @@ public class Ship extends Entity {
 				for (Morph morph : morphsById.values()) {
 					if (morph.getMorphType() == need.morphType()) {
 						pendingBehaviorsAddition.add(behavior);
+						// TODO Clean this and similar items
+						if (behavior instanceof Orbit) {
+							((Orbit) behavior).setStarsContribution(starsContribution);
+						}
+
 						return;
 					}
 				}
@@ -174,6 +183,10 @@ public class Ship extends Entity {
 		}
 
 		pendingBehaviorsAddition.add(behavior);
+		// TODO Clean this
+		if (behavior instanceof Orbit) {
+			((Orbit) behavior).setStarsContribution(starsContribution);
+		}
 	}
 
 	public void addEnergy(float energyInc) {
@@ -227,6 +240,7 @@ public class Ship extends Entity {
 		return energy;
 	}
 
+	@Override
 	public float getHeading() {
 		return heading;
 	}
@@ -236,6 +250,7 @@ public class Ship extends Entity {
 		return id;
 	}
 
+	@Override
 	public float getMass() {
 		return mass;
 	}
@@ -255,10 +270,12 @@ public class Ship extends Entity {
 		return maxLevel;
 	}
 
+	@Override
 	public float getMaxSpeed() {
 		return maxSpeed;
 	}
 
+	@Override
 	public float getMaxSteeringForce() {
 		return maxSteeringForce;
 	}
@@ -280,6 +297,7 @@ public class Ship extends Entity {
 		return player;
 	}
 
+	@Override
 	public Vect3D getPos() {
 		return pos;
 	}
@@ -288,6 +306,7 @@ public class Ship extends Entity {
 		return realAccelModulus;
 	}
 
+	@Override
 	public Vect3D getSpeed() {
 		return speed;
 	}
@@ -378,6 +397,7 @@ public class Ship extends Entity {
 	 * This way, the handling of behaviors is insensitive to the order in which they are processed and removed.
 	 * @param behavior to remove
 	 */
+	@Override
 	public void removeBehavior(Behavior behavior) {
 		pendingBehaviorsRemoval.add(behavior);
 	}
@@ -661,7 +681,7 @@ public class Ship extends Entity {
 		Vect3D realAccel = new Vect3D(speed);
 
 		// acceleration = steering_force / mass
-		accel.add(effectiveForce);
+		accel.add(effectiveForce).mult(1f / mass);
 		// velocity = truncate (velocity + acceleration, max_speed)
 		speed.add(new Vect3D(accel).mult(Model.getModel().getSecondsSinceLastUpdate())).truncate(maxSpeed);
 		realAccel.substract(speed);
@@ -718,5 +738,6 @@ public class Ship extends Entity {
 			maxSteeringForce *= stackingPenalty;
 			maxSpeed *= stackingPenalty;
 		}
+		maxSteeringForce /= mass;
 	}
 }

@@ -9,18 +9,20 @@ import net.carmgate.morph.actions.common.Event.EventType;
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.behaviors.InflictLaserDamage;
 import net.carmgate.morph.model.behaviors.Movement;
-import net.carmgate.morph.model.behaviors.steering.Follow;
+import net.carmgate.morph.model.behaviors.steering.Orbit;
 import net.carmgate.morph.model.entities.Ship;
+import net.carmgate.morph.model.entities.Star;
+import net.carmgate.morph.model.entities.common.Movable;
 import net.carmgate.morph.model.entities.common.Selectable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @ActionHints(mouseActionAutoload = true)
-public class FollowAndInflictDamage implements Action {
+public class EnterOrbit implements Action {
 
 	@SuppressWarnings("unused")
-	private static final Logger LOGGER = LoggerFactory.getLogger(FollowAndInflictDamage.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(EnterOrbit.class);
 
 	@Override
 	public void run() {
@@ -36,24 +38,22 @@ public class FollowAndInflictDamage implements Action {
 		// IMPROVE Clean this : we use a Selectable, when we would need a Ship.
 		// Therefore, we have an extraneous cast.
 		// However, we might attack something else than ships ...
-		Selectable targetShip = Model.getModel().getActionSelection().getFirst();
-		if (!(targetShip instanceof Ship)) {
+		Selectable target = Model.getModel().getActionSelection().getFirst();
+		if (!(target instanceof Star)) {
 			return;
 		}
 
 		for (Selectable selectable : Model.getModel().getSimpleSelection()) {
-			if (selectable instanceof Ship && selectable != targetShip) {
+			if (selectable instanceof Movable && selectable != target) {
 				Ship ship = (Ship) selectable;
 
 				// Remove existing arrive and combat behaviors
+				// TODO We should find a more systematic way of removing existing user triggered behaviors
 				ship.removeBehaviorsByClass(Movement.class);
 				ship.removeBehaviorsByClass(InflictLaserDamage.class);
 
-				// Add new arrive behavior
-				ship.addBehavior(new Follow((Ship) selectable, (Ship) targetShip, InflictLaserDamage.MAX_RANGE * 0.5f));
-
-				// Add new combat behavior
-				ship.addBehavior(new InflictLaserDamage(ship, (Ship) targetShip));
+				// Add new orbit behavior
+				ship.addBehavior(new Orbit((Movable) selectable, (Star) target, ((Movable) selectable).getPos().distance(((Star) target).getPos()) + 20));
 			}
 		}
 	}

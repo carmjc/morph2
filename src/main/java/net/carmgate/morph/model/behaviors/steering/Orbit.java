@@ -1,11 +1,12 @@
 package net.carmgate.morph.model.behaviors.steering;
 
 import net.carmgate.morph.model.Model;
-import net.carmgate.morph.model.behaviors.Behavior;
+import net.carmgate.morph.model.behaviors.Movement;
+import net.carmgate.morph.model.behaviors.StarsContribution;
 import net.carmgate.morph.model.common.Vect3D;
-import net.carmgate.morph.model.entities.Planet;
+import net.carmgate.morph.model.entities.Ship;
 import net.carmgate.morph.model.entities.Star;
-import net.carmgate.morph.model.entities.common.Renderable;
+import net.carmgate.morph.model.entities.common.Movable;
 import net.carmgate.morph.ui.common.RenderUtils;
 
 import org.lwjgl.opengl.GL11;
@@ -13,7 +14,7 @@ import org.newdawn.slick.opengl.TextureImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Orbit implements Behavior, Renderable {
+public class Orbit extends Movement {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(Orbit.class);
 
@@ -23,11 +24,18 @@ public class Orbit implements Behavior, Renderable {
 	private static final float sin = (float) Math.sin(deltaAngle);
 
 	private final float orbitRadius;
-	private final Planet orbiter;
+	private final Movable orbiter;
 	private final Star orbitee;
 
-	private ArriveForPlanet arrive;
+	private Arrive arrive;
 	private final Vect3D steeringForce = new Vect3D();
+
+	private final Vect3D tangentialForce = new Vect3D();
+
+	// TODO rework this ... awful thing
+	private StarsContribution starsContribution;
+
+	private boolean stable;
 
 	@Deprecated
 	public Orbit() {
@@ -35,12 +43,23 @@ public class Orbit implements Behavior, Renderable {
 	}
 
 	// TODO Replace orbiter with a type that would encompass any movable entity
-	public Orbit(Planet orbiter, Star orbitee, float orbitRadius) {
+	public Orbit(Movable orbiter, Star orbitee, float orbitRadius) {
+		super(orbiter);
 		this.orbiter = orbiter;
 		this.orbitee = orbitee;
 		this.orbitRadius = orbitRadius;
+		if (orbiter != null && orbitee != null) {
+			Vect3D orbiteeToOrbiter = new Vect3D(orbiter.getPos()).substract(orbitee.getPos());
+			Vect3D orbitalTarget = new Vect3D(orbiteeToOrbiter).normalize(orbitRadius).add(orbitee.getPos());
+			arrive = new Arrive(orbiter, orbitalTarget);
+		} else {
+			if (orbiter != null) {
+				throw new IllegalStateException();
+			}
+		}
 	}
 
+	@Override
 	public Vect3D getSteeringForce() {
 		return steeringForce;
 	}
@@ -54,43 +73,105 @@ public class Orbit implements Behavior, Renderable {
 	@Override
 	public boolean isActive() {
 		// TODO Auto-generated method stub
-		return false;
+		return true;
 	}
 
 	@Override
 	public void render(int glMode) {
 
 		// LOGGER.debug("orbit around " + orbitee.getPos() + " at " + orbitRadius);
+		// TODO fix this issue
 		GL11.glTranslatef(orbitee.getPos().x, orbitee.getPos().y, orbitee.getPos().z);
 
 		TextureImpl.bindNone();
-		RenderUtils.renderCircle(orbitRadius, 2, new Float[] { 0f, 0f, 0f, 0f }, new Float[] { 1f, 1f, 1f, 1f }, new Float[] { 0f, 0f, 0f, 0f });
+		RenderUtils.renderCircle(orbitRadius, 5, new Float[] { 0f, 0f, 0f, 0f }, new Float[] { 1f, 1f, 1f, 0.3f }, new Float[] { 0f, 0f, 0f, 0f });
 
 		GL11.glTranslatef(-orbitee.getPos().x, -orbitee.getPos().y, -orbitee.getPos().z);
+
+		if (Model.getModel().getUiContext().isDebugMode()) {
+			if (arrive != null) {
+				arrive.render(glMode);
+			}
+
+			GL11.glTranslatef(orbiter.getPos().x, orbiter.getPos().y, orbiter.getPos().z);
+			GL11.glColor4f(1, 0, 1, 0.5f);
+			orbiter.getSpeed().render(glMode);
+			tangentialForce.render(glMode);
+			GL11.glColor4f(0, 0, 1, 1);
+			getSteeringForce().render(glMode);
+			GL11.glColor4f(1f, 1f, 0f, 1);
+			new Vect3D(starsContribution.getNonSteeringForce()).add(steeringForce).render(glMode);
+			GL11.glTranslatef(-orbiter.getPos().x, -orbiter.getPos().y, -orbiter.getPos().z);
+		}
 	}
 
 	@Override
 	public void run(float secondsSinceLastUpdate) {
-		// If the orbiter is not on the desired distance, set an arrive behavior to go to it
-		if (arrive == null) {
-			Vect3D orbitalTarget = new Vect3D(orbiter.getPos()).substract(orbitee.getPos()).normalize(orbitRadius).add(orbitee.getPos());
-			arrive = new ArriveForPlanet(orbiter, orbitalTarget);
-		}
-		arrive.run(Model.getModel().getSecondsSinceLastUpdate());
-		steeringForce.copy(arrive.getSteeringForce());
 
+		// TODO add comments
+
+		steeringForce.nullify();
+		Vect3D orbiteeToOrbiter = new Vect3D(orbiter.getPos()).substract(orbitee.getPos());
+		Vect3D radialVector = new Vect3D(orbiteeToOrbiter).normalize(1);
+		Vect3D tangentialVector = new Vect3D(radialVector).rotate(90);
 		float optimalSpeed = (float) Math.sqrt(Star.SIMPLE_G * (orbitee.getMass() + orbiter.getMass()) / orbitRadius);
 
-		if (orbiter.getSpeed().modulus() < optimalSpeed) {
-			Vect3D tangentialForce = new Vect3D(orbiter.getPos()).substract(orbitee.getPos()).rotate(90);
-			tangentialForce.mult(tangentialForce.prodScal(orbiter.getSpeed())).normalize(optimalSpeed - orbiter.getSpeed().modulus());
-			steeringForce.add(tangentialForce);
+		if (stable) {
+			// Cheating to stay in orbit
+			// TODO we should check that the non steering force have not changed
+			// TODO we might do that far less often
+			orbiter.getPos().substract(orbitee.getPos()).normalize(orbitRadius).add(orbitee.getPos());
+			orbiter.getSpeed().copy(tangentialVector).normalize(optimalSpeed);
+			if (orbiter instanceof Ship) {
+				LOGGER.debug("stable2");
+			}
+			return;
 		}
 
-		// When the orbiter is at the right distance of the orbitee but not at orbiting speed (Math.sqrt(G*(M+m)/r)),
-		// Keep the arriving behavior but add a tangential acceleration to circularize it
+		if (tangentialForce.prodScal(orbiter.getSpeed()) < 0) {
+			// rotate in speed vector direction if not purely radial
+			tangentialForce.mult(-1);
+		}
 
-		// When it is circularized, cheat and make the orbit permanent until the non steering force changes.
-		// This will allow to limit the computation but allow to de-circularize the orbiter
+		// If the orbiter is not on the desired distance, set an arrive behavior to go to it
+		// TODO there is a problem with arrive nullifying target
+		if (arrive != null && arrive.getTarget() != null) {
+			Vect3D orbitalTarget = new Vect3D(orbiteeToOrbiter).normalize(orbitRadius).add(orbitee.getPos());
+			arrive.getTarget().copy(orbitalTarget);
+			arrive.run(Model.getModel().getSecondsSinceLastUpdate());
+			steeringForce.add(new Vect3D(radialVector).normalize(arrive.getSteeringForce().prodScal(radialVector)));
+			steeringForce.substract(starsContribution.getNonSteeringForce());
+		}
+
+		tangentialForce.copy(tangentialVector);
+		float test = new Vect3D(tangentialVector).prodScal(new Vect3D(orbiter.getSpeed()).normalize(1));
+		if (test == 0) {
+			test = 1;
+		}
+		tangentialForce.normalize((optimalSpeed - orbiter.getSpeed().modulus())
+				* test);
+		tangentialForce.mult(orbiter.getMass());
+		steeringForce.add(tangentialForce); // .substract(orbiter.getSpeed());
+		// LOGGER.debug("" + orbiter.getClass().getSimpleName() + ": " + steeringForce + ", optimal: " + optimalSpeed + ", current: "
+		// + orbiter.getSpeed().modulus());
+
+		if (Math.abs(Math.abs(new Vect3D(orbiter.getSpeed()).prodScal(tangentialVector)) - optimalSpeed) < optimalSpeed / 200
+				&& Math.abs(orbiteeToOrbiter.modulus() - orbitRadius) < 0.01) {
+			orbiter.getSpeed().copy(tangentialVector).mult(optimalSpeed);
+			LOGGER.debug("now stable");
+			stable = true;
+			steeringForce.nullify();
+			tangentialForce.nullify();
+			arrive = null;
+		} else {
+			if (orbiter instanceof Ship) {
+				LOGGER.debug(Math.abs(Math.abs(new Vect3D(orbiter.getSpeed()).prodScal(tangentialVector)) - optimalSpeed) + "/" + optimalSpeed / 200);
+			}
+		}
+
+	}
+
+	public void setStarsContribution(StarsContribution starsContribution) {
+		this.starsContribution = starsContribution;
 	}
 }

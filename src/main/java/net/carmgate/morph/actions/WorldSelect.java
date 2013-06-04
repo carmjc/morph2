@@ -162,7 +162,7 @@ public class WorldSelect implements Action {
 
 			// get the matching element in the model
 			Entity entity = Model.getModel().getEntitiesByType(selectBuf.get(selectBufIndex++)).get(selectBuf.get(selectBufIndex++));
-			if (!entity.getClass().getAnnotation(EntityHints.class).selectable()) {
+			if (!entity.getClass().getAnnotation(EntityHints.class).selectable() && !entity.getClass().getAnnotation(EntityHints.class).actionSelectable()) {
 				continue;
 			}
 
@@ -193,14 +193,6 @@ public class WorldSelect implements Action {
 			}
 		}
 
-		// int j = 0;
-		// Ship lastSelectedShip = globalModel.getSelectedShip();
-		// int index = selectBuf.get(j + 4);
-		// globalModel.setSelectedShip(index);
-		// if (lastSelectedShip != null && lastSelectedShip ==
-		// globalModel.getSelectedShip()) {
-		// globalModel.getSelectedShip().toggleSelectedMorph(selectBuf.get(j + 5));
-		// }
 	}
 
 }

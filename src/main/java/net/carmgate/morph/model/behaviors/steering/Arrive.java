@@ -6,7 +6,9 @@ import net.carmgate.morph.model.behaviors.Movement;
 import net.carmgate.morph.model.behaviors.Needs;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Morph.MorphType;
+import net.carmgate.morph.model.entities.Planet;
 import net.carmgate.morph.model.entities.Ship;
+import net.carmgate.morph.model.entities.common.Movable;
 
 import org.lwjgl.opengl.GL11;
 import org.newdawn.slick.opengl.TextureImpl;
@@ -36,12 +38,12 @@ public class Arrive extends Movement {
 	public Arrive() {
 	}
 
-	public Arrive(Ship shipToMove, Ship target) {
+	public Arrive(Movable shipToMove, Ship target) {
 		super(shipToMove);
 		this.target = target.getPos();
 	}
 
-	public Arrive(Ship shipToMove, Vect3D target) {
+	public Arrive(Movable shipToMove, Vect3D target) {
 		super(shipToMove);
 		this.target = target;
 	}
@@ -49,6 +51,10 @@ public class Arrive extends Movement {
 	@Override
 	public Vect3D getSteeringForce() {
 		return steeringForce;
+	}
+
+	public Vect3D getTarget() {
+		return target;
 	}
 
 	@Override
@@ -68,19 +74,19 @@ public class Arrive extends Movement {
 
 		GL11.glTranslatef(pos.x, pos.y, pos.z);
 		if (Model.getModel().getUiContext().isDebugMode()) {
-			speed.render(1);
+			speed.render(glMode);
 			GL11.glColor3f(1, 0, 0);
-			desiredVelocity.render(1);
+			desiredVelocity.render(glMode);
 			GL11.glTranslated(desiredVelocity.x, desiredVelocity.y, 0);
 			GL11.glColor3f(0, 0, 1);
-			steeringForce.render(1);
+			steeringForce.render(glMode);
 			GL11.glTranslated(-desiredVelocity.x, -desiredVelocity.y, 0);
 			GL11.glColor3f(0, 1, 0);
-			speedOpposition.render(1);
+			speedOpposition.render(glMode);
 		}
 		GL11.glTranslatef(-pos.x, -pos.y, -pos.z);
 
-		if (target != null && shipToMove.isSelected()) {
+		if (target != null && (shipToMove instanceof Ship && ((Ship) shipToMove).isSelected() || shipToMove instanceof Planet)) {
 			// Show target
 			GL11.glTranslatef(target.x, target.y, 0);
 
@@ -118,7 +124,7 @@ public class Arrive extends Movement {
 				x = slowingDistance; // radius
 				y = 0;
 				for (int i = 0; i < nbSegments; i++) {
-					GL11.glColor4d(1, 1, 1, 0.15);
+					GL11.glColor4d(1, 0, 0, 0.15);
 					GL11.glVertex2d(x, y);
 
 					t = x;
@@ -143,7 +149,7 @@ public class Arrive extends Movement {
 		final Vect3D pos = new Vect3D(shipToMove.getPos());
 		final Vect3D speed = new Vect3D(shipToMove.getSpeed());
 
-		targetOffset.copy(target).substract(pos).mult(0.9f);
+		targetOffset.copy(target).substract(pos);
 
 		normalizedTargetOffset.copy(targetOffset).normalize(1);
 		speedOpposition.copy(normalizedTargetOffset).rotate(90).mult(speed.prodVectOnZ(normalizedTargetOffset));
@@ -165,25 +171,26 @@ public class Arrive extends Movement {
 		// clipped_speed clips the speed to max speed
 		float clippedSpeed = Math.min(rampedSpeed, shipToMove.getMaxSpeed());
 		// desired_velocity would be the optimal speed vector if we had unlimited thrust
-		desiredVelocity.copy(targetOffset).add(speedOpposition).mult(clippedSpeed / distance);
+		desiredVelocity.copy(targetOffset).add(speedOpposition).mult(clippedSpeed / (distance + 0.0001f)); // + 0.000001 added for debug TODO
 
-		steeringForce.copy(desiredVelocity).substract(speed);
+		steeringForce.copy(desiredVelocity).substract(speed).mult(mass);
 		float factor = 1.35f;
 		float sdmin = slowingDistance / factor;
 		float sdmax = slowingDistance;
-		float overdrive = 1.0f + speed.modulus() / shipToMove.getMaxSpeed();
+		float overdrive = 1.0f + speed.modulus() / rampedSpeed;
 		if (distance > sdmax) {
-			steeringForce.truncate(shipToMove.getMaxSteeringForce() / mass);
+			steeringForce.truncate(shipToMove.getMaxSteeringForce()); // / mass
 		} else if (distance > sdmin) {
 			float stModulus = steeringForce.modulus();
 			steeringForce.normalize((distance - sdmin) / (sdmax - sdmin) * stModulus + (sdmax - distance)
-					/ (sdmax - sdmin) * shipToMove.getMaxSteeringForce() / mass * overdrive);
+					/ (sdmax - sdmin) * shipToMove.getMaxSteeringForce() * overdrive); // / mass
 		} else {
-			steeringForce.normalize(shipToMove.getMaxSteeringForce() / mass * overdrive);
+			steeringForce.normalize(shipToMove.getMaxSteeringForce() * overdrive); // / mass
 		}
 
 		// stop condition
-		if (new Vect3D(target).substract(pos).modulus() < 5 && speed.modulus() < 60) {
+		// TODO remove the instanceof test
+		if (new Vect3D(target).substract(pos).modulus() < 5 && speed.modulus() < 1 && shipToMove instanceof Ship) {
 
 			shipToMove.removeBehavior(this);
 
@@ -203,5 +210,4 @@ public class Arrive extends Movement {
 			shipToMove.getSpeed().nullify();
 		}
 	}
-
 }

@@ -130,7 +130,7 @@ public class ParticleEngine implements Renderable, Updatable {
 			GL11.glRotatef(particle.getRot(), 0, 0, 1);
 
 			float factor = 5;
-			float particleSize = (particle.getMaxLife() - particle.getLife()) * factor;
+			float particleSize = 0.01f + (particle.getMaxLife() - particle.getLife()) * factor;
 			GL11.glScalef(particleSize, particleSize, 1);
 
 			GL11.glColor4f(1, 1, 1, particle.getLuminosity());
@@ -157,6 +157,7 @@ public class ParticleEngine implements Renderable, Updatable {
 	public void update() {
 		secondsSinceLastUpdate = ((float) Model.getModel().getCurrentTS() - lastUpdateTS) / 1000;
 		lastUpdateTS = Model.getModel().getCurrentTS();
+		// TODO this should be in the main loop
 		if (secondsSinceLastUpdate == 0f) {
 			return;
 		}

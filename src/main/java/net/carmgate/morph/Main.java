@@ -113,6 +113,7 @@ public class Main {
 	private float meanFpsCounter = 0;
 
 	private long lastFpsResetTs = 0;
+	private Planet planet;
 
 	/**
 	 * This method initializes UI handlers.
@@ -190,7 +191,8 @@ public class Main {
 
 		Star star = new Star(3000, 3000, 0, 5000, 500, 10000);
 		Model.getModel().addEntity(star);
-		Planet planet = new Planet(star, 1000, 100, 5000);
+		// TODO remove attribute from class
+		planet = new Planet(star, 1000, 100, 10000);
 		Model.getModel().addEntity(planet);
 		planet.addBehavior(new Orbit(planet, star, 10000));
 
@@ -278,43 +280,45 @@ public class Main {
 	 */
 	public void render() {
 
-		Vect3D focalPoint = model.getViewport().getFocalPoint();
-		float zoomFactor = model.getViewport().getZoomFactor();
-		if (model.getViewport().getLockedOnShip() != null) {
-			Vect3D shipPos = null;
-			shipPos = new Vect3D(model.getViewport().getLockedOnShip().getPos()).mult(zoomFactor);
-			focalPoint.copy(new Vect3D().add(shipPos));
-		}
-		GL11.glTranslatef(-focalPoint.x, -focalPoint.y, -focalPoint.z);
+		try {
+			Vect3D focalPoint = model.getViewport().getFocalPoint();
+			float zoomFactor = model.getViewport().getZoomFactor();
+			if (model.getViewport().getLockedOnShip() != null) {
+				Vect3D shipPos = null;
+				shipPos = new Vect3D(model.getViewport().getLockedOnShip().getPos()).mult(zoomFactor);
+				focalPoint.copy(new Vect3D().add(shipPos));
+			}
 
-		GL11.glRotatef(model.getViewport().getRotation(), 0, 0, 1);
-		GL11.glScalef(zoomFactor, zoomFactor, 1);
+			GL11.glTranslatef(-focalPoint.x, -focalPoint.y, -focalPoint.z);
 
-		Model.getModel().getRootWA().render(GL11.GL_RENDER);
+			GL11.glRotatef(model.getViewport().getRotation(), 0, 0, 1);
+			GL11.glScalef(zoomFactor, zoomFactor, 1);
 
-		// Render particles
-		model.getParticleEngine().render(GL11.GL_RENDER);
+			Model.getModel().getRootWA().render(GL11.GL_RENDER);
 
-		// Rendering all renderable elements
-		for (RenderingSteps renderingStep : RenderingSteps.values()) {
-			if (Model.getModel().getEntitiesByRenderingType(renderingStep) != null) {
-				for (Entity renderable : Model.getModel().getEntitiesByRenderingType(renderingStep).values()) {
-					// if (renderable instanceof Planet) {
-					renderable.render(GL11.GL_RENDER);
-					// }
+			// Render particles
+			model.getParticleEngine().render(GL11.GL_RENDER);
+
+			// Rendering all renderable elements
+			for (RenderingSteps renderingStep : RenderingSteps.values()) {
+				if (Model.getModel().getEntitiesByRenderingType(renderingStep) != null) {
+					for (Entity renderable : Model.getModel().getEntitiesByRenderingType(renderingStep).values()) {
+						renderable.render(GL11.GL_RENDER);
+					}
 				}
 			}
+
+			GL11.glScalef(1f / zoomFactor, 1f / zoomFactor, 1);
+			GL11.glRotatef(-model.getViewport().getRotation(), 0, 0, 1);
+			GL11.glTranslatef(focalPoint.x, focalPoint.y, focalPoint.z);
+
+			// TODO activate ship editor upon some action
+			if (Model.getModel().getUiContext().getUiState() == UiState.SHIP_EDITOR) {
+				shipEditorRender(Model.getModel().getSelfShip(), GL11.GL_RENDER);
+			}
+		} catch (Exception e) {
+			LOGGER.debug("Exception caught in main loop.", e);
 		}
-
-		GL11.glScalef(1f / zoomFactor, 1f / zoomFactor, 1);
-		GL11.glRotatef(-model.getViewport().getRotation(), 0, 0, 1);
-		GL11.glTranslatef(focalPoint.x, focalPoint.y, focalPoint.z);
-
-		// TODO activate ship editor upon some action
-		if (Model.getModel().getUiContext().getUiState() == UiState.SHIP_EDITOR) {
-			shipEditorRender(Model.getModel().getSelfShip(), GL11.GL_RENDER);
-		}
-
 	}
 
 	private void runAction(Action action) {
@@ -365,16 +369,16 @@ public class Main {
 				initView();
 			}
 
-			// GL11.glMatrixMode(GL11.GL_PROJECTION);
-			// GL11.glLoadIdentity();
-			//
-			// int width = Display.getWidth();
-			// int height = Display.getHeight();
-			// GL11.glOrtho(-width / 2, width / 2, height / 2, -height / 2, 1, -1);
-			// GL11.glViewport(0, 0, width, height);
-			//
-			// GL11.glMatrixMode(GL11.GL_MODELVIEW);
-			// GL11.glLoadIdentity();
+			GL11.glMatrixMode(GL11.GL_PROJECTION);
+			GL11.glLoadIdentity();
+
+			int width = Display.getWidth();
+			int height = Display.getHeight();
+			GL11.glOrtho(-width / 2, width / 2, height / 2, -height / 2, 1, -1);
+			GL11.glViewport(0, 0, width, height);
+
+			GL11.glMatrixMode(GL11.GL_MODELVIEW);
+			GL11.glLoadIdentity();
 
 			// Fire events accordingly
 			if (Mouse.next()) {
