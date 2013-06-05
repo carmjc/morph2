@@ -39,6 +39,7 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 	protected final Vect3D speed = new Vect3D();
 	/** The ship orientation in the world. */
 	protected float heading;
+	// TODO remove the initial 10 value
 	protected float mass = 10;
 	protected boolean selected;
 	protected final Vect3D accel = new Vect3D();
