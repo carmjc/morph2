@@ -11,7 +11,6 @@ import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.model.entities.common.EntityHints;
 import net.carmgate.morph.model.entities.common.EntityType;
-import net.carmgate.morph.model.entities.common.Movable;
 import net.carmgate.morph.model.entities.common.Renderable;
 import net.carmgate.morph.ui.common.RenderingHints;
 import net.carmgate.morph.ui.common.RenderingSteps;
@@ -24,7 +23,7 @@ import org.slf4j.LoggerFactory;
 
 @EntityHints(entityType = EntityType.PLANET, selectable = false)
 @RenderingHints(renderingStep = RenderingSteps.PLANET)
-public class Planet extends Entity implements Movable {
+public class Planet extends Entity {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(Planet.class);
 	private static Texture baseTexture;
@@ -102,22 +101,6 @@ public class Planet extends Entity implements Movable {
 		GL11.glVertex2f(-halfWidth, -halfWidth);
 		GL11.glEnd();
 		GL11.glScalef(1f / radiusScale, 1f / radiusScale, 1);
-		// } else {
-		// float adjustedSize = 15 / Model.getModel().getViewport().getZoomFactor();
-		// // zoomedOutTexture.bind();
-		// // TODO make a texture for the zoomed out star
-		// baseTexture.bind();
-		// GL11.glBegin(GL11.GL_QUADS);
-		// GL11.glTexCoord2f(0, 0);
-		// GL11.glVertex2f(-adjustedSize, adjustedSize);
-		// GL11.glTexCoord2f(1, 0);
-		// GL11.glVertex2f(adjustedSize, adjustedSize);
-		// GL11.glTexCoord2f(1, 1);
-		// GL11.glVertex2f(adjustedSize, -adjustedSize);
-		// GL11.glTexCoord2f(0, 1);
-		// GL11.glVertex2f(-adjustedSize, -adjustedSize);
-		// GL11.glEnd();
-		// }
 
 		if (Model.getModel().getUiContext().isDebugMode()) {
 			GL11.glColor4f(0, 1, 0, 1);
