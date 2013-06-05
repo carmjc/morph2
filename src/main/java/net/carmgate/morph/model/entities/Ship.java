@@ -4,10 +4,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import net.carmgate.morph.Main;
 import net.carmgate.morph.conf.Conf;
@@ -18,14 +16,12 @@ import net.carmgate.morph.model.behaviors.Behavior;
 import net.carmgate.morph.model.behaviors.ForceGeneratingBehavior;
 import net.carmgate.morph.model.behaviors.Movement;
 import net.carmgate.morph.model.behaviors.Needs;
-import net.carmgate.morph.model.behaviors.StarsContribution;
 import net.carmgate.morph.model.behaviors.steering.Orbit;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Morph.MorphType;
 import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.model.entities.common.EntityHints;
 import net.carmgate.morph.model.entities.common.EntityType;
-import net.carmgate.morph.model.entities.common.Movable;
 import net.carmgate.morph.model.entities.common.Renderable;
 import net.carmgate.morph.model.orders.Die;
 import net.carmgate.morph.model.orders.Order;
@@ -36,8 +32,6 @@ import net.carmgate.morph.ui.common.RenderUtils;
 import net.carmgate.morph.ui.common.RenderingHints;
 import net.carmgate.morph.ui.common.RenderingSteps;
 
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.Predicate;
 import org.lwjgl.opengl.GL11;
 import org.newdawn.slick.opengl.Texture;
 import org.newdawn.slick.opengl.TextureImpl;
@@ -47,71 +41,32 @@ import org.slf4j.LoggerFactory;
 
 @EntityHints(entityType = EntityType.SHIP)
 @RenderingHints(renderingStep = RenderingSteps.SHIP)
-public class Ship extends Entity implements Movable {
-
-	private static final class SameClassPredicate implements Predicate {
-		private final Class<?> behaviorClass;
-
-		public SameClassPredicate(Class<?> behaviorClass) {
-			this.behaviorClass = behaviorClass;
-		}
-
-		@Override
-		public boolean evaluate(Object object) {
-			return behaviorClass.isInstance(object);
-		}
-	}
+public class Ship extends Entity {
 
 	private static final int nbSegments = 200;
 	private static final double deltaAngle = (float) (2 * Math.PI / nbSegments);
 	private static final float cos = (float) Math.cos(deltaAngle);
 	private static final float sin = (float) Math.sin(deltaAngle);
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(Ship.class);
+	public static final Logger LOGGER = LoggerFactory.getLogger(Ship.class);
 	// Management of the ship's ids.
 	private static Integer nextId = 1;
 
-	private final int id;
 	/** The texture under the morph image. */
 	private static Texture baseTexture;
 
 	private static Texture zoomedOutTexture;
 	private static final float MAX_DAMAGE = 10;
-	private final Map<Integer, Morph> morphsById = new HashMap<>();
+	public final Map<Integer, Morph> morphsById = new HashMap<>();
 
 	private final Map<MorphType, List<Morph>> morphsByType = new HashMap<>();
 
-	/** The ship position in the world. */
-	private final Vect3D pos = new Vect3D();
-
-	private final Vect3D speed = new Vect3D();
-
-	/** The ship orientation in the world. */
-	private float heading;
-
 	private final List<Order> orderList = new ArrayList<>();
-
-	private float mass = 10;
-
-	private boolean selected;
-
-	private final Vect3D accel = new Vect3D();
 
 	private final Vect3D effectiveForce = new Vect3D();
 	private final Player player;
 
 	private final Vect3D steeringForce = new Vect3D();
-	private final Set<Behavior> behaviorSet = new HashSet<>();
-	private final Set<Behavior> pendingBehaviorsRemoval = new HashSet<>();
-
-	private final Set<Behavior> pendingBehaviorsAddition = new HashSet<>();
-	private float damage = 0;
-	private float maxSteeringForce;
-
-	private float maxSpeed;
-
-	private boolean dead;
-
 	// TODO put in conf the dimension of the table
 	private final Vect3D[] trail = new Vect3D[20];
 	/** Stores last trail update. It occurred less than trailUpdateInterval ago. */
@@ -119,11 +74,9 @@ public class Ship extends Entity implements Movable {
 	// TODO put in conf the trail update interval
 	private final int trailUpdateInterval = 50;
 
-	private float energy;
 	private final List<Order> newOrderList = new ArrayList<>();
 
 	private float realAccelModulus;
-	private final StarsContribution starsContribution;
 
 	/***
 	 * Creates a new ship with position (0, 0, 0), mass = 10 assigned to player "self".
@@ -136,10 +89,6 @@ public class Ship extends Entity implements Movable {
 		this.player = player;
 		Model.getModel().getPlayers().add(player);
 
-		synchronized (nextId) {
-			id = nextId++;
-		}
-
 		// initialize positional information
 		pos.copy(x, y, z);
 		this.heading = heading;
@@ -149,17 +98,12 @@ public class Ship extends Entity implements Movable {
 		// TODO This should be a function of the ship's fitting
 		energy = 100;
 
-		starsContribution = new StarsContribution(this);
-		addBehavior(starsContribution);
 	}
 
-	/**
-	 * Adds a behavior to the ship if the needed morphs are present is the ship
-	 * @param behavior
-	 * @return true if it was possible to add the behavior
-	 */
 	@Override
 	public void addBehavior(Behavior behavior) {
+		super.addBehavior(behavior);
+
 		// Checks that the behavior can be added to the ship
 		if (behavior != null
 				&& behavior.getClass().isAnnotationPresent(Needs.class)) {
@@ -180,12 +124,6 @@ public class Ship extends Entity implements Movable {
 			}
 
 			return;
-		}
-
-		pendingBehaviorsAddition.add(behavior);
-		// TODO Clean this
-		if (behavior instanceof Orbit) {
-			((Orbit) behavior).setStarsContribution(starsContribution);
 		}
 	}
 
@@ -240,21 +178,6 @@ public class Ship extends Entity implements Movable {
 		return energy;
 	}
 
-	@Override
-	public float getHeading() {
-		return heading;
-	}
-
-	@Override
-	public int getId() {
-		return id;
-	}
-
-	@Override
-	public float getMass() {
-		return mass;
-	}
-
 	private int getMaxLevelForMorphType(final MorphType morphType) {
 		int maxLevel = 0;
 
@@ -268,16 +191,6 @@ public class Ship extends Entity implements Movable {
 			}
 		}
 		return maxLevel;
-	}
-
-	@Override
-	public float getMaxSpeed() {
-		return maxSpeed;
-	}
-
-	@Override
-	public float getMaxSteeringForce() {
-		return maxSteeringForce;
 	}
 
 	public Morph getMorphById(int id) {
@@ -297,18 +210,8 @@ public class Ship extends Entity implements Movable {
 		return player;
 	}
 
-	@Override
-	public Vect3D getPos() {
-		return pos;
-	}
-
 	public float getRealAccelModulus() {
 		return realAccelModulus;
-	}
-
-	@Override
-	public Vect3D getSpeed() {
-		return speed;
 	}
 
 	/**
@@ -375,44 +278,11 @@ public class Ship extends Entity implements Movable {
 		}
 	}
 
-	public boolean isDead() {
-		return dead;
-	}
-
-	@Override
-	public boolean isSelected() {
-		return selected;
-	}
-
 	private void processAI() {
 		// TODO Outsource this AI to allow several kinds of AIs
 		// TODO implement AI processing
 		// Very simple AI : wander and attack
 
-	}
-
-	/**
-	 * Removes a behavior from the ship's behavior collection.
-	 * This method postpones the behavior deletion until the end of the processing loop.
-	 * This way, the handling of behaviors is insensitive to the order in which they are processed and removed.
-	 * @param behavior to remove
-	 */
-	@Override
-	public void removeBehavior(Behavior behavior) {
-		pendingBehaviorsRemoval.add(behavior);
-	}
-
-	/**
-	 * Removes all the behaviors that are of the same type.
-	 * This method queues the behavior removal.
-	 * @param behaviorClass
-	 */
-	public void removeBehaviorsByClass(Class<?> behaviorClass) {
-		if (behaviorClass == null) {
-			LOGGER.error("This method parameter should not be null");
-		}
-
-		CollectionUtils.select(behaviorSet, new SameClassPredicate(behaviorClass), pendingBehaviorsRemoval);
 	}
 
 	@Override
@@ -629,11 +499,6 @@ public class Ship extends Entity implements Movable {
 		} else {
 			heading = heading - maxAngleSpeed * Math.max(1, angleDiff / 180) * secondsSinceLastUpdate;
 		}
-	}
-
-	@Override
-	public void setSelected(boolean selected) {
-		this.selected = selected;
 	}
 
 	@Override

@@ -11,7 +11,7 @@ import net.carmgate.morph.model.behaviors.InflictLaserDamage;
 import net.carmgate.morph.model.behaviors.Movement;
 import net.carmgate.morph.model.behaviors.steering.Follow;
 import net.carmgate.morph.model.entities.Ship;
-import net.carmgate.morph.model.entities.common.Selectable;
+import net.carmgate.morph.model.entities.common.Entity;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,12 +36,12 @@ public class FollowAndInflictDamage implements Action {
 		// IMPROVE Clean this : we use a Selectable, when we would need a Ship.
 		// Therefore, we have an extraneous cast.
 		// However, we might attack something else than ships ...
-		Selectable targetShip = Model.getModel().getActionSelection().getFirst();
+		Entity targetShip = Model.getModel().getActionSelection().getFirst();
 		if (!(targetShip instanceof Ship)) {
 			return;
 		}
 
-		for (Selectable selectable : Model.getModel().getSimpleSelection()) {
+		for (Entity selectable : Model.getModel().getSimpleSelection()) {
 			if (selectable instanceof Ship && selectable != targetShip) {
 				Ship ship = (Ship) selectable;
 
@@ -50,7 +50,7 @@ public class FollowAndInflictDamage implements Action {
 				ship.removeBehaviorsByClass(InflictLaserDamage.class);
 
 				// Add new arrive behavior
-				ship.addBehavior(new Follow((Ship) selectable, (Ship) targetShip, InflictLaserDamage.MAX_RANGE * 0.5f));
+				ship.addBehavior(new Follow(selectable, targetShip, InflictLaserDamage.MAX_RANGE * 0.5f));
 
 				// Add new combat behavior
 				ship.addBehavior(new InflictLaserDamage(ship, (Ship) targetShip));

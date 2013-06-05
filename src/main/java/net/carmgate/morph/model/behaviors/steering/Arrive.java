@@ -8,7 +8,7 @@ import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Morph.MorphType;
 import net.carmgate.morph.model.entities.Planet;
 import net.carmgate.morph.model.entities.Ship;
-import net.carmgate.morph.model.entities.common.Movable;
+import net.carmgate.morph.model.entities.common.Entity;
 
 import org.lwjgl.opengl.GL11;
 import org.newdawn.slick.opengl.TextureImpl;
@@ -38,13 +38,13 @@ public class Arrive extends Movement {
 	public Arrive() {
 	}
 
-	public Arrive(Movable shipToMove, Ship target) {
-		super(shipToMove);
+	public Arrive(Entity movable, Entity target) {
+		super(movable);
 		this.target = target.getPos();
 	}
 
-	public Arrive(Movable shipToMove, Vect3D target) {
-		super(shipToMove);
+	public Arrive(Entity movable, Vect3D target) {
+		super(movable);
 		this.target = target;
 	}
 
@@ -69,8 +69,8 @@ public class Arrive extends Movement {
 
 	@Override
 	public void render(int glMode) {
-		final Vect3D pos = shipToMove.getPos();
-		final Vect3D speed = shipToMove.getSpeed();
+		final Vect3D pos = movableEntity.getPos();
+		final Vect3D speed = movableEntity.getSpeed();
 
 		GL11.glTranslatef(pos.x, pos.y, pos.z);
 		if (Model.getModel().getUiContext().isDebugMode()) {
@@ -86,7 +86,7 @@ public class Arrive extends Movement {
 		}
 		GL11.glTranslatef(-pos.x, -pos.y, -pos.z);
 
-		if (target != null && (shipToMove instanceof Ship && ((Ship) shipToMove).isSelected() || shipToMove instanceof Planet)) {
+		if (target != null && (movableEntity instanceof Ship && ((Entity) movableEntity).isSelected() || movableEntity instanceof Planet)) {
 			// Show target
 			GL11.glTranslatef(target.x, target.y, 0);
 
@@ -145,9 +145,9 @@ public class Arrive extends Movement {
 	public void run(float secondsSinceLastUpdate) {
 
 		// Get some ship variables (must be final)
-		final float mass = shipToMove.getMass();
-		final Vect3D pos = new Vect3D(shipToMove.getPos());
-		final Vect3D speed = new Vect3D(shipToMove.getSpeed());
+		final float mass = movableEntity.getMass();
+		final Vect3D pos = new Vect3D(movableEntity.getPos());
+		final Vect3D speed = new Vect3D(movableEntity.getSpeed());
 
 		targetOffset.copy(target).substract(pos);
 
@@ -164,12 +164,12 @@ public class Arrive extends Movement {
 
 		// Optimal slowing distance when cruising at MAX_SPEED before entering the slowing radius
 		// Optimal slowing distance is computed for debugging purposes only
-		slowingDistance = 0.00001f + (float) (Math.pow(speed.modulus(), 2) / (2 * shipToMove.getMaxSteeringForce() / mass * cosSpeedToTO));
+		slowingDistance = 0.00001f + (float) (Math.pow(speed.modulus(), 2) / (2 * movableEntity.getMaxSteeringForce() / mass * cosSpeedToTO));
 
 		// Ramped speed is the optimal target speed modulus
-		float rampedSpeed = (float) Math.sqrt(2 * shipToMove.getMaxSteeringForce() / mass * distance);
+		float rampedSpeed = (float) Math.sqrt(2 * movableEntity.getMaxSteeringForce() / mass * distance);
 		// clipped_speed clips the speed to max speed
-		float clippedSpeed = Math.min(rampedSpeed, shipToMove.getMaxSpeed());
+		float clippedSpeed = Math.min(rampedSpeed, movableEntity.getMaxSpeed());
 		// desired_velocity would be the optimal speed vector if we had unlimited thrust
 		desiredVelocity.copy(targetOffset).add(speedOpposition).mult(clippedSpeed / (distance + 0.0001f)); // + 0.000001 added for debug TODO
 
@@ -179,20 +179,20 @@ public class Arrive extends Movement {
 		float sdmax = slowingDistance;
 		float overdrive = 1.0f + speed.modulus() / rampedSpeed;
 		if (distance > sdmax) {
-			steeringForce.truncate(shipToMove.getMaxSteeringForce()); // / mass
+			steeringForce.truncate(movableEntity.getMaxSteeringForce()); // / mass
 		} else if (distance > sdmin) {
 			float stModulus = steeringForce.modulus();
 			steeringForce.normalize((distance - sdmin) / (sdmax - sdmin) * stModulus + (sdmax - distance)
-					/ (sdmax - sdmin) * shipToMove.getMaxSteeringForce() * overdrive); // / mass
+					/ (sdmax - sdmin) * movableEntity.getMaxSteeringForce() * overdrive); // / mass
 		} else {
-			steeringForce.normalize(shipToMove.getMaxSteeringForce() * overdrive); // / mass
+			steeringForce.normalize(movableEntity.getMaxSteeringForce() * overdrive); // / mass
 		}
 
 		// stop condition
 		// TODO remove the instanceof test
-		if (new Vect3D(target).substract(pos).modulus() < 5 && speed.modulus() < 1 && shipToMove instanceof Ship) {
+		if (new Vect3D(target).substract(pos).modulus() < 5 && speed.modulus() < 1 && movableEntity instanceof Ship) {
 
-			shipToMove.removeBehavior(this);
+			movableEntity.removeBehavior(this);
 
 			// Stop and reset the behavior
 			target = null;
@@ -207,7 +207,7 @@ public class Arrive extends Movement {
 			// TODO we should do this some other way, there is a risk it collides with some other order
 			// This might also be implemented with a physics cheating mecanism (see github issue #16)
 			// -> Maybe we should send a stop order to the ship.
-			shipToMove.getSpeed().nullify();
+			movableEntity.getSpeed().nullify();
 		}
 	}
 }

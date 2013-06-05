@@ -7,7 +7,7 @@ import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Morph;
 import net.carmgate.morph.model.entities.Morph.MorphType;
 import net.carmgate.morph.model.entities.Ship;
-import net.carmgate.morph.model.entities.common.Movable;
+import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.model.entities.common.Renderable;
 
 import org.slf4j.Logger;
@@ -16,27 +16,27 @@ import org.slf4j.LoggerFactory;
 public abstract class Movement implements Behavior, Renderable {
 	private static final Logger LOGGER = LoggerFactory.getLogger(Movement.class);
 
-	protected final Movable shipToMove;
+	protected final Entity movableEntity;
 
 	/**
 	 * Do not use.
 	 */
 	@Deprecated
 	protected Movement() {
-		shipToMove = null;
+		movableEntity = null;
 	}
 
-	protected Movement(Movable shipToMove) {
-		this.shipToMove = shipToMove;
+	protected Movement(Entity movable) {
+		this.movableEntity = movable;
 	}
 
 	// TODO the energy consumption should depend on the number and level of the propulsor morphs
 	public boolean consumeEnergy() {
-		if (shipToMove instanceof Ship) {
+		if (movableEntity instanceof Ship) {
 			float energyDec = Model.getModel().getSecondsSinceLastUpdate()
 					* MorphType.SIMPLE_PROPULSOR.getEnergyConsumption()
-					* ((Ship) shipToMove).getRealAccelModulus() / ((Ship) shipToMove).getMaxSteeringForce();
-			return ((Ship) shipToMove).consumeEnergy(energyDec);
+					* ((Ship) movableEntity).getRealAccelModulus() / ((Entity) movableEntity).getMaxSteeringForce();
+			return ((Ship) movableEntity).consumeEnergy(energyDec);
 		}
 		return false;
 	}
@@ -44,9 +44,9 @@ public abstract class Movement implements Behavior, Renderable {
 	public abstract Vect3D getSteeringForce();
 
 	public void rewardMorphs() {
-		if (shipToMove instanceof Ship) {
-			for (Morph morph : ((Ship) shipToMove).getMorphsByType(MorphType.SIMPLE_PROPULSOR)) {
-				morph.increaseXp(((Ship) shipToMove).getRealAccelModulus() / ((Ship) shipToMove).getMaxSteeringForce()
+		if (movableEntity instanceof Ship) {
+			for (Morph morph : ((Ship) movableEntity).getMorphsByType(MorphType.SIMPLE_PROPULSOR)) {
+				morph.increaseXp(((Ship) movableEntity).getRealAccelModulus() / ((Entity) movableEntity).getMaxSteeringForce()
 						* Model.getModel().getSecondsSinceLastUpdate()
 						* Conf.getFloatProperty(ConfItem.MORPH_SIMPLEPROPULSOR_MAXXPPERSECOND));
 			}

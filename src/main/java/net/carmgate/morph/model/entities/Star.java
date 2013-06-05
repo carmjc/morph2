@@ -3,7 +3,6 @@ package net.carmgate.morph.model.entities;
 import java.io.FileInputStream;
 import java.io.IOException;
 
-import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.model.entities.common.EntityHints;
 import net.carmgate.morph.model.entities.common.EntityType;
@@ -23,11 +22,7 @@ public class Star extends Entity {
 	private static final Logger LOGGER = LoggerFactory.getLogger(Star.class);
 	private static Texture baseTexture;
 
-	private final Vect3D pos = new Vect3D();
-	private int id;
-
 	private static Integer nextId = 0;
-	private final float mass;
 	public static double SIMPLE_G = 6.67259 * Math.pow(10, 3); // normal one is .. * Math.pow(10, -11)
 	private final double gm;
 
@@ -42,9 +37,6 @@ public class Star extends Entity {
 	}
 
 	public Star(float x, float y, float z, float mass, float radius, float energyFlow) {
-		synchronized (nextId) {
-			id = nextId++;
-		}
 
 		pos.x = x;
 		pos.y = y;
@@ -53,6 +45,8 @@ public class Star extends Entity {
 		this.radius = radius;
 		gm = SIMPLE_G * mass;
 		this.energyFlow = energyFlow;
+
+		starsContribution = null;
 	}
 
 	public float getEnergyFlow() {
@@ -63,21 +57,8 @@ public class Star extends Entity {
 		return gm;
 	}
 
-	@Override
-	public int getId() {
-		return id;
-	}
-
 	public float getKillingRadius() {
 		return radius * 3;
-	}
-
-	public float getMass() {
-		return mass;
-	}
-
-	public Vect3D getPos() {
-		return pos;
 	}
 
 	public float getRadius() {
@@ -95,12 +76,6 @@ public class Star extends Entity {
 			}
 		}
 
-	}
-
-	@Override
-	public boolean isSelected() {
-		// Stars are not selectable
-		return false;
 	}
 
 	@Override
@@ -144,11 +119,6 @@ public class Star extends Entity {
 		// }
 
 		GL11.glTranslatef(-pos.x, -pos.y, -pos.z);
-	}
-
-	@Override
-	public void setSelected(boolean selected) {
-		// Stars are not selectable
 	}
 
 	@Override

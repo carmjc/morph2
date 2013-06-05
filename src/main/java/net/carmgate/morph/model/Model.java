@@ -17,7 +17,6 @@ import net.carmgate.morph.model.entities.WorldArea;
 import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.model.entities.common.EntityHints;
 import net.carmgate.morph.model.entities.common.EntityType;
-import net.carmgate.morph.model.entities.common.Selectable;
 import net.carmgate.morph.model.player.Player;
 import net.carmgate.morph.model.player.Player.FOF;
 import net.carmgate.morph.model.player.Player.PlayerType;
@@ -54,8 +53,8 @@ public class Model {
 
 	private final ViewPort viewport = new ViewPort();
 
-	private final Set<Selectable> simpleSelection = new HashSet<>();
-	private final Deque<Selectable> actionSelection = new LinkedList<>();
+	private final Set<Entity> simpleSelection = new HashSet<>();
+	private final Deque<Entity> actionSelection = new LinkedList<>();
 
 	private final InteractionStack interactionStack = new InteractionStack();
 
@@ -114,13 +113,13 @@ public class Model {
 
 	// IMPROVE We must fix the temptation to use getSelection.clear() instead
 	public void clearSimpleSelection() {
-		for (Selectable selectable : simpleSelection) {
+		for (Entity selectable : simpleSelection) {
 			selectable.setSelected(false);
 		}
 		simpleSelection.clear();
 	}
 
-	public Deque<Selectable> getActionSelection() {
+	public Deque<Entity> getActionSelection() {
 		return actionSelection;
 	}
 
@@ -179,7 +178,7 @@ public class Model {
 		return selfShip;
 	}
 
-	public Set<Selectable> getSimpleSelection() {
+	public Set<Entity> getSimpleSelection() {
 		return simpleSelection;
 	}
 

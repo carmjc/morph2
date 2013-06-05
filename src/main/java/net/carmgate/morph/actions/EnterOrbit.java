@@ -10,10 +10,8 @@ import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.behaviors.InflictLaserDamage;
 import net.carmgate.morph.model.behaviors.Movement;
 import net.carmgate.morph.model.behaviors.steering.Orbit;
-import net.carmgate.morph.model.entities.Ship;
 import net.carmgate.morph.model.entities.Star;
-import net.carmgate.morph.model.entities.common.Movable;
-import net.carmgate.morph.model.entities.common.Selectable;
+import net.carmgate.morph.model.entities.common.Entity;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,22 +36,21 @@ public class EnterOrbit implements Action {
 		// IMPROVE Clean this : we use a Selectable, when we would need a Ship.
 		// Therefore, we have an extraneous cast.
 		// However, we might attack something else than ships ...
-		Selectable target = Model.getModel().getActionSelection().getFirst();
+		Entity target = Model.getModel().getActionSelection().getFirst();
 		if (!(target instanceof Star)) {
 			return;
 		}
 
-		for (Selectable selectable : Model.getModel().getSimpleSelection()) {
-			if (selectable instanceof Movable && selectable != target) {
-				Ship ship = (Ship) selectable;
+		for (Entity selectable : Model.getModel().getSimpleSelection()) {
+			if (selectable != target) {
 
 				// Remove existing arrive and combat behaviors
 				// TODO We should find a more systematic way of removing existing user triggered behaviors
-				ship.removeBehaviorsByClass(Movement.class);
-				ship.removeBehaviorsByClass(InflictLaserDamage.class);
+				selectable.removeBehaviorsByClass(Movement.class);
+				selectable.removeBehaviorsByClass(InflictLaserDamage.class);
 
 				// Add new orbit behavior
-				ship.addBehavior(new Orbit((Movable) selectable, (Star) target, ((Movable) selectable).getPos().distance(((Star) target).getPos()) + 20));
+				selectable.addBehavior(new Orbit(selectable, target, selectable.getPos().distance(((Star) target).getPos()) + 20));
 			}
 		}
 	}

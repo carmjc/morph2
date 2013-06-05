@@ -1,7 +1,7 @@
 package net.carmgate.morph.model.ui;
 
 import net.carmgate.morph.model.common.Vect3D;
-import net.carmgate.morph.model.entities.Ship;
+import net.carmgate.morph.model.entities.common.Entity;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,14 +24,14 @@ public class ViewPort {
 	/** The zoom factor. > 1 means what you see is bigger. */
 	private float zoomFactor = 0.5f;
 
-	private Ship lockedOnShip;
+	private Entity lockedOnShip;
 
 	/** The intersection of the diagonals of the viewport (in <b>world coordinates</b>).*/
 	public Vect3D getFocalPoint() {
 		return focalPoint;
 	}
 
-	public Ship getLockedOnShip() {
+	public Entity getLockedOnShip() {
 		return lockedOnShip;
 	}
 
@@ -45,7 +45,7 @@ public class ViewPort {
 		return zoomFactor;
 	}
 
-	public void setLockedOnShip(Ship lockedOnShip) {
+	public void setLockedOnShip(Entity lockedOnShip) {
 		this.lockedOnShip = lockedOnShip;
 	}
 

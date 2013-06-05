@@ -2,15 +2,11 @@ package net.carmgate.morph.model.entities;
 
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
 
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.behaviors.Behavior;
 import net.carmgate.morph.model.behaviors.ForceGeneratingBehavior;
 import net.carmgate.morph.model.behaviors.Movement;
-import net.carmgate.morph.model.behaviors.StarsContribution;
-import net.carmgate.morph.model.behaviors.steering.Orbit;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.model.entities.common.EntityHints;
@@ -34,21 +30,15 @@ public class Planet extends Entity implements Movable {
 	private static Texture baseTexture;
 	private static Integer nextId = 0;
 
-	private final Vect3D pos = new Vect3D();
-	private final Vect3D speed = new Vect3D();
 	private final Star star;
 
-	private int id;
-	private final float mass;
 	private final float mu;
 
 	private final float radius;
 
 	private final float orbit;
-	private final Set<Behavior> behaviorSet = new HashSet<>();
 	private final Vect3D steeringForce = new Vect3D();
 	private final Vect3D effectiveForce = new Vect3D();
-	private final StarsContribution starsContribution;
 
 	@Deprecated
 	public Planet() {
@@ -69,20 +59,6 @@ public class Planet extends Entity implements Movable {
 			mu = 0;
 		}
 
-		synchronized (nextId) {
-			id = nextId++;
-		}
-
-		starsContribution = new StarsContribution(this);
-		addBehavior(starsContribution);
-	}
-
-	@Override
-	public void addBehavior(Behavior behavior) {
-		behaviorSet.add(behavior);
-		if (behavior instanceof Orbit) {
-			((Orbit) behavior).setStarsContribution(starsContribution);
-		}
 	}
 
 	// IMPROVE remove effectiveForce from steeringForce management ?
@@ -90,44 +66,6 @@ public class Planet extends Entity implements Movable {
 	private void applySteeringForce(Vect3D force) {
 		steeringForce.add(force);
 		effectiveForce.add(force);
-	}
-
-	@Override
-	public float getHeading() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
-	public int getId() {
-		return id;
-	}
-
-	@Override
-	public float getMass() {
-		return mass;
-	}
-
-	@Override
-	public float getMaxSpeed() {
-		// TODO Auto-generated method stub
-		return 100000;
-	}
-
-	@Override
-	public float getMaxSteeringForce() {
-		// TODO Auto-generated method stub
-		return 100000;
-	}
-
-	@Override
-	public Vect3D getPos() {
-		return pos;
-	}
-
-	@Override
-	public Vect3D getSpeed() {
-		return speed;
 	}
 
 	@Override
@@ -140,18 +78,6 @@ public class Planet extends Entity implements Movable {
 				LOGGER.error("Exception raised while loading texture", e);
 			}
 		}
-	}
-
-	@Override
-	public boolean isSelected() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public void removeBehavior(Behavior behavior) {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override
@@ -206,16 +132,6 @@ public class Planet extends Entity implements Movable {
 				((Renderable) behavior).render(glMode);
 			}
 		}
-
-	}
-
-	public void setId(int id) {
-		this.id = id;
-	}
-
-	@Override
-	public void setSelected(boolean selected) {
-		// TODO Auto-generated method stub
 
 	}
 

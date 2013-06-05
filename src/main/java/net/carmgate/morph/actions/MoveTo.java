@@ -12,7 +12,7 @@ import net.carmgate.morph.model.behaviors.Movement;
 import net.carmgate.morph.model.behaviors.steering.Arrive;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Ship;
-import net.carmgate.morph.model.entities.common.Selectable;
+import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.ui.GameMouse;
 
 import org.slf4j.Logger;
@@ -34,17 +34,16 @@ public class MoveTo implements Action {
 			return;
 		}
 
-		for (Selectable selectable : Model.getModel().getSimpleSelection()) {
+		for (Entity selectable : Model.getModel().getSimpleSelection()) {
 			if (selectable instanceof Ship) {
 				Vect3D target = new Vect3D(GameMouse.getXInWorld(), GameMouse.getYInWorld(), 0);
-				Ship ship = (Ship) selectable;
 
 				// Remove existing arrive and combat behaviors
-				ship.removeBehaviorsByClass(Movement.class);
-				ship.removeBehaviorsByClass(InflictLaserDamage.class);
+				selectable.removeBehaviorsByClass(Movement.class);
+				selectable.removeBehaviorsByClass(InflictLaserDamage.class);
 
 				// Add new arrive behavior
-				ship.addBehavior(new Arrive((Ship) selectable, target));
+				selectable.addBehavior(new Arrive(selectable, target));
 
 				// ((Ship) selectable).arrive.setArriveTarget(target);
 				LOGGER.debug("target set to " + target);

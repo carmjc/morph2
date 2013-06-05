@@ -7,6 +7,7 @@ import net.carmgate.morph.model.behaviors.Needs;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Morph.MorphType;
 import net.carmgate.morph.model.entities.Ship;
+import net.carmgate.morph.model.entities.common.Entity;
 
 import org.lwjgl.opengl.GL11;
 import org.newdawn.slick.opengl.TextureImpl;
@@ -20,7 +21,7 @@ public class Follow extends Movement {
 	private static final float sin = (float) Math.sin(deltaAngle);
 
 	// Be careful, this is the real instance of the ship's position
-	private Ship target;
+	private Entity target;
 	private final Vect3D desiredVelocity = new Vect3D();
 
 	private float slowingDistance;
@@ -38,7 +39,7 @@ public class Follow extends Movement {
 	public Follow() {
 	}
 
-	public Follow(Ship shipToMove, Ship target, float maxDistance) {
+	public Follow(Entity shipToMove, Entity target, float maxDistance) {
 		super(shipToMove);
 		this.maxDistance = maxDistance;
 		this.target = target;
@@ -62,8 +63,8 @@ public class Follow extends Movement {
 
 	@Override
 	public void render(int glMode) {
-		final Vect3D pos = shipToMove.getPos();
-		final Vect3D speed = shipToMove.getSpeed();
+		final Vect3D pos = movableEntity.getPos();
+		final Vect3D speed = movableEntity.getSpeed();
 
 		GL11.glTranslatef(pos.x, pos.y, pos.z);
 		if (Model.getModel().getUiContext().isDebugMode()) {
@@ -79,7 +80,7 @@ public class Follow extends Movement {
 		}
 		GL11.glTranslatef(-pos.x, -pos.y, -pos.z);
 
-		if (target != null && shipToMove instanceof Ship && ((Ship) shipToMove).isSelected() && Model.getModel().getUiContext().isDebugMode()) {
+		if (target != null && movableEntity instanceof Ship && ((Entity) movableEntity).isSelected() && Model.getModel().getUiContext().isDebugMode()) {
 			// Show target
 			GL11.glTranslatef(target.getPos().x, target.getPos().y, 0);
 
@@ -115,20 +116,20 @@ public class Follow extends Movement {
 	public void run(float secondsSinceLastUpdate) {
 		if (target.isDead()) {
 			// Remove existing arrive and combat behaviors
-			shipToMove.removeBehavior(this);
+			movableEntity.removeBehavior(this);
 
 			// Add new arrive behavior
 			// TODO Replace this with a simple break behavior
 			// TODO Add a break behavior triggered by KEY_ESCAPE ?
-			shipToMove.addBehavior(new Arrive(shipToMove, target.getPos()));
+			movableEntity.addBehavior(new Arrive(movableEntity, target.getPos()));
 
 			return;
 		}
 
 		// Get some ship variables (must be final)
-		final float mass = shipToMove.getMass();
-		final Vect3D pos = new Vect3D(shipToMove.getPos());
-		final Vect3D speed = new Vect3D(shipToMove.getSpeed());
+		final float mass = movableEntity.getMass();
+		final Vect3D pos = new Vect3D(movableEntity.getPos());
+		final Vect3D speed = new Vect3D(movableEntity.getSpeed());
 
 		Vect3D recomputedTarget = new Vect3D(target.getPos()).add(new Vect3D(targetSpeed).truncate(targetSpeed.modulus() - maxDistance));
 		targetOffset.copy(recomputedTarget).substract(pos);
@@ -146,7 +147,7 @@ public class Follow extends Movement {
 
 		// Optimal slowing distance when cruising at MAX_SPEED before entering the slowing radius
 		// Optimal slowing distance is computed for debugging purposes only
-		slowingDistance = 0.00001f + (float) (Math.pow(speed.modulus(), 2) / (2 * shipToMove.getMaxSteeringForce() / mass * cosSpeedToTO));
+		slowingDistance = 0.00001f + (float) (Math.pow(speed.modulus(), 2) / (2 * movableEntity.getMaxSteeringForce() / mass * cosSpeedToTO));
 
 		// desired_velocity would be the optimal speed vector if we had unlimited thrust
 		desiredVelocity.copy(targetOffset).add(speedOpposition).normalize(distance);
@@ -156,7 +157,7 @@ public class Follow extends Movement {
 		// stop condition
 		if (new Vect3D(recomputedTarget).substract(pos).modulus() < 5 && speed.modulus() < 60) {
 
-			shipToMove.removeBehavior(this);
+			movableEntity.removeBehavior(this);
 
 			// Stop and reset the behavior
 			target = null;
@@ -171,7 +172,7 @@ public class Follow extends Movement {
 			// TODO we should do this some other way, there is a risk it collides with some other order
 			// This might also be implemented with a physics cheating mecanism (see github issue #16)
 			// -> Maybe we should send a stop order to the ship.
-			shipToMove.getSpeed().nullify();
+			movableEntity.getSpeed().nullify();
 		}
 	}
 }

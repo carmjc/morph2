@@ -6,7 +6,7 @@ import net.carmgate.morph.model.behaviors.Movement;
 import net.carmgate.morph.model.behaviors.Needs;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Morph.MorphType;
-import net.carmgate.morph.model.entities.Ship;
+import net.carmgate.morph.model.entities.common.Entity;
 
 import org.lwjgl.opengl.GL11;
 import org.newdawn.slick.opengl.TextureImpl;
@@ -35,7 +35,7 @@ public class Wander extends Movement {
 		wanderRadius = 0;
 	}
 
-	public Wander(Ship shipToMove, float wanderFocusDistance, float wanderRadius) {
+	public Wander(Entity shipToMove, float wanderFocusDistance, float wanderRadius) {
 		super(shipToMove);
 		this.wanderFocusDistance = wanderFocusDistance;
 		this.wanderRadius = wanderRadius;
@@ -58,8 +58,8 @@ public class Wander extends Movement {
 
 	@Override
 	public void render(int glMode) {
-		final Vect3D pos = shipToMove.getPos();
-		final Vect3D speed = shipToMove.getSpeed();
+		final Vect3D pos = movableEntity.getPos();
+		final Vect3D speed = movableEntity.getSpeed();
 
 		if (Model.getModel().getUiContext().isDebugMode()) {
 			GL11.glTranslatef(pos.x, pos.y, pos.z);
@@ -125,14 +125,14 @@ public class Wander extends Movement {
 	@Override
 	public void run(float secondsSinceLastUpdate) {
 		if (wanderRadius == 0) {
-			shipToMove.removeBehavior(this);
+			movableEntity.removeBehavior(this);
 			return;
 		}
 
-		final Vect3D pos = new Vect3D(shipToMove.getPos());
+		final Vect3D pos = new Vect3D(movableEntity.getPos());
 
 		wanderFocus.copy(pos)
-				.add(new Vect3D(Vect3D.NORTH).rotate(shipToMove.getHeading()).normalize(wanderFocusDistance + shipToMove.getMass()));
+				.add(new Vect3D(Vect3D.NORTH).rotate(movableEntity.getHeading()).normalize(wanderFocusDistance + movableEntity.getMass()));
 
 		// Determine a target at acceptable distance from the wander focus point
 		wanderTarget.x += Math.random() * 0.25f - 0.125f;
@@ -141,6 +141,6 @@ public class Wander extends Movement {
 			wanderTarget.copy(Vect3D.NULL);
 		}
 
-		steeringForce.copy(new Vect3D(wanderFocus).substract(pos).add(wanderTarget)).truncate(shipToMove.getMaxSteeringForce()).mult(shipToMove.getMass());
+		steeringForce.copy(new Vect3D(wanderFocus).substract(pos).add(wanderTarget)).truncate(movableEntity.getMaxSteeringForce()).mult(movableEntity.getMass());
 	}
 }

@@ -6,7 +6,7 @@ import net.carmgate.morph.actions.common.Event;
 import net.carmgate.morph.actions.common.Event.EventType;
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.entities.Ship;
-import net.carmgate.morph.model.entities.common.Selectable;
+import net.carmgate.morph.model.entities.common.Entity;
 
 import org.lwjgl.input.Keyboard;
 import org.slf4j.Logger;
@@ -26,11 +26,11 @@ public class LockOnSelectedShip implements Action {
 			return;
 		}
 
-		Ship lockedOnShip = null;
+		Entity lockedOnShip = null;
 		if (Model.getModel().getSimpleSelection().size() == 1) {
-			Selectable entity = Model.getModel().getSimpleSelection().iterator().next();
+			Entity entity = Model.getModel().getSimpleSelection().iterator().next();
 			if (entity instanceof Ship) {
-				lockedOnShip = (Ship) entity;
+				lockedOnShip = entity;
 			}
 			// IMPROVE add a else here to notify the user this command should not be used on something else
 			// than a ship

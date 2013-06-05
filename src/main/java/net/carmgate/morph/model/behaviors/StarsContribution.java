@@ -6,7 +6,6 @@ import net.carmgate.morph.model.entities.Ship;
 import net.carmgate.morph.model.entities.Star;
 import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.model.entities.common.EntityType;
-import net.carmgate.morph.model.entities.common.Movable;
 import net.carmgate.morph.model.entities.common.Renderable;
 import net.carmgate.morph.model.orders.Die;
 
@@ -18,7 +17,7 @@ public class StarsContribution extends ForceGeneratingBehavior implements Render
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(StarsContribution.class);
 
-	private final Movable movable;
+	private final Entity movable;
 
 	private final Vect3D force = new Vect3D();
 
@@ -26,7 +25,7 @@ public class StarsContribution extends ForceGeneratingBehavior implements Render
 		this(null);
 	}
 
-	public StarsContribution(Movable ship) {
+	public StarsContribution(Entity ship) {
 		movable = ship;
 	}
 

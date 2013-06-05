@@ -6,7 +6,7 @@ import net.carmgate.morph.model.behaviors.StarsContribution;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Ship;
 import net.carmgate.morph.model.entities.Star;
-import net.carmgate.morph.model.entities.common.Movable;
+import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.ui.common.RenderUtils;
 
 import org.lwjgl.opengl.GL11;
@@ -24,8 +24,8 @@ public class Orbit extends Movement {
 	private static final float sin = (float) Math.sin(deltaAngle);
 
 	private final float orbitRadius;
-	private final Movable orbiter;
-	private final Star orbitee;
+	private final Entity orbiter;
+	private final Entity orbitee;
 
 	private Arrive arrive;
 	private final Vect3D steeringForce = new Vect3D();
@@ -43,7 +43,7 @@ public class Orbit extends Movement {
 	}
 
 	// TODO Replace orbiter with a type that would encompass any movable entity
-	public Orbit(Movable orbiter, Star orbitee, float orbitRadius) {
+	public Orbit(Entity orbiter, Entity orbitee, float orbitRadius) {
 		super(orbiter);
 		this.orbiter = orbiter;
 		this.orbitee = orbitee;
