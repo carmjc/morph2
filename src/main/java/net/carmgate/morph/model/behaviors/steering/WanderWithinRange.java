@@ -34,7 +34,7 @@ public class WanderWithinRange extends Wander {
 		super(entityToMove, wanderFocusDistance, wanderRadius);
 		this.target = target;
 		this.range = range;
-		delta = 0.5f;
+		delta = 0.2f;
 	}
 
 	@Override
@@ -67,7 +67,7 @@ public class WanderWithinRange extends Wander {
 
 		final Vect3D pos = new Vect3D(movableEntity.getPos());
 
-		wanderAngle += Math.random() * 4 - 2;
+		wanderAngle += Math.random() * 2 - 1f;
 
 		// if we are out of range, change the angle to take the ship back within range
 		// the farther we are out of range, the more we pull it back within range
@@ -81,8 +81,14 @@ public class WanderWithinRange extends Wander {
 			wanderAngle = forcedAngle;
 		} else if (distanceToTarget > minDist) {
 			// TODO il faut adapter pour que le virage soit beaucoup plus progressif
-			wanderAngle = wanderAngle * (maxDist - distanceToTarget) / (maxDist - minDist)
-					+ forcedAngle * (distanceToTarget - minDist) / (maxDist - minDist);
+			float relativeAngle = (wanderAngle - forcedAngle + 180 + 720) % 360;
+			float minAngle = 180 - 180 * (maxDist - distanceToTarget) / (maxDist - minDist);
+			float maxAngle = 180 + 180 * (maxDist - distanceToTarget) / (maxDist - minDist);
+			if (relativeAngle < minAngle) {
+				wanderAngle = (minAngle + forcedAngle - 180 + 720) % 360;
+			} else if (relativeAngle > maxAngle) {
+				wanderAngle = (maxAngle + forcedAngle - 180 + 720) % 360;
+			}
 		}
 
 		Vect3D targetDirection = new Vect3D(new Vect3D(Vect3D.NORTH).normalize(wanderFocusDistance).rotate(movableEntity.getHeading()))
