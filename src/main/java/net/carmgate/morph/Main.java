@@ -22,7 +22,7 @@ import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.UiState;
 import net.carmgate.morph.model.behaviors.SpawnShips;
 import net.carmgate.morph.model.behaviors.steering.Orbit;
-import net.carmgate.morph.model.behaviors.steering.Wander;
+import net.carmgate.morph.model.behaviors.steering.WanderWithinRange;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Morph;
 import net.carmgate.morph.model.entities.Morph.MorphType;
@@ -199,16 +199,17 @@ public class Main {
 		planet.addBehavior(new Orbit(planet, star, 100000, true));
 		Model.getModel().addEntity(planet);
 
+		Station station = new Station(planet, 100, 50, 5000);
+
 		Player player = new Player(PlayerType.AI, "Nemesis", FOF.FOE);
 		Ship enemyShip = new Ship(128, 0, 0, 0, 5, player);
 		enemyShip.addMorph(new Morph(MorphType.OVERMIND));
 		enemyShip.addMorph(new Morph(MorphType.SIMPLE_PROPULSOR));
-		enemyShip.addBehavior(new Wander(enemyShip, 200, 50));
+		enemyShip.addBehavior(new WanderWithinRange(enemyShip, 50, 100, station, 5000f));
 		enemyShip.update(); // TODO This is needed so that behaviors are really in the behavior set. That is an issue.
 
-		Station station = new Station(planet, 100, 50, 5000);
 		station.addBehavior(new Orbit(station, planet, 5000, true));
-		station.addBehavior(new SpawnShips(station.getPos(), 20, 5000, enemyShip));
+		station.addBehavior(new SpawnShips(station.getPos(), 1, 5000, enemyShip));
 		Model.getModel().addEntity(station);
 
 	}

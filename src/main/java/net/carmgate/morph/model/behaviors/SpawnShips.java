@@ -49,6 +49,7 @@ public class SpawnShips implements Behavior {
 				newShip.getPos().copy(spawnLocation);
 				newShip.setHeading((float) (Math.random() * 360));
 				Model.getModel().addEntity(newShip);
+				spawnedShips.add(newShip);
 			}
 
 			lastSpawnTS += spawnPeriod;

@@ -20,12 +20,10 @@ public class Wander extends Movement {
 	private static final float cos = (float) Math.cos(deltaAngle);
 	private static final float sin = (float) Math.sin(deltaAngle);
 
-	private final float wanderFocusDistance;
-	private final float wanderRadius;
+	protected final float wanderFocusDistance;
+	protected final float wanderRadius;
+	protected float wanderAngle;
 	private final Vect3D steeringForce = new Vect3D();
-
-	private final Vect3D wanderTarget = new Vect3D();
-	private final Vect3D wanderFocus = new Vect3D();
 
 	/**
 	 * Do not use.
@@ -34,12 +32,14 @@ public class Wander extends Movement {
 	public Wander() {
 		wanderFocusDistance = 0;
 		wanderRadius = 0;
+		wanderAngle = 0;
 	}
 
 	public Wander(Entity shipToMove, float wanderFocusDistance, float wanderRadius) {
 		super(shipToMove);
 		this.wanderFocusDistance = wanderFocusDistance;
 		this.wanderRadius = wanderRadius;
+		wanderAngle = 0;
 	}
 
 	@Override
@@ -90,9 +90,8 @@ public class Wander extends Movement {
 			}
 			GL11.glEnd();
 
-			GL11.glTranslatef(-pos.x, -pos.y, -pos.z);
-
-			GL11.glTranslatef(wanderFocus.x, wanderFocus.y, 0);
+			GL11.glRotatef(movableEntity.getHeading(), 0, 0, 1);
+			GL11.glTranslatef(0, -wanderFocusDistance, 0);
 
 			// render limit of effect zone
 			GL11.glBegin(GL11.GL_LINES);
@@ -111,19 +110,23 @@ public class Wander extends Movement {
 			}
 			GL11.glEnd();
 
-			GL11.glTranslatef(wanderTarget.x, wanderTarget.y, 0);
+			GL11.glRotatef(wanderAngle - movableEntity.getHeading(), 0, 0, 1);
+			GL11.glTranslatef(0, -wanderRadius, 0);
 
 			GL11.glColor4f(1, 1, 1, 1);
 			TextureImpl.bindNone();
 			GL11.glBegin(GL11.GL_QUADS);
-			GL11.glVertex2f(-16, -16);
-			GL11.glVertex2f(16, -16);
-			GL11.glVertex2f(16, 16);
-			GL11.glVertex2f(-16, 16);
+			GL11.glVertex2f(-4, -4);
+			GL11.glVertex2f(4, -4);
+			GL11.glVertex2f(4, 4);
+			GL11.glVertex2f(-4, 4);
 			GL11.glEnd();
 
-			GL11.glTranslatef(-wanderTarget.x, -wanderTarget.y, 0);
-			GL11.glTranslatef(-wanderFocus.x, -wanderFocus.y, 0);
+			GL11.glTranslatef(0, wanderRadius, 0);
+			GL11.glRotatef(-wanderAngle + movableEntity.getHeading(), 0, 0, 1);
+			GL11.glTranslatef(0, wanderFocusDistance, 0);
+			GL11.glRotatef(-movableEntity.getHeading(), 0, 0, 1);
+			GL11.glTranslatef(-pos.x, -pos.y, -pos.z);
 		}
 
 	}
@@ -137,17 +140,13 @@ public class Wander extends Movement {
 
 		final Vect3D pos = new Vect3D(movableEntity.getPos());
 
-		wanderFocus.copy(pos)
-				.add(new Vect3D(Vect3D.NORTH).rotate(movableEntity.getHeading()).normalize(wanderFocusDistance + movableEntity.getMass()));
+		wanderAngle += Math.random() * 4 - 2;
+		Vect3D target = new Vect3D(new Vect3D(Vect3D.NORTH).normalize(wanderFocusDistance).rotate(movableEntity.getHeading()))
+				.add(new Vect3D(Vect3D.NORTH).normalize(wanderRadius).rotate(wanderAngle));
 
-		// Determine a target at acceptable distance from the wander focus point
-		wanderTarget.x += Math.random() * 0.25f - 0.125f;
-		wanderTarget.y += Math.random() * 0.25f - 0.125f;
-		if (new Vect3D(wanderFocus).add(wanderTarget).distance(wanderFocus) > wanderRadius) {
-			wanderTarget.copy(Vect3D.NULL);
-		}
-
-		steeringForce.copy(new Vect3D(wanderFocus).substract(pos).add(wanderTarget)).truncate(movableEntity.getMaxSteeringForce())
+		// TODO is it right to multiply by mass ?
+		// What are we multiplying by mass ?
+		steeringForce.copy(target).truncate(movableEntity.getMaxSteeringForce())
 				.mult(movableEntity.getMass());
 	}
 }
