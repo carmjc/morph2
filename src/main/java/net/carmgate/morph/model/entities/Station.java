@@ -20,21 +20,21 @@ import org.newdawn.slick.opengl.TextureLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@EntityHints(entityType = EntityType.PLANET, selectable = false)
-@RenderingHints(renderingStep = RenderingSteps.PLANET)
-public class Planet extends Entity {
+@EntityHints(entityType = EntityType.STATION, selectable = true)
+@RenderingHints(renderingStep = RenderingSteps.STATION)
+public class Station extends Entity {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(Planet.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(Station.class);
 	private static Texture baseTexture;
 
 	private final float radius;
 
 	@Deprecated
-	public Planet() {
+	public Station() {
 		this(null, 0, 0, 0);
 	}
 
-	public Planet(Entity orbitee, float mass, float radius, float orbit) {
+	public Station(Entity orbitee, float mass, float radius, float orbit) {
 		super(Player.NO_ONE);
 		maxSpeed = 100000;
 		maxSteeringForce = 100000;
@@ -52,7 +52,7 @@ public class Planet extends Entity {
 	public void initRenderer() {
 		// load texture from PNG file if needed
 		if (baseTexture == null) {
-			try (FileInputStream fileInputStream = new FileInputStream(ClassLoader.getSystemResource("img/planet/planet4.png").getPath())) {
+			try (FileInputStream fileInputStream = new FileInputStream(ClassLoader.getSystemResource("img/spacestations/station1.png").getPath())) {
 				baseTexture = TextureLoader.getTexture("PNG", fileInputStream);
 			} catch (IOException e) {
 				LOGGER.error("Exception raised while loading texture", e);
@@ -62,7 +62,7 @@ public class Planet extends Entity {
 
 	@Override
 	public void render(int glMode) {
-		float scale = radius;
+		float scale = radius / 10;
 		float width = 128f;
 
 		float zoomFactor = Model.getModel().getViewport().getZoomFactor();
@@ -84,13 +84,13 @@ public class Planet extends Entity {
 		baseTexture.bind();
 		GL11.glBegin(GL11.GL_QUADS);
 		GL11.glTexCoord2f(0, 0);
-		GL11.glVertex2f(-width / 2, width / 2);
-		GL11.glTexCoord2f(1, 0);
-		GL11.glVertex2f(width / 2, width / 2);
-		GL11.glTexCoord2f(1, 1);
-		GL11.glVertex2f(width / 2, -width / 2);
-		GL11.glTexCoord2f(0, 1);
 		GL11.glVertex2f(-width / 2, -width / 2);
+		GL11.glTexCoord2f(1, 0);
+		GL11.glVertex2f(width / 2, -width / 2);
+		GL11.glTexCoord2f(1, 1);
+		GL11.glVertex2f(width / 2, width / 2);
+		GL11.glTexCoord2f(0, 1);
+		GL11.glVertex2f(-width / 2, width / 2);
 		GL11.glEnd();
 		GL11.glScalef(1f / scale, 1f / scale, 1);
 

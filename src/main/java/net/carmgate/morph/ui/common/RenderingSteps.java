@@ -6,6 +6,7 @@ public enum RenderingSteps {
 	WORLDAREA,
 	STAR,
 	PLANET,
+	STATION,
 	SHIP;
 
 	private static RenderingSteps[] reverseValuesArray;

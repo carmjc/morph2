@@ -51,7 +51,7 @@ public class EnterOrbit implements Action {
 				selectable.removeBehaviorsByClass(InflictLaserDamage.class);
 
 				// Add new orbit behavior
-				selectable.addBehavior(new Orbit(selectable, target, selectable.getPos().distance(target.getPos()) + 20));
+				selectable.addBehavior(new Orbit(selectable, target, selectable.getPos().distance(target.getPos()) + 20, false));
 			}
 		}
 	}

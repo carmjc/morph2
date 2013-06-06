@@ -5,7 +5,6 @@ import net.carmgate.morph.actions.common.ActionHints;
 import net.carmgate.morph.actions.common.Event;
 import net.carmgate.morph.actions.common.Event.EventType;
 import net.carmgate.morph.model.Model;
-import net.carmgate.morph.model.entities.Ship;
 import net.carmgate.morph.model.entities.common.Entity;
 
 import org.lwjgl.input.Keyboard;
@@ -26,21 +25,18 @@ public class LockOnSelectedShip implements Action {
 			return;
 		}
 
-		Entity lockedOnShip = null;
+		Entity lockedOnEntity = null;
 		if (Model.getModel().getSimpleSelection().size() == 1) {
-			Entity entity = Model.getModel().getSimpleSelection().iterator().next();
-			if (entity instanceof Ship) {
-				lockedOnShip = entity;
-			}
+			lockedOnEntity = Model.getModel().getSimpleSelection().iterator().next();
 			// IMPROVE add a else here to notify the user this command should not be used on something else
 			// than a ship
 		}
 
-		if (Model.getModel().getViewport().getLockedOnShip() == null
-				|| lockedOnShip != Model.getModel().getViewport().getLockedOnShip()) {
-			Model.getModel().getViewport().setLockedOnShip(lockedOnShip);
+		if (Model.getModel().getViewport().getLockedOnEntity() == null
+				|| lockedOnEntity != Model.getModel().getViewport().getLockedOnEntity()) {
+			Model.getModel().getViewport().setLockedOnEntity(lockedOnEntity);
 		} else {
-			Model.getModel().getViewport().setLockedOnShip(null);
+			Model.getModel().getViewport().setLockedOnEntity(null);
 		}
 	}
 }

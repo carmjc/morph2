@@ -86,16 +86,13 @@ public class Star extends Entity {
 	@Override
 	public void render(int glMode) {
 		GL11.glTranslatef(pos.x, pos.y, pos.z);
-		float scale = radius / 10;
+		float scale = radius;
 		float width = 128f;
 
 		float zoomFactor = Model.getModel().getViewport().getZoomFactor();
-		boolean minZoom = scale * zoomFactor > 8;
-		boolean maxZoom = scale * zoomFactor < 1;
+		boolean minZoom = scale / radius * zoomFactor < 0.002;
 		if (minZoom) {
-			scale = 8f / zoomFactor;
-		} else if (maxZoom) {
-			scale = 1f / zoomFactor;
+			scale = 0.002f * radius / zoomFactor;
 		}
 
 		GL11.glColor4f(1, 1, 1, 1);

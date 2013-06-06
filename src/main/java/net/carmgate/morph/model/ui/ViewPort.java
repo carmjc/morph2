@@ -24,15 +24,15 @@ public class ViewPort {
 	/** The zoom factor. > 1 means what you see is bigger. */
 	private float zoomFactor = 0.5f;
 
-	private Entity lockedOnShip;
+	private Entity lockedOnEntity;
 
 	/** The intersection of the diagonals of the viewport (in <b>world coordinates</b>).*/
 	public Vect3D getFocalPoint() {
 		return focalPoint;
 	}
 
-	public Entity getLockedOnShip() {
-		return lockedOnShip;
+	public Entity getLockedOnEntity() {
+		return lockedOnEntity;
 	}
 
 	/** The rotation of the scene around the focal point. */
@@ -45,8 +45,8 @@ public class ViewPort {
 		return zoomFactor;
 	}
 
-	public void setLockedOnShip(Entity lockedOnShip) {
-		this.lockedOnShip = lockedOnShip;
+	public void setLockedOnEntity(Entity lockedOnEntity) {
+		this.lockedOnEntity = lockedOnEntity;
 	}
 
 	public void setZoomFactor(float zoomFactor) {

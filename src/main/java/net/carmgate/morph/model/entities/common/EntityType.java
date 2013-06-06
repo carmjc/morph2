@@ -4,5 +4,6 @@ public enum EntityType {
 	WORLDAREA,
 	STAR,
 	PLANET,
+	STATION,
 	SHIP;
 }

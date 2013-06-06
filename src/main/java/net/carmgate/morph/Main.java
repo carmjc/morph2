@@ -28,6 +28,7 @@ import net.carmgate.morph.model.entities.Morph.MorphType;
 import net.carmgate.morph.model.entities.Planet;
 import net.carmgate.morph.model.entities.Ship;
 import net.carmgate.morph.model.entities.Star;
+import net.carmgate.morph.model.entities.Station;
 import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.model.entities.common.Renderable;
 import net.carmgate.morph.model.player.Player;
@@ -193,8 +194,13 @@ public class Main {
 		Model.getModel().addEntity(star);
 		// TODO remove attribute from class
 		planet = new Planet(star, 1000, 100, 100000);
+		// TODO Clean this, we should not have to mention the orbit radius twice
+		planet.addBehavior(new Orbit(planet, star, 100000, true));
 		Model.getModel().addEntity(planet);
-		planet.addBehavior(new Orbit(planet, star, 100000));
+
+		Station station = new Station(planet, 100, 50, 5000);
+		station.addBehavior(new Orbit(station, planet, 5000, true));
+		Model.getModel().addEntity(station);
 
 		Player player = new Player(PlayerType.AI, "Nemesis", FOF.FOE);
 		Ship enemyShip = new Ship(128, 0, 0, 0, 20, player);
@@ -283,10 +289,8 @@ public class Main {
 		try {
 			Vect3D focalPoint = model.getViewport().getFocalPoint();
 			float zoomFactor = model.getViewport().getZoomFactor();
-			if (model.getViewport().getLockedOnShip() != null) {
-				Vect3D shipPos = null;
-				shipPos = new Vect3D(model.getViewport().getLockedOnShip().getPos()).mult(zoomFactor);
-				focalPoint.copy(new Vect3D().add(shipPos));
+			if (model.getViewport().getLockedOnEntity() != null) {
+				focalPoint.copy(new Vect3D().add(model.getViewport().getLockedOnEntity().getPos()).mult(zoomFactor));
 			}
 
 			GL11.glTranslatef(-focalPoint.x, -focalPoint.y, -focalPoint.z);

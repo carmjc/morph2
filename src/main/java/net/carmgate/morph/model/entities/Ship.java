@@ -276,6 +276,15 @@ public class Ship extends Entity {
 	@Override
 	public void render(int glMode) {
 
+		float massScale = mass / 10;
+		float zoomFactor = Model.getModel().getViewport().getZoomFactor();
+		boolean disappearZoom = 64f * massScale * zoomFactor < 1;
+		if (disappearZoom && !selected) {
+			return;
+		}
+
+		boolean minZoom = 64f * massScale * zoomFactor > 16;
+
 		// render trail
 		if (trail[0] != null) {
 			Vect3D start = new Vect3D(pos);
@@ -304,12 +313,9 @@ public class Ship extends Entity {
 
 		GL11.glTranslatef(pos.x, pos.y, pos.z);
 		GL11.glRotatef(heading, 0, 0, 1);
-		float massScale = mass / 10;
-		float zoomFactor = Model.getModel().getViewport().getZoomFactor();
-		boolean maxZoom = 64f * massScale * zoomFactor > 16;
 
 		// Render selection circle around the ship
-		renderSelection(massScale, maxZoom);
+		renderSelection(massScale, minZoom);
 
 		// Render the ship in itself
 		if (Model.getModel().getUiContext().isDebugMode()) {
@@ -323,7 +329,7 @@ public class Ship extends Entity {
 		} else {
 			GL11.glColor3f(1f, 1f, 1f);
 		}
-		if (maxZoom) {
+		if (minZoom) {
 			GL11.glScalef(massScale, massScale, 0);
 			baseTexture.bind();
 			GL11.glBegin(GL11.GL_QUADS);
@@ -363,7 +369,7 @@ public class Ship extends Entity {
 
 		// Render energy gauge
 		GL11.glScalef(1f / zoomFactor, 1f / zoomFactor, 1);
-		if (maxZoom) {
+		if (minZoom) {
 			RenderUtils.renderGauge(50, 16 + 64 * zoomFactor * massScale + 5, Math.min(MAX_DAMAGE - damage, MAX_DAMAGE) / MAX_DAMAGE, 0.2f,
 					new float[] { 0.5f, 1, 0.5f,
 							1 });

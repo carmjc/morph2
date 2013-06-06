@@ -37,21 +37,27 @@ public class Orbit extends Movement {
 
 	private boolean stable;
 
+	private final boolean instantOrbit;
+
 	@Deprecated
 	public Orbit() {
-		this(null, null, 0);
+		this(null, null, 0, false);
 	}
 
 	// TODO Replace orbiter with a type that would encompass any movable entity
-	public Orbit(Entity orbiter, Entity orbitee, float orbitRadius) {
+	public Orbit(Entity orbiter, Entity orbitee, float orbitRadius, boolean instantOrbit) {
 		super(orbiter);
 		this.orbiter = orbiter;
 		this.orbitee = orbitee;
 		this.orbitRadius = orbitRadius;
+		this.instantOrbit = instantOrbit;
 		if (orbiter != null && orbitee != null) {
 			Vect3D orbiteeToOrbiter = new Vect3D(orbiter.getPos()).substract(orbitee.getPos());
 			Vect3D orbitalTarget = new Vect3D(orbiteeToOrbiter).normalize(orbitRadius).add(orbitee.getPos());
-			arrive = new Arrive(orbiter, orbitalTarget);
+
+			if (!instantOrbit) {
+				arrive = new Arrive(orbiter, orbitalTarget);
+			}
 		} else {
 			if (orbiter != null) {
 				throw new IllegalStateException();
@@ -116,7 +122,7 @@ public class Orbit extends Movement {
 		Vect3D tangentialVector = new Vect3D(radialVector).rotate(90);
 		float optimalSpeed = (float) Math.sqrt(Star.SIMPLE_G * (orbitee.getMass() + orbiter.getMass()) / orbitRadius);
 
-		if (stable) {
+		if (stable || instantOrbit) {
 			// Cheating to stay in orbit
 			// TODO we should check that the non steering force have not changed
 			// TODO we might do that far less often
