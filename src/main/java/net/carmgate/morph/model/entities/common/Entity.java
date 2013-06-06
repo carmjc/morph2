@@ -179,6 +179,10 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 	// No contract specific to the entity
 	// IMPROVE we should probably define the entities in a different way
 
+	public void setHeading(float heading) {
+		this.heading = heading;
+	}
+
 	@Override
 	public void setSelected(boolean selected) {
 		this.selected = selected;

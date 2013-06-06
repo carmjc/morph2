@@ -1,6 +1,10 @@
 package net.carmgate.morph.model.behaviors;
 
-public interface Behavior {
+import net.carmgate.morph.model.entities.common.Entity;
+
+public interface Behavior extends Cloneable {
+
+	Behavior cloneForEntity(Entity entity);
 
 	// TODO It seems it's not useful anymore. It should be a good idea to get rid of it
 	@Deprecated

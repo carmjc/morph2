@@ -2,6 +2,7 @@ package net.carmgate.morph.model.behaviors.steering;
 
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.behaviors.ActivatedMorph;
+import net.carmgate.morph.model.behaviors.Behavior;
 import net.carmgate.morph.model.behaviors.Movement;
 import net.carmgate.morph.model.behaviors.Needs;
 import net.carmgate.morph.model.common.Vect3D;
@@ -47,6 +48,11 @@ public class Follow extends Movement {
 	}
 
 	@Override
+	public Behavior cloneForEntity(Entity entity) {
+		return new Follow(entity, target, maxDistance);
+	}
+
+	@Override
 	public Vect3D getSteeringForce() {
 		return steeringForce;
 	}
@@ -80,7 +86,7 @@ public class Follow extends Movement {
 		}
 		GL11.glTranslatef(-pos.x, -pos.y, -pos.z);
 
-		if (target != null && movableEntity instanceof Ship && ((Entity) movableEntity).isSelected() && Model.getModel().getUiContext().isDebugMode()) {
+		if (target != null && movableEntity instanceof Ship && movableEntity.isSelected() && Model.getModel().getUiContext().isDebugMode()) {
 			// Show target
 			GL11.glTranslatef(target.getPos().x, target.getPos().y, 0);
 

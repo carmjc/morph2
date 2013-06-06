@@ -30,6 +30,11 @@ public class StarsContribution extends ForceGeneratingBehavior implements Render
 	}
 
 	@Override
+	public Behavior cloneForEntity(Entity entity) {
+		return new StarsContribution(entity);
+	}
+
+	@Override
 	public Vect3D getNonSteeringForce() {
 		return force;
 	}

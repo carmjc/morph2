@@ -1,6 +1,7 @@
 package net.carmgate.morph.model.behaviors.steering;
 
 import net.carmgate.morph.model.Model;
+import net.carmgate.morph.model.behaviors.Behavior;
 import net.carmgate.morph.model.behaviors.Movement;
 import net.carmgate.morph.model.behaviors.StarsContribution;
 import net.carmgate.morph.model.common.Vect3D;
@@ -24,7 +25,6 @@ public class Orbit extends Movement {
 	private static final float sin = (float) Math.sin(deltaAngle);
 
 	private final float orbitRadius;
-	private final Entity orbiter;
 	private final Entity orbitee;
 
 	private Arrive arrive;
@@ -47,12 +47,11 @@ public class Orbit extends Movement {
 	// TODO Replace orbiter with a type that would encompass any movable entity
 	public Orbit(Entity orbiter, Entity orbitee, float orbitRadius, boolean instantOrbit) {
 		super(orbiter);
-		this.orbiter = orbiter;
 		this.orbitee = orbitee;
 		this.orbitRadius = orbitRadius;
 		this.instantOrbit = instantOrbit;
 		if (orbiter != null && orbitee != null) {
-			Vect3D orbiteeToOrbiter = new Vect3D(orbiter.getPos()).substract(orbitee.getPos());
+			Vect3D orbiteeToOrbiter = new Vect3D(movableEntity.getPos()).substract(orbitee.getPos());
 			Vect3D orbitalTarget = new Vect3D(orbiteeToOrbiter).normalize(orbitRadius).add(orbitee.getPos());
 
 			if (!instantOrbit) {
@@ -63,6 +62,11 @@ public class Orbit extends Movement {
 				throw new IllegalStateException();
 			}
 		}
+	}
+
+	@Override
+	public Behavior cloneForEntity(Entity entity) {
+		return new Orbit(entity, orbitee, orbitRadius, instantOrbit);
 	}
 
 	@Override
@@ -99,15 +103,15 @@ public class Orbit extends Movement {
 				arrive.render(glMode);
 			}
 
-			GL11.glTranslatef(orbiter.getPos().x, orbiter.getPos().y, orbiter.getPos().z);
+			GL11.glTranslatef(movableEntity.getPos().x, movableEntity.getPos().y, movableEntity.getPos().z);
 			GL11.glColor4f(1, 0, 1, 0.5f);
-			orbiter.getSpeed().render(glMode);
+			movableEntity.getSpeed().render(glMode);
 			tangentialForce.render(glMode);
 			GL11.glColor4f(0, 0, 1, 1);
 			getSteeringForce().render(glMode);
 			GL11.glColor4f(1f, 1f, 0f, 1);
 			new Vect3D(starsContribution.getNonSteeringForce()).add(steeringForce).render(glMode);
-			GL11.glTranslatef(-orbiter.getPos().x, -orbiter.getPos().y, -orbiter.getPos().z);
+			GL11.glTranslatef(-movableEntity.getPos().x, -movableEntity.getPos().y, -movableEntity.getPos().z);
 		}
 	}
 
@@ -117,24 +121,24 @@ public class Orbit extends Movement {
 		// TODO add comments
 
 		steeringForce.nullify();
-		Vect3D orbiteeToOrbiter = new Vect3D(orbiter.getPos()).substract(orbitee.getPos());
+		Vect3D orbiteeToOrbiter = new Vect3D(movableEntity.getPos()).substract(orbitee.getPos());
 		Vect3D radialVector = new Vect3D(orbiteeToOrbiter).normalize(1);
 		Vect3D tangentialVector = new Vect3D(radialVector).rotate(90);
-		float optimalSpeed = (float) Math.sqrt(Star.SIMPLE_G * (orbitee.getMass() + orbiter.getMass()) / orbitRadius);
+		float optimalSpeed = (float) Math.sqrt(Star.SIMPLE_G * (orbitee.getMass() + movableEntity.getMass()) / orbitRadius);
 
 		if (stable || instantOrbit) {
 			// Cheating to stay in orbit
 			// TODO we should check that the non steering force have not changed
 			// TODO we might do that far less often
-			orbiter.getPos().substract(orbitee.getPos()).normalize(orbitRadius).add(orbitee.getPos());
-			orbiter.getSpeed().copy(tangentialVector).normalize(optimalSpeed);
-			if (orbiter instanceof Ship) {
+			movableEntity.getPos().substract(orbitee.getPos()).normalize(orbitRadius).add(orbitee.getPos());
+			movableEntity.getSpeed().copy(tangentialVector).normalize(optimalSpeed);
+			if (movableEntity instanceof Ship) {
 				LOGGER.debug("stable2");
 			}
 			return;
 		}
 
-		if (tangentialForce.prodScal(orbiter.getSpeed()) < 0) {
+		if (tangentialForce.prodScal(movableEntity.getSpeed()) < 0) {
 			// rotate in speed vector direction if not purely radial
 			tangentialForce.mult(-1);
 		}
@@ -150,28 +154,28 @@ public class Orbit extends Movement {
 		}
 
 		tangentialForce.copy(tangentialVector);
-		float test = new Vect3D(tangentialVector).prodScal(new Vect3D(orbiter.getSpeed()).normalize(1));
+		float test = new Vect3D(tangentialVector).prodScal(new Vect3D(movableEntity.getSpeed()).normalize(1));
 		if (test == 0) {
 			test = 1;
 		}
-		tangentialForce.normalize((optimalSpeed - orbiter.getSpeed().modulus())
+		tangentialForce.normalize((optimalSpeed - movableEntity.getSpeed().modulus())
 				* test);
-		tangentialForce.mult(orbiter.getMass());
-		steeringForce.add(tangentialForce); // .substract(orbiter.getSpeed());
-		// LOGGER.debug("" + orbiter.getClass().getSimpleName() + ": " + steeringForce + ", optimal: " + optimalSpeed + ", current: "
-		// + orbiter.getSpeed().modulus());
+		tangentialForce.mult(movableEntity.getMass());
+		steeringForce.add(tangentialForce); // .substract(movableEntity.getSpeed());
+		// LOGGER.debug("" + movableEntity.getClass().getSimpleName() + ": " + steeringForce + ", optimal: " + optimalSpeed + ", current: "
+		// + movableEntity.getSpeed().modulus());
 
-		if (Math.abs(Math.abs(new Vect3D(orbiter.getSpeed()).prodScal(tangentialVector)) - optimalSpeed) < optimalSpeed / 200
+		if (Math.abs(Math.abs(new Vect3D(movableEntity.getSpeed()).prodScal(tangentialVector)) - optimalSpeed) < optimalSpeed / 200
 				&& Math.abs(orbiteeToOrbiter.modulus() - orbitRadius) < 0.01) {
-			orbiter.getSpeed().copy(tangentialVector).mult(optimalSpeed);
+			movableEntity.getSpeed().copy(tangentialVector).mult(optimalSpeed);
 			LOGGER.debug("now stable");
 			stable = true;
 			steeringForce.nullify();
 			tangentialForce.nullify();
 			arrive = null;
 		} else {
-			if (orbiter instanceof Ship) {
-				LOGGER.debug(Math.abs(Math.abs(new Vect3D(orbiter.getSpeed()).prodScal(tangentialVector)) - optimalSpeed) + "/" + optimalSpeed / 200);
+			if (movableEntity instanceof Ship) {
+				LOGGER.debug(Math.abs(Math.abs(new Vect3D(movableEntity.getSpeed()).prodScal(tangentialVector)) - optimalSpeed) + "/" + optimalSpeed / 200);
 			}
 		}
 

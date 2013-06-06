@@ -2,6 +2,7 @@ package net.carmgate.morph.model.behaviors.steering;
 
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.behaviors.ActivatedMorph;
+import net.carmgate.morph.model.behaviors.Behavior;
 import net.carmgate.morph.model.behaviors.Movement;
 import net.carmgate.morph.model.behaviors.Needs;
 import net.carmgate.morph.model.common.Vect3D;
@@ -39,6 +40,11 @@ public class Wander extends Movement {
 		super(shipToMove);
 		this.wanderFocusDistance = wanderFocusDistance;
 		this.wanderRadius = wanderRadius;
+	}
+
+	@Override
+	public Behavior cloneForEntity(Entity entity) {
+		return new Wander(entity, wanderFocusDistance, wanderRadius);
 	}
 
 	@Override
@@ -141,6 +147,7 @@ public class Wander extends Movement {
 			wanderTarget.copy(Vect3D.NULL);
 		}
 
-		steeringForce.copy(new Vect3D(wanderFocus).substract(pos).add(wanderTarget)).truncate(movableEntity.getMaxSteeringForce()).mult(movableEntity.getMass());
+		steeringForce.copy(new Vect3D(wanderFocus).substract(pos).add(wanderTarget)).truncate(movableEntity.getMaxSteeringForce())
+				.mult(movableEntity.getMass());
 	}
 }

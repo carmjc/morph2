@@ -6,6 +6,7 @@ import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.entities.Morph;
 import net.carmgate.morph.model.entities.Morph.MorphType;
 import net.carmgate.morph.model.entities.Ship;
+import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.model.orders.TakeDamage;
 
 import org.slf4j.Logger;
@@ -30,6 +31,17 @@ public class InflictLaserDamage implements Behavior {
 	public InflictLaserDamage(Ship sourceOfDamage, Ship target) {
 		this.sourceOfDamage = sourceOfDamage;
 		this.target = target;
+	}
+
+	@Override
+	public Behavior cloneForEntity(Entity entity) {
+		// TODO This test should not have to be done
+		// Something else than a ship should be able to inflict damage
+		if (entity instanceof Ship) {
+			return new InflictLaserDamage((Ship) entity, target);
+		}
+
+		return null;
 	}
 
 	public boolean consumeEnergy() {

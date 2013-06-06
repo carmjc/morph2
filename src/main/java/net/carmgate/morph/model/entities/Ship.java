@@ -144,6 +144,29 @@ public class Ship extends Entity {
 		updateMorphDependantValues();
 	}
 
+	@Override
+	public Ship clone() {
+		Ship newShip = new Ship(getPos().x, getPos().y, getPos().z, getHeading(),
+				getMass(), getPlayer());
+
+		// clone morphs
+		for (MorphType morphType : MorphType.values()) {
+			List<Morph> morphs = getMorphsByType(morphType);
+			if (morphs != null) {
+				for (Morph morph : morphs) {
+					newShip.addMorph(new Morph(morphType, morph.getLevel(), morph.getXp()));
+				}
+			}
+		}
+
+		// clone behaviors
+		for (Behavior behavior : behaviorSet) {
+			newShip.addBehavior(behavior.cloneForEntity(newShip));
+		}
+
+		return newShip;
+	}
+
 	public boolean consumeEnergy(float energyDec) {
 		// return true if there is enough energy
 		if (energy >= energyDec) {

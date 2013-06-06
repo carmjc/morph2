@@ -2,6 +2,7 @@ package net.carmgate.morph.model.behaviors.steering;
 
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.behaviors.ActivatedMorph;
+import net.carmgate.morph.model.behaviors.Behavior;
 import net.carmgate.morph.model.behaviors.Movement;
 import net.carmgate.morph.model.behaviors.Needs;
 import net.carmgate.morph.model.common.Vect3D;
@@ -46,6 +47,11 @@ public class Arrive extends Movement {
 	public Arrive(Entity movable, Vect3D target) {
 		super(movable);
 		this.target = target;
+	}
+
+	@Override
+	public Behavior cloneForEntity(Entity entity) {
+		return new Arrive(entity, target);
 	}
 
 	@Override

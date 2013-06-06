@@ -27,15 +27,18 @@ public abstract class Movement implements Behavior, Renderable {
 	}
 
 	protected Movement(Entity movable) {
-		this.movableEntity = movable;
+		movableEntity = movable;
 	}
+
+	@Override
+	public abstract Behavior cloneForEntity(Entity entity);
 
 	// TODO the energy consumption should depend on the number and level of the propulsor morphs
 	public boolean consumeEnergy() {
 		if (movableEntity instanceof Ship) {
 			float energyDec = Model.getModel().getSecondsSinceLastUpdate()
 					* MorphType.SIMPLE_PROPULSOR.getEnergyConsumption()
-					* ((Ship) movableEntity).getRealAccelModulus() / ((Entity) movableEntity).getMaxSteeringForce();
+					* ((Ship) movableEntity).getRealAccelModulus() / movableEntity.getMaxSteeringForce();
 			return ((Ship) movableEntity).consumeEnergy(energyDec);
 		}
 		return false;
@@ -46,7 +49,7 @@ public abstract class Movement implements Behavior, Renderable {
 	public void rewardMorphs() {
 		if (movableEntity instanceof Ship) {
 			for (Morph morph : ((Ship) movableEntity).getMorphsByType(MorphType.SIMPLE_PROPULSOR)) {
-				morph.increaseXp(((Ship) movableEntity).getRealAccelModulus() / ((Entity) movableEntity).getMaxSteeringForce()
+				morph.increaseXp(((Ship) movableEntity).getRealAccelModulus() / movableEntity.getMaxSteeringForce()
 						* Model.getModel().getSecondsSinceLastUpdate()
 						* Conf.getFloatProperty(ConfItem.MORPH_SIMPLEPROPULSOR_MAXXPPERSECOND));
 			}
