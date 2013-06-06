@@ -68,6 +68,18 @@ public class Planet extends Entity {
 	}
 
 	@Override
+	public float getMaxSpeed() {
+		// TODO Auto-generated method stub
+		return 100000;
+	}
+
+	@Override
+	public float getMaxSteeringForce() {
+		// TODO Auto-generated method stub
+		return 100000;
+	}
+
+	@Override
 	public void initRenderer() {
 		// load texture from PNG file if needed
 		if (baseTexture == null) {
@@ -82,6 +94,7 @@ public class Planet extends Entity {
 	@Override
 	public void render(int glMode) {
 		GL11.glTranslatef(pos.x, pos.y, pos.z);
+
 		float radiusScale = radius / 10;
 		float halfWidth = 64f;
 		// boolean maxZoom = halfWidth * radiusScale * Model.getModel().getViewport().getZoomFactor() > 15;
@@ -150,7 +163,8 @@ public class Planet extends Entity {
 		// position = position + velocity
 		pos.add(new Vect3D(speed).mult(Model.getModel().getSecondsSinceLastUpdate()));
 
+		// TODO move this somewhere else
+		handlePendingBehaviors();
 		// LOGGER.debug("planet effective force: " + effectiveForce);
 	}
-
 }

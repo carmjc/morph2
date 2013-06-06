@@ -123,6 +123,8 @@ public class Star extends Entity {
 
 	@Override
 	public void update() {
+		// TODO move this somewhere else
+		handlePendingBehaviors();
 		// Nothing to do
 	}
 

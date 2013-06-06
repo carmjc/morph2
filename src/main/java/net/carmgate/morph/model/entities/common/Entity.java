@@ -111,6 +111,20 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 		return speed;
 	}
 
+	protected void handlePendingBehaviors() {
+		// Cleaning
+		for (Behavior behavior : pendingBehaviorsRemoval) {
+			behaviorSet.remove(behavior);
+		}
+		pendingBehaviorsRemoval.clear();
+
+		// Executing pending behavior addition
+		for (Behavior behavior : pendingBehaviorsAddition) {
+			behaviorSet.add(behavior);
+		}
+		pendingBehaviorsAddition.clear();
+	}
+
 	public boolean isDead() {
 		return dead;
 	}

@@ -84,7 +84,6 @@ public class Orbit extends Movement {
 		GL11.glTranslatef(orbitee.getPos().x, orbitee.getPos().y, orbitee.getPos().z);
 
 		TextureImpl.bindNone();
-		LOGGER.debug("ooops");
 		RenderUtils.renderCircle(orbitRadius, 5, new Float[] { 0f, 0f, 0f, 0f }, new Float[] { 1f, 1f, 1f, 0.3f }, new Float[] { 0f, 0f, 0f, 0f });
 
 		GL11.glTranslatef(-orbitee.getPos().x, -orbitee.getPos().y, -orbitee.getPos().z);

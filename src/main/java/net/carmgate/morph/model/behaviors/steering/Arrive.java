@@ -86,7 +86,7 @@ public class Arrive extends Movement {
 		}
 		GL11.glTranslatef(-pos.x, -pos.y, -pos.z);
 
-		if (target != null && (movableEntity instanceof Ship && ((Entity) movableEntity).isSelected() || movableEntity instanceof Planet)) {
+		if (target != null && (movableEntity instanceof Ship && movableEntity.isSelected() || movableEntity instanceof Planet)) {
 			// Show target
 			GL11.glTranslatef(target.x, target.y, 0);
 
@@ -150,6 +150,10 @@ public class Arrive extends Movement {
 		final Vect3D speed = new Vect3D(movableEntity.getSpeed());
 
 		targetOffset.copy(target).substract(pos);
+
+		if (targetOffset.modulus() == 0) {
+			return;
+		}
 
 		normalizedTargetOffset.copy(targetOffset).normalize(1);
 		speedOpposition.copy(normalizedTargetOffset).rotate(90).mult(speed.prodVectOnZ(normalizedTargetOffset));

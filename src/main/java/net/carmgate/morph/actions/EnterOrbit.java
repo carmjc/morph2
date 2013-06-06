@@ -10,6 +10,7 @@ import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.behaviors.InflictLaserDamage;
 import net.carmgate.morph.model.behaviors.Movement;
 import net.carmgate.morph.model.behaviors.steering.Orbit;
+import net.carmgate.morph.model.entities.Planet;
 import net.carmgate.morph.model.entities.Star;
 import net.carmgate.morph.model.entities.common.Entity;
 
@@ -37,7 +38,7 @@ public class EnterOrbit implements Action {
 		// Therefore, we have an extraneous cast.
 		// However, we might attack something else than ships ...
 		Entity target = Model.getModel().getActionSelection().getFirst();
-		if (!(target instanceof Star)) {
+		if (!(target instanceof Star || target instanceof Planet)) {
 			return;
 		}
 
@@ -50,7 +51,7 @@ public class EnterOrbit implements Action {
 				selectable.removeBehaviorsByClass(InflictLaserDamage.class);
 
 				// Add new orbit behavior
-				selectable.addBehavior(new Orbit(selectable, target, selectable.getPos().distance(((Star) target).getPos()) + 20));
+				selectable.addBehavior(new Orbit(selectable, target, selectable.getPos().distance(target.getPos()) + 20));
 			}
 		}
 	}

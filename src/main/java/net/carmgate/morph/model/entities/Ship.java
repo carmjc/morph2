@@ -102,29 +102,32 @@ public class Ship extends Entity {
 
 	@Override
 	public void addBehavior(Behavior behavior) {
-		super.addBehavior(behavior);
 
 		// Checks that the behavior can be added to the ship
 		if (behavior != null
 				&& behavior.getClass().isAnnotationPresent(Needs.class)) {
 			ActivatedMorph[] needs = behavior.getClass().getAnnotation(Needs.class).value();
 
-			for (ActivatedMorph need : needs) {
-				for (Morph morph : morphsById.values()) {
-					if (morph.getMorphType() == need.morphType()) {
-						pendingBehaviorsAddition.add(behavior);
-						// TODO Clean this and similar items
-						if (behavior instanceof Orbit) {
-							((Orbit) behavior).setStarsContribution(starsContribution);
-						}
+			if (needs != null) {
+				for (ActivatedMorph need : needs) {
+					for (Morph morph : morphsById.values()) {
+						if (morph.getMorphType() == need.morphType()) {
+							pendingBehaviorsAddition.add(behavior);
+							// TODO Clean this and similar items
+							if (behavior instanceof Orbit) {
+								((Orbit) behavior).setStarsContribution(starsContribution);
+							}
 
-						return;
+							return;
+						}
 					}
 				}
 			}
 
 			return;
 		}
+
+		super.addBehavior(behavior);
 	}
 
 	public void addEnergy(float energyInc) {
@@ -149,7 +152,6 @@ public class Ship extends Entity {
 	// movements should add a propulsion force to the ship
 	private void applySteeringForce(Vect3D force) {
 		steeringForce.add(force);
-		effectiveForce.add(force);
 	}
 
 	public boolean consumeEnergy(float energyDec) {
@@ -537,6 +539,10 @@ public class Ship extends Entity {
 			}
 		}
 
+		// cap steeringForce to maximum steering force
+		steeringForce.truncate(getMaxSteeringForce());
+		effectiveForce.add(steeringForce);
+
 		// rotate and add trail according to the steering force vector
 		rotateProperly();
 
@@ -571,17 +577,8 @@ public class Ship extends Entity {
 			trailLastUpdate += trailUpdateInterval;
 		}
 
-		// Cleaning
-		for (Behavior behavior : pendingBehaviorsRemoval) {
-			behaviorSet.remove(behavior);
-		}
-		pendingBehaviorsRemoval.clear();
-
-		// Executing pending behavior addition
-		for (Behavior behavior : pendingBehaviorsAddition) {
-			behaviorSet.add(behavior);
-		}
-		pendingBehaviorsAddition.clear();
+		// TODO move this somewhere else
+		handlePendingBehaviors();
 	}
 
 	private void updateMorphDependantValues() {
