@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.carmgate.morph.model.Model;
+import net.carmgate.morph.model.behaviors.common.Behavior;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Ship;
 import net.carmgate.morph.model.entities.common.Entity;

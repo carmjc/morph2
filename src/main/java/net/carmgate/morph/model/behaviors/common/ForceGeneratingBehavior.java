@@ -1,4 +1,4 @@
-package net.carmgate.morph.model.behaviors;
+package net.carmgate.morph.model.behaviors.common;
 
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.common.Entity;

@@ -4,10 +4,10 @@ import java.util.HashSet;
 import java.util.Set;
 
 import net.carmgate.morph.model.Model;
-import net.carmgate.morph.model.behaviors.Behavior;
-import net.carmgate.morph.model.behaviors.ForceGeneratingBehavior;
-import net.carmgate.morph.model.behaviors.Movement;
 import net.carmgate.morph.model.behaviors.StarsContribution;
+import net.carmgate.morph.model.behaviors.common.Behavior;
+import net.carmgate.morph.model.behaviors.common.ForceGeneratingBehavior;
+import net.carmgate.morph.model.behaviors.common.Movement;
 import net.carmgate.morph.model.behaviors.steering.Orbit;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Star;

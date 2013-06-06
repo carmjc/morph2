@@ -1,4 +1,4 @@
-package net.carmgate.morph.model.behaviors;
+package net.carmgate.morph.model.behaviors.common;
 
 import net.carmgate.morph.conf.Conf;
 import net.carmgate.morph.conf.Conf.ConfItem;

@@ -8,7 +8,7 @@ import net.carmgate.morph.actions.common.Event;
 import net.carmgate.morph.actions.common.Event.EventType;
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.behaviors.InflictLaserDamage;
-import net.carmgate.morph.model.behaviors.Movement;
+import net.carmgate.morph.model.behaviors.common.Movement;
 import net.carmgate.morph.model.behaviors.steering.Orbit;
 import net.carmgate.morph.model.entities.Planet;
 import net.carmgate.morph.model.entities.Star;
