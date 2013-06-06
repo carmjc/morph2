@@ -5,13 +5,12 @@ import java.io.IOException;
 
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.behaviors.Behavior;
-import net.carmgate.morph.model.behaviors.ForceGeneratingBehavior;
-import net.carmgate.morph.model.behaviors.Movement;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.model.entities.common.EntityHints;
 import net.carmgate.morph.model.entities.common.EntityType;
 import net.carmgate.morph.model.entities.common.Renderable;
+import net.carmgate.morph.model.player.Player;
 import net.carmgate.morph.ui.common.RenderingHints;
 import net.carmgate.morph.ui.common.RenderingSteps;
 
@@ -27,44 +26,24 @@ public class Planet extends Entity {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(Planet.class);
 	private static Texture baseTexture;
-	private static Integer nextId = 0;
-
-	private final Star star;
-
-	private final float mu;
 
 	private final float radius;
-
-	private final float orbit;
-	private final Vect3D steeringForce = new Vect3D();
-	private final Vect3D effectiveForce = new Vect3D();
 
 	@Deprecated
 	public Planet() {
 		this(null, 0, 0, 0);
 	}
 
-	public Planet(Star star, float mass, float radius, float orbit) {
+	public Planet(Entity orbitee, float mass, float radius, float orbit) {
+		super(Player.NO_ONE);
 
-		this.star = star;
 		this.mass = mass;
 		this.radius = radius;
-		this.orbit = orbit;
-		if (star != null) {
-			mu = (float) Math.sqrt(Star.SIMPLE_G * (star.getMass() + mass) / orbit);
+		if (orbitee != null) {
 			// TODO compute random first position
-			pos.copy(new Vect3D(star.getPos()).add(new Vect3D(Vect3D.NORTH).rotate((float) (Math.random() * 360)).mult(orbit)));
-		} else {
-			mu = 0;
+			pos.copy(new Vect3D(orbitee.getPos()).add(new Vect3D(Vect3D.NORTH).rotate((float) (Math.random() * 360)).mult(orbit)));
 		}
 
-	}
-
-	// IMPROVE remove effectiveForce from steeringForce management ?
-	// movements should add a propulsion force to the ship
-	private void applySteeringForce(Vect3D force) {
-		steeringForce.add(force);
-		effectiveForce.add(force);
 	}
 
 	@Override
@@ -95,25 +74,32 @@ public class Planet extends Entity {
 	public void render(int glMode) {
 		GL11.glTranslatef(pos.x, pos.y, pos.z);
 
-		float radiusScale = radius / 10;
-		float halfWidth = 64f;
-		// boolean maxZoom = halfWidth * radiusScale * Model.getModel().getViewport().getZoomFactor() > 15;
+		float scale = radius / 10;
+		float width = 128f;
 
-		// if (maxZoom) {
+		float zoomFactor = Model.getModel().getViewport().getZoomFactor();
+		boolean minZoom = scale * zoomFactor > 4;
+		boolean maxZoom = scale * zoomFactor < 0.25f;
+		if (minZoom) {
+			scale = 4f / zoomFactor;
+		} else if (maxZoom) {
+			scale = 0.25f / zoomFactor;
+		}
+
 		GL11.glColor4f(1, 1, 1, 1);
-		GL11.glScalef(radiusScale, radiusScale, 1);
+		GL11.glScalef(scale, scale, 1);
 		baseTexture.bind();
 		GL11.glBegin(GL11.GL_QUADS);
 		GL11.glTexCoord2f(0, 0);
-		GL11.glVertex2f(-halfWidth, halfWidth);
+		GL11.glVertex2f(-width / 2, width / 2);
 		GL11.glTexCoord2f(1, 0);
-		GL11.glVertex2f(halfWidth, halfWidth);
+		GL11.glVertex2f(width / 2, width / 2);
 		GL11.glTexCoord2f(1, 1);
-		GL11.glVertex2f(halfWidth, -halfWidth);
+		GL11.glVertex2f(width / 2, -width / 2);
 		GL11.glTexCoord2f(0, 1);
-		GL11.glVertex2f(-halfWidth, -halfWidth);
+		GL11.glVertex2f(-width / 2, -width / 2);
 		GL11.glEnd();
-		GL11.glScalef(1f / radiusScale, 1f / radiusScale, 1);
+		GL11.glScalef(1f / scale, 1f / scale, 1);
 
 		if (Model.getModel().getUiContext().isDebugMode()) {
 			GL11.glColor4f(0, 1, 0, 1);
@@ -137,23 +123,11 @@ public class Planet extends Entity {
 		effectiveForce.nullify();
 		steeringForce.nullify();
 
-		// if no movement needed, no update needed
-		for (Behavior behavior : behaviorSet) {
-			if (behavior.isActive()) {
-				behavior.run(Model.getModel().getSecondsSinceLastUpdate());
+		updateForcesWithBehavior();
 
-				// if the behavior is a movement, use the generated steering force
-				if (behavior instanceof Movement) {
-					applySteeringForce(((Movement) behavior).getSteeringForce());
-				}
-
-				// if the behavior is generating a force, we must apply it
-				if (behavior instanceof ForceGeneratingBehavior) {
-					effectiveForce.add(((ForceGeneratingBehavior) behavior).getNonSteeringForce());
-				}
-
-			}
-		}
+		// cap steeringForce to maximum steering force
+		steeringForce.truncate(getMaxSteeringForce());
+		effectiveForce.add(steeringForce);
 
 		// velocity = truncate (velocity + acceleration, max_speed)
 		// TODO fix this magic number

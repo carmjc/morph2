@@ -13,8 +13,6 @@ import net.carmgate.morph.conf.Conf.ConfItem;
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.behaviors.ActivatedMorph;
 import net.carmgate.morph.model.behaviors.Behavior;
-import net.carmgate.morph.model.behaviors.ForceGeneratingBehavior;
-import net.carmgate.morph.model.behaviors.Movement;
 import net.carmgate.morph.model.behaviors.Needs;
 import net.carmgate.morph.model.behaviors.steering.Orbit;
 import net.carmgate.morph.model.common.Vect3D;
@@ -48,25 +46,21 @@ public class Ship extends Entity {
 	private static final float cos = (float) Math.cos(deltaAngle);
 	private static final float sin = (float) Math.sin(deltaAngle);
 
-	public static final Logger LOGGER = LoggerFactory.getLogger(Ship.class);
-	// Management of the ship's ids.
-	private static Integer nextId = 1;
-
+	private static final Logger LOGGER = LoggerFactory.getLogger(Ship.class);
 	/** The texture under the morph image. */
 	private static Texture baseTexture;
 
 	private static Texture zoomedOutTexture;
+
+	// TODO This should be moved elsewhere
 	private static final float MAX_DAMAGE = 10;
-	public final Map<Integer, Morph> morphsById = new HashMap<>();
+
+	private final Map<Integer, Morph> morphsById = new HashMap<>();
 
 	private final Map<MorphType, List<Morph>> morphsByType = new HashMap<>();
 
 	private final List<Order> orderList = new ArrayList<>();
 
-	private final Vect3D effectiveForce = new Vect3D();
-	private final Player player;
-
-	private final Vect3D steeringForce = new Vect3D();
 	// TODO put in conf the dimension of the table
 	private final Vect3D[] trail = new Vect3D[20];
 	/** Stores last trail update. It occurred less than trailUpdateInterval ago. */
@@ -76,6 +70,7 @@ public class Ship extends Entity {
 
 	private final List<Order> newOrderList = new ArrayList<>();
 
+	// TODO We should move this to entity
 	private float realAccelModulus;
 
 	/***
@@ -86,7 +81,8 @@ public class Ship extends Entity {
 	}
 
 	public Ship(float x, float y, float z, float heading, float mass, Player player) {
-		this.player = player;
+		super(player);
+
 		Model.getModel().getPlayers().add(player);
 
 		// initialize positional information
@@ -148,12 +144,6 @@ public class Ship extends Entity {
 		updateMorphDependantValues();
 	}
 
-	// IMPROVE remove effectiveForce from steeringForce management ?
-	// movements should add a propulsion force to the ship
-	private void applySteeringForce(Vect3D force) {
-		steeringForce.add(force);
-	}
-
 	public boolean consumeEnergy(float energyDec) {
 		// return true if there is enough energy
 		if (energy >= energyDec) {
@@ -206,10 +196,6 @@ public class Ship extends Entity {
 	 */
 	public List<Morph> getMorphsByType(MorphType morphType) {
 		return morphsByType.get(morphType);
-	}
-
-	public Player getPlayer() {
-		return player;
 	}
 
 	public float getRealAccelModulus() {
@@ -406,6 +392,7 @@ public class Ship extends Entity {
 
 	}
 
+	// TODO Replace this method by using RenderUtils.renderCircle(...)
 	private void renderSelection(float massScale, boolean maxZoom) {
 		if (selected) {
 			// render limit of effect zone
@@ -511,7 +498,6 @@ public class Ship extends Entity {
 	@Override
 	public void update() {
 		// TODO Is this really the proper way to do it ?
-		accel.nullify();
 		effectiveForce.nullify();
 		steeringForce.nullify();
 
@@ -520,24 +506,7 @@ public class Ship extends Entity {
 			processAI();
 		}
 
-		// if no movement needed, no update needed
-		for (Behavior behavior : behaviorSet) {
-			if (behavior.isActive()) {
-				behavior.run(Model.getModel().getSecondsSinceLastUpdate());
-
-				// if the behavior is a movement, use the generated steering force
-				if (behavior instanceof Movement && ((Movement) behavior).consumeEnergy()) {
-					applySteeringForce(((Movement) behavior).getSteeringForce());
-					((Movement) behavior).rewardMorphs();
-				}
-
-				// if the behavior is generating a force, we must apply it
-				if (behavior instanceof ForceGeneratingBehavior) {
-					effectiveForce.add(((ForceGeneratingBehavior) behavior).getNonSteeringForce());
-				}
-
-			}
-		}
+		updateForcesWithBehavior();
 
 		// cap steeringForce to maximum steering force
 		steeringForce.truncate(getMaxSteeringForce());
@@ -551,10 +520,8 @@ public class Ship extends Entity {
 		// the speed in the previous cycle
 		Vect3D realAccel = new Vect3D(speed);
 
-		// acceleration = steering_force / mass
-		accel.add(effectiveForce).mult(1f / mass);
 		// velocity = truncate (velocity + acceleration, max_speed)
-		speed.add(new Vect3D(accel).mult(Model.getModel().getSecondsSinceLastUpdate())).truncate(maxSpeed);
+		speed.add(new Vect3D(effectiveForce).mult(1f / mass).mult(Model.getModel().getSecondsSinceLastUpdate())).truncate(maxSpeed);
 		realAccel.substract(speed);
 		realAccelModulus = realAccel.modulus();
 		// position = position + velocity

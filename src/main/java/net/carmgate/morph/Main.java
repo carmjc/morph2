@@ -113,7 +113,7 @@ public class Main {
 	private float meanFpsCounter = 0;
 
 	private long lastFpsResetTs = 0;
-	private Planet planet;
+	private Entity planet;
 
 	/**
 	 * This method initializes UI handlers.
@@ -192,9 +192,9 @@ public class Main {
 		Star star = new Star(3000, 3000, 0, 5000, 500, 10000);
 		Model.getModel().addEntity(star);
 		// TODO remove attribute from class
-		planet = new Planet(star, 1000, 100, 10000);
+		planet = new Planet(star, 1000, 100, 100000);
 		Model.getModel().addEntity(planet);
-		planet.addBehavior(new Orbit(planet, star, 10000));
+		planet.addBehavior(new Orbit(planet, star, 100000));
 
 		Player player = new Player(PlayerType.AI, "Nemesis", FOF.FOE);
 		Ship enemyShip = new Ship(128, 0, 0, 0, 20, player);

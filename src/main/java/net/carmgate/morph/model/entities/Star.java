@@ -3,9 +3,11 @@ package net.carmgate.morph.model.entities;
 import java.io.FileInputStream;
 import java.io.IOException;
 
+import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.model.entities.common.EntityHints;
 import net.carmgate.morph.model.entities.common.EntityType;
+import net.carmgate.morph.model.player.Player;
 import net.carmgate.morph.ui.common.RenderingHints;
 import net.carmgate.morph.ui.common.RenderingSteps;
 
@@ -22,8 +24,8 @@ public class Star extends Entity {
 	private static final Logger LOGGER = LoggerFactory.getLogger(Star.class);
 	private static Texture baseTexture;
 
-	private static Integer nextId = 0;
 	public static double SIMPLE_G = 6.67259 * Math.pow(10, 3); // normal one is .. * Math.pow(10, -11)
+	// TODO remove this field, it's not really usefull and might be confusing
 	private final double gm;
 
 	private final float radius;
@@ -37,12 +39,14 @@ public class Star extends Entity {
 	}
 
 	public Star(float x, float y, float z, float mass, float radius, float energyFlow) {
+		super(Player.NO_ONE);
 
 		pos.x = x;
 		pos.y = y;
 		pos.z = z;
 		this.mass = mass;
 		this.radius = radius;
+		// TODO remove this field, it's not really usefull and might be confusing
 		gm = SIMPLE_G * mass;
 		this.energyFlow = energyFlow;
 
@@ -53,6 +57,7 @@ public class Star extends Entity {
 		return energyFlow;
 	}
 
+	// TODO remove this field, it's not really usefull and might be confusing
 	public double getGm() {
 		return gm;
 	}
@@ -81,25 +86,32 @@ public class Star extends Entity {
 	@Override
 	public void render(int glMode) {
 		GL11.glTranslatef(pos.x, pos.y, pos.z);
-		float radiusScale = radius / 10;
-		float halfWidth = 64f;
-		// boolean maxZoom = halfWidth * radiusScale * Model.getModel().getViewport().getZoomFactor() > 15;
+		float scale = radius / 10;
+		float width = 128f;
 
-		// if (maxZoom) {
+		float zoomFactor = Model.getModel().getViewport().getZoomFactor();
+		boolean minZoom = scale * zoomFactor > 8;
+		boolean maxZoom = scale * zoomFactor < 1;
+		if (minZoom) {
+			scale = 8f / zoomFactor;
+		} else if (maxZoom) {
+			scale = 1f / zoomFactor;
+		}
+
 		GL11.glColor4f(1, 1, 1, 1);
-		GL11.glScalef(radiusScale, radiusScale, 0);
+		GL11.glScalef(scale, scale, 0);
 		baseTexture.bind();
 		GL11.glBegin(GL11.GL_QUADS);
 		GL11.glTexCoord2f(0, 0);
-		GL11.glVertex2f(-halfWidth, halfWidth);
+		GL11.glVertex2f(-width / 2, width / 2);
 		GL11.glTexCoord2f(1, 0);
-		GL11.glVertex2f(halfWidth, halfWidth);
+		GL11.glVertex2f(width / 2, width / 2);
 		GL11.glTexCoord2f(1, 1);
-		GL11.glVertex2f(halfWidth, -halfWidth);
+		GL11.glVertex2f(width / 2, -width / 2);
 		GL11.glTexCoord2f(0, 1);
-		GL11.glVertex2f(-halfWidth, -halfWidth);
+		GL11.glVertex2f(-width / 2, -width / 2);
 		GL11.glEnd();
-		GL11.glScalef(1 / radiusScale, 1 / radiusScale, 0);
+		GL11.glScalef(1 / scale, 1 / scale, 0);
 
 		// } else {
 		// float adjustedSize = 15 / Model.getModel().getViewport().getZoomFactor();

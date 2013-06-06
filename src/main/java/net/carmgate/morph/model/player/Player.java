@@ -2,6 +2,7 @@ package net.carmgate.morph.model.player;
 
 public class Player {
 	public static enum FOF {
+		NO_ONE,
 		SELF,
 		FRIEND,
 		NEUTRAL,
@@ -9,11 +10,14 @@ public class Player {
 	}
 
 	public static enum PlayerType {
+		NOONE,
 		HUMAN,
 		AI;
 	}
 
-	private final PlayerType playerType;
+	public static final Player NO_ONE = new Player(PlayerType.NOONE, "No one", FOF.NO_ONE);
+
+	final PlayerType playerType;
 	private final String name;
 	/** IMPROVE This is rather simplistic, it only defines fof against "SELF", not against any couple of player. */
 	private final FOF fof;

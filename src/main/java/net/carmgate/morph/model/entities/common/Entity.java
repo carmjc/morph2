@@ -3,11 +3,15 @@ package net.carmgate.morph.model.entities.common;
 import java.util.HashSet;
 import java.util.Set;
 
+import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.behaviors.Behavior;
+import net.carmgate.morph.model.behaviors.ForceGeneratingBehavior;
+import net.carmgate.morph.model.behaviors.Movement;
 import net.carmgate.morph.model.behaviors.StarsContribution;
 import net.carmgate.morph.model.behaviors.steering.Orbit;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Star;
+import net.carmgate.morph.model.player.Player;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
@@ -42,7 +46,6 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 	// TODO remove the initial 10 value
 	protected float mass = 10;
 	protected boolean selected;
-	protected final Vect3D accel = new Vect3D();
 	protected final Set<Behavior> behaviorSet = new HashSet<>();
 	protected float damage = 0;
 	protected boolean dead;
@@ -58,7 +61,13 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 
 	protected float maxSpeed;
 
-	protected Entity() {
+	protected final Vect3D steeringForce = new Vect3D();
+
+	protected final Vect3D effectiveForce = new Vect3D();
+
+	protected final Player player;
+
+	protected Entity(Player player) {
 		synchronized (nextId) {
 			id = nextId++;
 		}
@@ -67,6 +76,8 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 			starsContribution = new StarsContribution(this);
 			addBehavior(starsContribution);
 		}
+
+		this.player = player;
 	}
 
 	/**
@@ -80,6 +91,10 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 		if (behavior instanceof Orbit) {
 			((Orbit) behavior).setStarsContribution(starsContribution);
 		}
+	}
+
+	private void applySteeringForce(Vect3D force) {
+		steeringForce.add(force);
 	}
 
 	public float getHeading() {
@@ -101,6 +116,10 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 
 	public float getMaxSteeringForce() {
 		return maxSteeringForce;
+	}
+
+	public Player getPlayer() {
+		return player;
 	}
 
 	public Vect3D getPos() {
@@ -157,10 +176,31 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 		CollectionUtils.select(behaviorSet, new SameClassPredicate(behaviorClass), pendingBehaviorsRemoval);
 	}
 
+	// No contract specific to the entity
+	// IMPROVE we should probably define the entities in a different way
+
 	@Override
 	public void setSelected(boolean selected) {
 		this.selected = selected;
 	}
-	// No contract specific to the entity
-	// IMPROVE we should probably define the entities in a different way
+
+	protected void updateForcesWithBehavior() {
+		// if no movement needed, no update needed
+		for (Behavior behavior : behaviorSet) {
+			if (behavior.isActive()) {
+				behavior.run(Model.getModel().getSecondsSinceLastUpdate());
+
+				// if the behavior is a movement, use the generated steering force
+				if (behavior instanceof Movement) {
+					applySteeringForce(((Movement) behavior).getSteeringForce());
+				}
+
+				// if the behavior is generating a force, we must apply it
+				if (behavior instanceof ForceGeneratingBehavior) {
+					effectiveForce.add(((ForceGeneratingBehavior) behavior).getNonSteeringForce());
+				}
+
+			}
+		}
+	}
 }
