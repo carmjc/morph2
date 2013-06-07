@@ -73,9 +73,6 @@ public class Ship extends Entity {
 	// TODO put in conf the trail update interval
 	private final int trailUpdateInterval = 50;
 
-	// TODO We should move this to entity
-	private float realAccelModulus;
-
 	// Listeners
 	private final List<DeathListener> deathListeners = new ArrayList<>();
 
@@ -279,6 +276,15 @@ public class Ship extends Entity {
 			}
 
 		}
+	}
+
+	private void handleOrders() {
+		for (Order order : orderList) {
+			handleOrder(order);
+		}
+		orderList.clear();
+		orderList.addAll(newOrderList);
+		newOrderList.clear();
 	}
 
 	/** List of ships IAs. */
@@ -571,52 +577,21 @@ public class Ship extends Entity {
 
 	@Override
 	public void update() {
-		// TODO Is this really the proper way to do it ?
-		effectiveForce.nullify();
-		steeringForce.nullify();
 
 		// handle AI assignements if appropriate
 		if (player.getPlayerType() == PlayerType.AI) {
 			processAI();
 		}
 
-		updateForcesWithBehavior();
-
-		// cap steeringForce to maximum steering force
-		steeringForce.truncate(getMaxSteeringForce());
-		effectiveForce.add(steeringForce);
-
-		// rotate and add trail according to the steering force vector
+		computeForcesFromBehavior();
 		rotateProperly();
-
-		// real accel is necessary to calculate propulsors energy consumption
-		// it is the difference between the speed in the new cycle and
-		// the speed in the previous cycle
-		Vect3D realAccel = new Vect3D(speed);
-
-		// velocity = truncate (velocity + acceleration, max_speed)
-		speed.add(new Vect3D(effectiveForce).mult(1f / mass).mult(Model.getModel().getSecondsSinceLastUpdate())).truncate(maxSpeed);
-		realAccel.substract(speed);
-		realAccelModulus = realAccel.modulus();
-		// position = position + velocity
-		pos.add(new Vect3D(speed).mult(Model.getModel().getSecondsSinceLastUpdate()));
+		computeSpeedAndPos();
 
 		// Handle orders
-		for (Order order : orderList) {
-			handleOrder(order);
-		}
-		orderList.clear();
-		orderList.addAll(newOrderList);
-		newOrderList.clear();
+		handleOrders();
 
 		// update trail
-		if (trailLastUpdate == 0 || Model.getModel().getLastUpdateTS() - trailLastUpdate > trailUpdateInterval) {
-			for (int i = trail.length - 2; i >= 0; i--) {
-				trail[i + 1] = trail[i];
-			}
-			trail[0] = new Vect3D(pos);
-			trailLastUpdate += trailUpdateInterval;
-		}
+		updateTrail();
 
 		// TODO move this somewhere else
 		handlePendingBehaviors();
@@ -642,5 +617,15 @@ public class Ship extends Entity {
 			maxSpeed *= stackingPenalty;
 		}
 		maxSteeringForce /= mass;
+	}
+
+	private void updateTrail() {
+		if (trailLastUpdate == 0 || Model.getModel().getLastUpdateTS() - trailLastUpdate > trailUpdateInterval) {
+			for (int i = trail.length - 2; i >= 0; i--) {
+				trail[i + 1] = trail[i];
+			}
+			trail[0] = new Vect3D(pos);
+			trailLastUpdate += trailUpdateInterval;
+		}
 	}
 }

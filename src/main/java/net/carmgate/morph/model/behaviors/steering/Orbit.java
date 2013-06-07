@@ -81,12 +81,6 @@ public class Orbit extends Movement {
 	}
 
 	@Override
-	public boolean isActive() {
-		// TODO Auto-generated method stub
-		return true;
-	}
-
-	@Override
 	public void render(int glMode) {
 
 		// LOGGER.debug("orbit around " + orbitee.getPos() + " at " + orbitRadius);

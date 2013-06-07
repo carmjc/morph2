@@ -63,11 +63,6 @@ public class Follow extends Movement {
 	}
 
 	@Override
-	public boolean isActive() {
-		return target != null;
-	}
-
-	@Override
 	public void render(int glMode) {
 		final Vect3D pos = movableEntity.getPos();
 		final Vect3D speed = movableEntity.getSpeed();
@@ -162,23 +157,7 @@ public class Follow extends Movement {
 
 		// stop condition
 		if (new Vect3D(recomputedTarget).substract(pos).modulus() < 5 && speed.modulus() < 60) {
-
 			movableEntity.removeBehavior(this);
-
-			// Stop and reset the behavior
-			target = null;
-			desiredVelocity.nullify();
-			steeringForce.nullify();
-			slowingDistance = 0;
-			speedOpposition.nullify();
-			targetOffset.nullify();
-			normalizedTargetOffset.nullify();
-
-			// stop ship
-			// TODO we should do this some other way, there is a risk it collides with some other order
-			// This might also be implemented with a physics cheating mecanism (see github issue #16)
-			// -> Maybe we should send a stop order to the ship.
-			movableEntity.getSpeed().nullify();
 		}
 	}
 }

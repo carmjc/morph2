@@ -48,12 +48,6 @@ public class StarsContribution extends ForceGeneratingBehavior implements Render
 	}
 
 	@Override
-	public boolean isActive() {
-		// This behavior is always active
-		return true;
-	}
-
-	@Override
 	public void render(int glMode) {
 		GL11.glTranslatef(movable.getPos().x, movable.getPos().y, movable.getPos().z);
 		if (Model.getModel().getUiContext().isDebugMode()) {

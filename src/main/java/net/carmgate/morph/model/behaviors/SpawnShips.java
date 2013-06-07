@@ -45,14 +45,8 @@ public class SpawnShips implements Behavior, DeathListener {
 	}
 
 	@Override
-	public void handleDeathEvent(Ship deadShip) {
+	public void handleDeathEvent(Entity deadShip) {
 		spawnedShips.remove(deadShip);
-	}
-
-	@Override
-	@Deprecated
-	public boolean isActive() {
-		return true;
 	}
 
 	@Override

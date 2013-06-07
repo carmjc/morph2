@@ -64,11 +64,6 @@ public class Wander extends Movement {
 	}
 
 	@Override
-	public boolean isActive() {
-		return wanderFocusDistance != 0;
-	}
-
-	@Override
 	public void render(int glMode) {
 		final Vect3D pos = movableEntity.getPos();
 		final Vect3D speed = movableEntity.getSpeed();
@@ -139,11 +134,6 @@ public class Wander extends Movement {
 
 	@Override
 	public void run() {
-		if (wanderRadius == 0) {
-			movableEntity.removeBehavior(this);
-			return;
-		}
-
 		final Vect3D pos = new Vect3D(movableEntity.getPos());
 
 		wanderAngle += Math.random() * 4 - 2;

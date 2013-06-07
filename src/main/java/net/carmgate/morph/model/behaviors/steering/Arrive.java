@@ -69,11 +69,6 @@ public class Arrive extends Movement {
 	}
 
 	@Override
-	public boolean isActive() {
-		return target != null;
-	}
-
-	@Override
 	public void render(int glMode) {
 		final Vect3D pos = movableEntity.getPos();
 		final Vect3D speed = movableEntity.getSpeed();
@@ -92,7 +87,7 @@ public class Arrive extends Movement {
 		}
 		GL11.glTranslatef(-pos.x, -pos.y, -pos.z);
 
-		if (target != null && (movableEntity instanceof Ship && movableEntity.isSelected() || movableEntity instanceof Planet)) {
+		if (movableEntity instanceof Ship && movableEntity.isSelected() || movableEntity instanceof Planet) {
 			// Show target
 			GL11.glTranslatef(target.x, target.y, 0);
 
@@ -158,6 +153,8 @@ public class Arrive extends Movement {
 		targetOffset.copy(target).substract(pos);
 
 		if (targetOffset.modulus() == 0) {
+			// TODO If we do not return there is a division by 0 somewhere below this point.
+			// However, that's not clean.
 			return;
 		}
 
@@ -201,23 +198,7 @@ public class Arrive extends Movement {
 		// stop condition
 		// TODO remove the instanceof test
 		if (new Vect3D(target).substract(pos).modulus() < 5 && speed.modulus() < 1 && movableEntity instanceof Ship) {
-
 			movableEntity.removeBehavior(this);
-
-			// Stop and reset the behavior
-			target = null;
-			desiredVelocity.nullify();
-			steeringForce.nullify();
-			slowingDistance = 0;
-			speedOpposition.nullify();
-			targetOffset.nullify();
-			normalizedTargetOffset.nullify();
-
-			// stop ship
-			// TODO we should do this some other way, there is a risk it collides with some other order
-			// This might also be implemented with a physics cheating mecanism (see github issue #16)
-			// -> Maybe we should send a stop order to the ship.
-			movableEntity.getSpeed().nullify();
 		}
 	}
 }

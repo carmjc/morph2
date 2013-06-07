@@ -122,22 +122,8 @@ public class Planet extends Entity {
 	@Override
 	public void update() {
 
-		effectiveForce.nullify();
-		steeringForce.nullify();
-
-		updateForcesWithBehavior();
-
-		// cap steeringForce to maximum steering force
-		steeringForce.truncate(getMaxSteeringForce());
-		effectiveForce.add(steeringForce);
-
-		// velocity = truncate (velocity + acceleration, max_speed)
-		// TODO fix this magic number
-		Vect3D accel = new Vect3D(effectiveForce).mult(1f / mass);
-		// LOGGER.debug("planet: " + accel);
-		speed.add(accel.mult(Model.getModel().getSecondsSinceLastUpdate())).truncate(getMaxSpeed());
-		// position = position + velocity
-		pos.add(new Vect3D(speed).mult(Model.getModel().getSecondsSinceLastUpdate()));
+		computeForcesFromBehavior();
+		computeSpeedAndPos();
 
 		// TODO move this somewhere else
 		handlePendingBehaviors();

@@ -63,6 +63,7 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 	protected StarsContribution starsContribution;
 
 	protected boolean dead;
+	protected float realAccelModulus;
 
 	protected Entity(Player player) {
 		synchronized (nextId) {
@@ -92,6 +93,43 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 
 	private void applySteeringForce(Vect3D force) {
 		steeringForce.add(force);
+	}
+
+	protected void computeForcesFromBehavior() {
+		// TODO Is this really the proper way to do it ?
+		effectiveForce.nullify();
+		steeringForce.nullify();
+
+		// if no movement needed, no update needed
+		for (Behavior behavior : behaviorSet) {
+			behavior.run();
+
+			// if the behavior is a movement, use the generated steering force
+			if (behavior instanceof Movement) {
+				applySteeringForce(((Movement) behavior).getSteeringForce());
+			}
+
+			// if the behavior is generating a force, we must apply it
+			if (behavior instanceof ForceGeneratingBehavior) {
+				effectiveForce.add(((ForceGeneratingBehavior) behavior).getNonSteeringForce());
+			}
+		}
+
+		// cap steeringForce to maximum steering force
+		steeringForce.truncate(getMaxSteeringForce());
+		effectiveForce.add(steeringForce);
+
+	}
+
+	protected void computeSpeedAndPos() {
+		// real accel is necessary to calculate propulsors energy consumption
+		// it is the difference between the speed in the new cycle and
+		// the speed in the previous cycle
+		Vect3D realAccel = new Vect3D(speed);
+		speed.add(new Vect3D(effectiveForce).mult(1f / mass).mult(Model.getModel().getSecondsSinceLastUpdate())).truncate(maxSpeed);
+		realAccel.substract(speed);
+		realAccelModulus = realAccel.modulus();
+		pos.add(new Vect3D(speed).mult(Model.getModel().getSecondsSinceLastUpdate()));
 	}
 
 	public float getHeading() {
@@ -150,6 +188,14 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 		return selected;
 	}
 
+	// No contract specific to the entity
+	// IMPROVE we should probably define the entities in a different way
+
+	protected boolean isSelectRendering(int glMode) {
+		return glMode == GL11.GL_SELECT ||
+				Model.getModel().getUiContext().isDebugMode() && Model.getModel().getUiContext().isSelectViewMode();
+	}
+
 	/**
 	 * Removes a behavior from the ship's behavior collection.
 	 * This method postpones the behavior deletion until the end of the processing loop.
@@ -173,9 +219,6 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 		CollectionUtils.select(behaviorSet, new SameClassPredicate(behaviorClass), pendingBehaviorsRemoval);
 	}
 
-	// No contract specific to the entity
-	// IMPROVE we should probably define the entities in a different way
-
 	public void setHeading(float heading) {
 		this.heading = heading;
 	}
@@ -183,30 +226,5 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 	@Override
 	public void setSelected(boolean selected) {
 		this.selected = selected;
-	}
-
-	protected void updateForcesWithBehavior() {
-		// if no movement needed, no update needed
-		for (Behavior behavior : behaviorSet) {
-			if (behavior.isActive()) {
-				behavior.run();
-
-				// if the behavior is a movement, use the generated steering force
-				if (behavior instanceof Movement) {
-					applySteeringForce(((Movement) behavior).getSteeringForce());
-				}
-
-				// if the behavior is generating a force, we must apply it
-				if (behavior instanceof ForceGeneratingBehavior) {
-					effectiveForce.add(((ForceGeneratingBehavior) behavior).getNonSteeringForce());
-				}
-
-			}
-		}
-	}
-
-	protected boolean isSelectRendering(int glMode) {
-		return glMode == GL11.GL_SELECT ||
-				Model.getModel().getUiContext().isDebugMode() && Model.getModel().getUiContext().isSelectViewMode();
 	}
 }

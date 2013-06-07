@@ -67,11 +67,6 @@ public class InflictLaserDamage implements Behavior, Renderable {
 	}
 
 	@Override
-	public boolean isActive() {
-		return target != null;
-	}
-
-	@Override
 	public void render(int glMode) {
 		if (timeOfLastFire != 0 && Math.abs(Model.getModel().getCurrentTS() - timeOfLastFire) < 200) {
 			GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
