@@ -148,7 +148,7 @@ public class Arrive extends Movement {
 	}
 
 	@Override
-	public void run(float secondsSinceLastUpdate) {
+	public void run() {
 
 		// Get some ship variables (must be final)
 		final float mass = movableEntity.getMass();

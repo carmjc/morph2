@@ -64,7 +64,7 @@ public class StarsContribution extends ForceGeneratingBehavior implements Render
 	}
 
 	@Override
-	public void run(float secondsSinceLastUpdate) {
+	public void run() {
 		for (Entity entity : Model.getModel().getEntitiesByType(EntityType.STAR).values()) {
 			Star star = (Star) entity;
 			force.copy(star.getPos()).substract(movable.getPos());

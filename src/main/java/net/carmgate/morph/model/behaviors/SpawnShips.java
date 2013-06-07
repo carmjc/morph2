@@ -52,7 +52,7 @@ public class SpawnShips implements Behavior, DeathListener {
 	}
 
 	@Override
-	public void run(float secondsSinceLastUpdate) {
+	public void run() {
 		if (Model.getModel().getCurrentTS() - lastSpawnTS > spawnPeriod) {
 
 			LOGGER.debug("children: " + spawnedShips.size());

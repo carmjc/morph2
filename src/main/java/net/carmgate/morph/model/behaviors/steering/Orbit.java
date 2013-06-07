@@ -116,7 +116,7 @@ public class Orbit extends Movement {
 	}
 
 	@Override
-	public void run(float secondsSinceLastUpdate) {
+	public void run() {
 
 		// TODO add comments
 
@@ -148,7 +148,7 @@ public class Orbit extends Movement {
 		if (arrive != null && arrive.getTarget() != null) {
 			Vect3D orbitalTarget = new Vect3D(orbiteeToOrbiter).normalize(orbitRadius).add(orbitee.getPos());
 			arrive.getTarget().copy(orbitalTarget);
-			arrive.run(Model.getModel().getSecondsSinceLastUpdate());
+			arrive.run();
 			steeringForce.add(new Vect3D(radialVector).normalize(arrive.getSteeringForce().prodScal(radialVector)));
 			steeringForce.substract(starsContribution.getNonSteeringForce());
 		}

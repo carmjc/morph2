@@ -58,7 +58,7 @@ public class InflictLaserDamage implements Behavior {
 	}
 
 	@Override
-	public void run(float secondsSinceLastUpdate) {
+	public void run() {
 		if (target.isDead()) {
 			sourceOfDamage.removeBehavior(this);
 		}

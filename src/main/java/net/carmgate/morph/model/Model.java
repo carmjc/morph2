@@ -43,41 +43,48 @@ public class Model {
 		return _instance;
 	}
 
+	// Time management
 	/** number of millis since game start. */
 	private long currentTS = 0;
-
 	/** timestamp of game start. */
 	private long gameStartMsec = new Date().getTime();
+	private float secondsSinceLastUpdate;
+	private long lastUpdateTS;
 
+	// Ui context
 	private final Window window = new Window();
-
 	private final ViewPort viewport = new ViewPort();
+	private final UiContext uiContext = new UiContext();
 
+	// Handling user inputs
 	private final Set<Entity> simpleSelection = new HashSet<>();
 	private final Deque<Entity> actionSelection = new LinkedList<>();
-
 	private final InteractionStack interactionStack = new InteractionStack();
+	private final Set<Morph> morphSelection = new HashSet<>();
 
 	/** All the entities of the world can be searched by @entity uniqueId and entity instance uniqueId. */
 	// TODO we should rework this structure, it's not clean.
 	private final Map<EntityType, EntityMap> entitiesByEntityType = new HashMap<>();
 	private final Map<RenderingSteps, EntityMap> entitiesByRenderingStep = new HashMap<>();
-
-	private final ParticleEngine particleEngine = new ParticleEngine();
 	private final Set<Entity> entitiesToRemove = new HashSet<>();
 
+	// particle engine
+	private final ParticleEngine particleEngine = new ParticleEngine();
+
+	// players and self ship
 	private final Player self;
 	private Ship selfShip;
 	private final Set<Player> players = new HashSet<>();
+
+	// world areas
+	// TODO Replace this with some kind of particles to show that there is some movement without
+	// the hassle of using such a complex system.
+	// However, we should keep the world area code somewhere just in case we need it for optimization purpose later.
 	private WorldArea rootWA;
-	private float secondsSinceLastUpdate;
-	private long lastUpdateTS;
-	private float secondsSinceLastEnemySeed;
-	private final Set<Morph> morphSelection = new HashSet<>();
-	private final UiContext uiContext = new UiContext();
 
 	private Model() {
 		self = new Player(PlayerType.HUMAN, "Carm", FOF.SELF);
+
 		rootWA = new WorldArea();
 		// TODO The following lines should not be needed
 		for (int i = 0; i < 16; i++) {
@@ -85,6 +92,10 @@ public class Model {
 		}
 	}
 
+	/**
+	 * Add an entity to the model.
+	 * @param entity
+	 */
 	public void addEntity(Entity entity) {
 		// Add it the selection model
 		EntityType entityType = entity.getClass().getAnnotation(EntityHints.class).entityType();
@@ -279,17 +290,5 @@ public class Model {
 		// particle engin
 		particleEngine.update();
 
-		// Seed new enemies
-		if (secondsSinceLastEnemySeed >= 10) {
-			// Player player = new Player(PlayerType.AI, "Nemesis", FOF.FOE);
-			// Ship enemyShip = new Ship(128, 0, 0, 0, 20, player);
-			// enemyShip.addMorph(new Morph(MorphType.OVERMIND));
-			// enemyShip.addMorph(new Morph(MorphType.SIMPLE_PROPULSOR));
-			// Model.getModel().addEntity(enemyShip);
-			// enemyShip.addBehavior(new Wander(enemyShip, 100, 50));
-			secondsSinceLastEnemySeed = 0;
-		} else {
-			secondsSinceLastEnemySeed += Model.getModel().getSecondsSinceLastUpdate();
-		}
 	}
 }

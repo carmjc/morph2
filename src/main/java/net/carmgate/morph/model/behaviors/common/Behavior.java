@@ -10,6 +10,5 @@ public interface Behavior extends Cloneable {
 	@Deprecated
 	abstract boolean isActive();
 
-	// TODO Remove the parameter since it's served by the model now
-	abstract void run(float secondsSinceLastUpdate);
+	abstract void run();
 }

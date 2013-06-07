@@ -119,7 +119,7 @@ public class Follow extends Movement {
 	}
 
 	@Override
-	public void run(float secondsSinceLastUpdate) {
+	public void run() {
 		if (target.isDead()) {
 			// Remove existing arrive and combat behaviors
 			movableEntity.removeBehavior(this);

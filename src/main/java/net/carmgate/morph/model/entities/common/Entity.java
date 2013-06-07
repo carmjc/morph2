@@ -3,7 +3,6 @@ package net.carmgate.morph.model.entities.common;
 import java.util.HashSet;
 import java.util.Set;
 
-import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.behaviors.StarsContribution;
 import net.carmgate.morph.model.behaviors.common.Behavior;
 import net.carmgate.morph.model.behaviors.common.ForceGeneratingBehavior;
@@ -192,7 +191,7 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 		// if no movement needed, no update needed
 		for (Behavior behavior : behaviorSet) {
 			if (behavior.isActive()) {
-				behavior.run(Model.getModel().getSecondsSinceLastUpdate());
+				behavior.run();
 
 				// if the behavior is a movement, use the generated steering force
 				if (behavior instanceof Movement) {

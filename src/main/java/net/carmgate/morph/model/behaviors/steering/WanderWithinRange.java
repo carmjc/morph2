@@ -59,7 +59,7 @@ public class WanderWithinRange extends Wander {
 	}
 
 	@Override
-	public void run(float secondsSinceLastUpdate) {
+	public void run() {
 		if (wanderRadius == 0) {
 			movableEntity.removeBehavior(this);
 			return;
