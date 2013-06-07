@@ -17,6 +17,7 @@ import net.carmgate.morph.model.behaviors.common.Needs;
 import net.carmgate.morph.model.behaviors.steering.Orbit;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Morph.MorphType;
+import net.carmgate.morph.model.entities.common.DeathListener;
 import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.model.entities.common.EntityHints;
 import net.carmgate.morph.model.entities.common.EntityType;
@@ -72,6 +73,8 @@ public class Ship extends Entity {
 
 	// TODO We should move this to entity
 	private float realAccelModulus;
+
+	private final List<DeathListener> deathListeners = new ArrayList<>();
 
 	/***
 	 * Creates a new ship with position (0, 0, 0), mass = 10 assigned to player "self".
@@ -129,6 +132,10 @@ public class Ship extends Entity {
 	public void addEnergy(float energyInc) {
 		// TODO implement some kind of max energy
 		energy += energyInc;
+	}
+
+	public void addListener(DeathListener e) {
+		deathListeners.add(e);
 	}
 
 	public void addMorph(Morph morph) {
@@ -263,6 +270,11 @@ public class Ship extends Entity {
 
 			Model.getModel().removeEntity(this);
 
+			// TODO maybe this should better be handled by the Model ?
+			for (DeathListener lst : deathListeners) {
+				lst.handleDeathEvent(this);
+			}
+
 		}
 	}
 
@@ -294,6 +306,10 @@ public class Ship extends Entity {
 		// TODO implement AI processing
 		// Very simple AI : wander and attack
 
+	}
+
+	public void removeListener(DeathListener e) {
+		deathListeners.remove(e);
 	}
 
 	@Override

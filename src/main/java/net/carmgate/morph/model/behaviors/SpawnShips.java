@@ -7,9 +7,15 @@ import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.behaviors.common.Behavior;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Ship;
+import net.carmgate.morph.model.entities.common.DeathListener;
 import net.carmgate.morph.model.entities.common.Entity;
 
-public class SpawnShips implements Behavior {
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class SpawnShips implements Behavior, DeathListener {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(SpawnShips.class);
 
 	// TODO add a DeathListener to listen to ship's death
 	private final List<Ship> spawnedShips = new ArrayList<>();
@@ -35,6 +41,11 @@ public class SpawnShips implements Behavior {
 	}
 
 	@Override
+	public void handleDeathEvent(Ship deadShip) {
+		spawnedShips.remove(deadShip);
+	}
+
+	@Override
 	@Deprecated
 	public boolean isActive() {
 		return true;
@@ -44,10 +55,12 @@ public class SpawnShips implements Behavior {
 	public void run(float secondsSinceLastUpdate) {
 		if (Model.getModel().getCurrentTS() - lastSpawnTS > spawnPeriod) {
 
+			LOGGER.debug("children: " + spawnedShips.size());
 			if (spawnedShips.size() < maxNumberOfShips) {
 				Ship newShip = modelShip.clone();
 				newShip.getPos().copy(spawnLocation);
 				newShip.setHeading((float) (Math.random() * 360));
+				newShip.addListener(this);
 				Model.getModel().addEntity(newShip);
 				spawnedShips.add(newShip);
 			}
