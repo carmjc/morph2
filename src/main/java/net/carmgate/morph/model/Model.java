@@ -228,7 +228,7 @@ public class Model {
 		Ship enemyShip = new Ship(128, 0, 0, 0, 10, player);
 		enemyShip.addMorph(new Morph(MorphType.OVERMIND));
 		enemyShip.addMorph(new Morph(MorphType.SIMPLE_PROPULSOR));
-		enemyShip.addBehavior(new WanderWithinRange(enemyShip, 200, 100, station, 5000));
+		enemyShip.addBehavior(new WanderWithinRange(enemyShip, 200, 100, station, 2000));
 		enemyShip.update(); // TODO This is needed so that behaviors are really in the behavior set. That is an issue.
 
 		station.addBehavior(new Orbit(station, planet, 7000, true));
