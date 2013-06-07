@@ -214,7 +214,7 @@ public class Model {
 	}
 
 	private void init() {
-		Star star = new Star(3000, 3000, 0, 20000, 500, 200000);
+		Star star = new Star(3000, 3000, 0, 20000, 500, 4000000);
 		Model.getModel().addEntity(star);
 		Planet planet = new Planet(star, 1000, 100, 500000);
 		planet.addBehavior(new Orbit(planet, star, 500000, true));

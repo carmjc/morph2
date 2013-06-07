@@ -76,7 +76,7 @@ public class StarsContribution extends ForceGeneratingBehavior implements Render
 			// Add energy inflow
 			if (movable instanceof Ship) {
 				float energyInflux = (float) (star.getEnergyFlow() * Math.sqrt(movable.getMass()) / movable.getPos().distance(star.getPos()));
-				((Ship) movable).addEnergy(energyInflux * Model.getModel().getSecondsSinceLastUpdate());
+				((Entity) movable).addEnergy(energyInflux * Model.getModel().getSecondsSinceLastUpdate());
 			}
 
 			// TODO Add overflow energy induced damage

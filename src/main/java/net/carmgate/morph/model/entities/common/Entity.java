@@ -52,7 +52,9 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 	// TODO remove the initial 10 value
 	protected float mass = 10;
 	protected float damage = 0;
+	protected float maxDamage = 1;
 	protected float energy;
+	protected float maxEnergy = 0;
 
 	protected boolean selected;
 	protected final Player player;
@@ -64,7 +66,6 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 
 	protected boolean dead;
 	protected float realAccelModulus;
-	protected float maxDamage = 1;
 
 	protected Entity(Player player) {
 		synchronized (nextId) {
@@ -86,10 +87,14 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 	 */
 	public void addBehavior(Behavior behavior) {
 		pendingBehaviorsAddition.add(behavior);
-		// TODO Find a better way of hnadling this
+		// TODO Find a better way of handling this
 		if (behavior instanceof Orbit) {
 			((Orbit) behavior).setStarsContribution(starsContribution);
 		}
+	}
+
+	public void addEnergy(float energyInc) {
+		energy = Math.min(maxEnergy, energy + energyInc);
 	}
 
 	private void applySteeringForce(Vect3D force) {
@@ -165,20 +170,6 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 		return speed;
 	}
 
-	public void processPendingBehaviors() {
-		// Cleaning
-		for (Behavior behavior : pendingBehaviorsRemoval) {
-			behaviorSet.remove(behavior);
-		}
-		pendingBehaviorsRemoval.clear();
-
-		// Executing pending behavior addition
-		for (Behavior behavior : pendingBehaviorsAddition) {
-			behaviorSet.add(behavior);
-		}
-		pendingBehaviorsAddition.clear();
-	}
-
 	public boolean isDead() {
 		return dead;
 	}
@@ -194,6 +185,20 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 	protected boolean isSelectRendering(int glMode) {
 		return glMode == GL11.GL_SELECT ||
 				Model.getModel().getUiContext().isDebugMode() && Model.getModel().getUiContext().isSelectViewMode();
+	}
+
+	public void processPendingBehaviors() {
+		// Cleaning
+		for (Behavior behavior : pendingBehaviorsRemoval) {
+			behaviorSet.remove(behavior);
+		}
+		pendingBehaviorsRemoval.clear();
+
+		// Executing pending behavior addition
+		for (Behavior behavior : pendingBehaviorsAddition) {
+			behaviorSet.add(behavior);
+		}
+		pendingBehaviorsAddition.clear();
 	}
 
 	/**

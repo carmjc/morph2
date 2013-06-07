@@ -91,6 +91,7 @@ public class Ship extends Entity {
 		// TODO This should be a function of the ship's fitting
 		energy = 100;
 		maxDamage = 10;
+		maxEnergy = 100;
 
 	}
 
@@ -122,11 +123,6 @@ public class Ship extends Entity {
 		}
 
 		super.addBehavior(behavior);
-	}
-
-	public void addEnergy(float energyInc) {
-		// TODO #25 implement some kind of max energy
-		energy += energyInc;
 	}
 
 	public void addListener(DeathListener e) {
@@ -428,10 +424,11 @@ public class Ship extends Entity {
 				RenderUtils.renderGauge(50, 16 + 64 * zoomFactor * massScale + 5, Math.min(maxDamage - damage, maxDamage) / maxDamage, 0.2f,
 						new float[] { 0.5f, 1, 0.5f,
 								1 });
-				RenderUtils.renderGauge(50, 16 + 64 * zoomFactor * massScale - 5, Math.min(energy, 100) / 100, 0.05f, new float[] { 0.5f, 0.5f, 1, 1 });
+				RenderUtils.renderGauge(50, 16 + 64 * zoomFactor * massScale - 5, Math.min(energy, maxEnergy) / maxEnergy, 0.05f, new float[] { 0.5f, 0.5f, 1,
+						1 });
 			} else {
 				RenderUtils.renderGauge(50, 32 + 5, Math.min(maxDamage - damage, maxDamage) / maxDamage, 0.2f, new float[] { 0.5f, 1, 0.5f, 1 });
-				RenderUtils.renderGauge(50, 32 - 5, Math.min(energy, 100) / 100, 0.05f, new float[] { 0.5f, 0.5f, 1, 1 });
+				RenderUtils.renderGauge(50, 32 - 5, Math.min(energy, maxEnergy) / maxEnergy, 0.05f, new float[] { 0.5f, 0.5f, 1, 1 });
 			}
 			GL11.glScalef(zoomFactor, zoomFactor, 1);
 		}
