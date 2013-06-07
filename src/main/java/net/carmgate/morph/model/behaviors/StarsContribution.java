@@ -1,5 +1,6 @@
 package net.carmgate.morph.model.behaviors;
 
+import net.carmgate.morph.model.Constants;
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.behaviors.common.Behavior;
 import net.carmgate.morph.model.behaviors.common.ForceGeneratingBehavior;
@@ -23,6 +24,7 @@ public class StarsContribution extends ForceGeneratingBehavior implements Render
 
 	private final Vect3D force = new Vect3D();
 
+	@Deprecated
 	public StarsContribution() {
 		this(null);
 	}
@@ -43,8 +45,7 @@ public class StarsContribution extends ForceGeneratingBehavior implements Render
 
 	@Override
 	public void initRenderer() {
-		// TODO Auto-generated method stub
-
+		// Nothing to do
 	}
 
 	@Override
@@ -66,12 +67,11 @@ public class StarsContribution extends ForceGeneratingBehavior implements Render
 
 			// if the ship enters the star, it's destroyed
 			if (distance < star.getKillingRadius() && movable instanceof Ship) {
-				// TODO This might be better handled by a destruction order given to the ship
 				((Ship) movable).fireOrder(new Die());
 			}
 
 			// Adds the gravity pulling force
-			force.normalize(1).mult((float) (star.getGm() * movable.getMass() / (distance * distance)));
+			force.normalize(1).mult((float) (Constants.SIMPLE_G * star.getMass() * movable.getMass() / (distance * distance)));
 
 			// Add energy inflow
 			if (movable instanceof Ship) {

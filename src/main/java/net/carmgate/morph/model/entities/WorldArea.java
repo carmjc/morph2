@@ -93,7 +93,7 @@ public class WorldArea implements Renderable {
 		// Create a new child if there is none and if lazy creation is required
 		if (children[i] == null) {
 			Vect3D childCenter = new Vect3D().copy(center);
-			// TODO Check what the maximum is and put constraint on the level.
+			// IMPROVE Check what the maximum is and put constraint on the level.
 			long levelWidth = GRID_SIZE << level;
 			switch (i) {
 			case 0:

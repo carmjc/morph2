@@ -97,8 +97,6 @@ public class ParticleEngine implements Renderable, Updatable {
 	// IMPROVE We should move this in a class that can handle this behavior for any Updatable
 	private long lastUpdateTS;
 
-	protected float secondsSinceLastUpdate;
-
 	protected final Random random = new Random();
 
 	public void addParticle(Vect3D pos, Vect3D speed, float initialLife, float initialLifeDeviation, float minInitialAlpha, float maxInitialAlpha) {
@@ -155,25 +153,20 @@ public class ParticleEngine implements Renderable, Updatable {
 
 	@Override
 	public void update() {
-		secondsSinceLastUpdate = ((float) Model.getModel().getCurrentTS() - lastUpdateTS) / 1000;
-		lastUpdateTS = Model.getModel().getCurrentTS();
-		// TODO this should be in the main loop
-		if (secondsSinceLastUpdate == 0f) {
-			return;
-		}
+		float secsSinceLastUpdate = Model.getModel().getSecondsSinceLastUpdate();
 
 		// Update all particles
 		List<Particle> particlesToRemove = new ArrayList<>();
 		for (Particle particle : particles) {
 			Vect3D pos = particle.getPos();
 			Vect3D speed = particle.getSpeed();
-			pos.x += speed.x * secondsSinceLastUpdate;
-			pos.y += speed.y * secondsSinceLastUpdate;
-			pos.z += speed.z * secondsSinceLastUpdate;
+			pos.x += speed.x * secsSinceLastUpdate;
+			pos.y += speed.y * secsSinceLastUpdate;
+			pos.z += speed.z * secsSinceLastUpdate;
 
 			// linear decrease in luminosity
 			particle.setLuminosity(particle.getInitialLuminosity() * particle.getLife() / particle.getMaxLife());
-			particle.setLife(particle.getLife() - secondsSinceLastUpdate / particle.getMaxLife());
+			particle.setLife(particle.getLife() - secsSinceLastUpdate / particle.getMaxLife());
 
 			if (particle.getLife() <= 0 || particle.getLuminosity() <= 0) {
 				particlesToRemove.add(particle);

@@ -13,7 +13,6 @@ public class RenderUtils {
 	private static final float cos = (float) Math.cos(deltaAngle);
 	private static final float sin = (float) Math.sin(deltaAngle);
 
-	// TODO this draws a circle independant of the scale, this is a mistake ..
 	public static void renderCircle(float radius, float lineWidth, Float[] colorInt, Float[] colorMiddle, Float[] colorExt) {
 		// render limit of effect zone
 		TextureImpl.bindNone();
@@ -21,10 +20,9 @@ public class RenderUtils {
 		float tExt = 0; // temporary data holder
 		float xInt;
 		float xExt;
-		float zoomFactor = Model.getModel().getViewport().getZoomFactor();
 
 		xInt = radius; // radius
-		xExt = radius + lineWidth / zoomFactor; // radius
+		xExt = radius + lineWidth; // radius
 
 		float xIntBackup = xInt; // radius
 		float xExtBackup = xExt; // radius

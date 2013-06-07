@@ -44,7 +44,6 @@ public class Station extends Entity {
 		this.mass = mass;
 		this.radius = radius;
 		if (orbitee != null) {
-			// TODO compute random first position
 			pos.copy(new Vect3D(orbitee.getPos()).add(new Vect3D(Vect3D.NORTH).rotate((float) (Math.random() * 360)).mult(orbit)));
 		}
 
@@ -125,8 +124,5 @@ public class Station extends Entity {
 		computeForcesFromBehavior();
 		computeSpeedAndPos();
 
-		// TODO move this somewhere else
-		handlePendingBehaviors();
-		// LOGGER.debug("planet effective force: " + effectiveForce);
 	}
 }

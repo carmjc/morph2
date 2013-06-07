@@ -47,8 +47,9 @@ public class InflictLaserDamage implements Behavior, Renderable {
 
 	@Override
 	public Behavior cloneForEntity(Entity entity) {
-		// TODO This test should not have to be done
-		// Something else than a ship should be able to inflict damage
+		// TODO #21 This test should not have to be done
+		// or maybe it's the right way to do it .. because nothing else can be made of morphs
+		// and inflict damage
 		if (entity instanceof Ship) {
 			return new InflictLaserDamage((Ship) entity, target);
 		}
@@ -57,6 +58,7 @@ public class InflictLaserDamage implements Behavior, Renderable {
 	}
 
 	public boolean consumeEnergy() {
+		// TODO #21
 		return sourceOfDamage.consumeEnergy(Model.getModel().getSecondsSinceLastUpdate()
 				* MorphType.LASER.getEnergyConsumption());
 	}
@@ -100,7 +102,7 @@ public class InflictLaserDamage implements Behavior, Renderable {
 				}
 			}
 
-			// TODO There seems to be an issue with this.
+			// TODO #23 There seems to be an issue with this.
 			// It seems that if the ship has to run long before hitting the target, it hammers heavier on it ...
 			// Sometimes, it takes 20s to kill a target, sometimes it takes 3s to bring done a clone of the former.
 			timeOfLastAction += 1 / rateOfFire;

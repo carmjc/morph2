@@ -64,11 +64,6 @@ public class Arrive extends Movement {
 	}
 
 	@Override
-	public void initRenderer() {
-		// Nothing to do
-	}
-
-	@Override
 	public void render(int glMode) {
 		final Vect3D pos = movableEntity.getPos();
 		final Vect3D speed = movableEntity.getSpeed();
@@ -178,7 +173,7 @@ public class Arrive extends Movement {
 		// clipped_speed clips the speed to max speed
 		float clippedSpeed = Math.min(rampedSpeed, movableEntity.getMaxSpeed());
 		// desired_velocity would be the optimal speed vector if we had unlimited thrust
-		desiredVelocity.copy(targetOffset).add(speedOpposition).mult(clippedSpeed / (distance + 0.0001f)); // + 0.000001 added for debug TODO
+		desiredVelocity.copy(targetOffset).add(speedOpposition).mult(clippedSpeed / distance);
 
 		steeringForce.copy(desiredVelocity).substract(speed).mult(mass);
 		float factor = 1.35f;

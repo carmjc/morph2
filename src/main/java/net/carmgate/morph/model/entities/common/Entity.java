@@ -64,6 +64,7 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 
 	protected boolean dead;
 	protected float realAccelModulus;
+	protected float maxDamage = 1;
 
 	protected Entity(Player player) {
 		synchronized (nextId) {
@@ -85,7 +86,7 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 	 */
 	public void addBehavior(Behavior behavior) {
 		pendingBehaviorsAddition.add(behavior);
-		// TODO Clean this
+		// TODO Find a better way of hnadling this
 		if (behavior instanceof Orbit) {
 			((Orbit) behavior).setStarsContribution(starsContribution);
 		}
@@ -96,7 +97,6 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 	}
 
 	protected void computeForcesFromBehavior() {
-		// TODO Is this really the proper way to do it ?
 		effectiveForce.nullify();
 		steeringForce.nullify();
 
@@ -165,7 +165,7 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 		return speed;
 	}
 
-	protected void handlePendingBehaviors() {
+	public void processPendingBehaviors() {
 		// Cleaning
 		for (Behavior behavior : pendingBehaviorsRemoval) {
 			behaviorSet.remove(behavior);

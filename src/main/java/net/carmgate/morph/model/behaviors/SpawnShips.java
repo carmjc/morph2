@@ -21,7 +21,6 @@ public class SpawnShips implements Behavior, DeathListener {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(SpawnShips.class);
 
-	// TODO add a DeathListener to listen to ship's death
 	private final List<Ship> spawnedShips = new ArrayList<>();
 	private final int maxNumberOfShips;
 	private final long spawnPeriod;

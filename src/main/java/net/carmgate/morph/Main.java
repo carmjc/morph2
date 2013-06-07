@@ -1,5 +1,6 @@
 package net.carmgate.morph;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -210,8 +211,10 @@ public class Main {
 			}
 
 			try {
-				renderable.newInstance().initRenderer();
-			} catch (InstantiationException | IllegalAccessException e) {
+				Constructor<? extends Renderable> constructor = renderable.getConstructor((Class<?>[]) null);
+				constructor.newInstance().initRenderer();
+			} catch (InstantiationException | NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException
+					| InvocationTargetException e) {
 				LOGGER.error("Exception raised while trying to init renderer " + renderable.getName(), e);
 			}
 
@@ -284,7 +287,6 @@ public class Main {
 			GL11.glRotatef(-model.getViewport().getRotation(), 0, 0, 1);
 			GL11.glTranslatef(focalPoint.x, focalPoint.y, focalPoint.z);
 
-			// TODO activate ship editor upon some action
 			if (Model.getModel().getUiContext().getUiState() == UiState.SHIP_EDITOR) {
 				shipEditorRender(Model.getModel().getSelfShip(), GL11.GL_RENDER);
 			}

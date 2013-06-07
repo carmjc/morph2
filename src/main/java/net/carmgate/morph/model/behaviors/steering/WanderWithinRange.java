@@ -42,18 +42,14 @@ public class WanderWithinRange extends Wander {
 		return new WanderWithinRange(entity, wanderFocusDistance, wanderRadius, target, range);
 	}
 
-	private Vect3D getMaxForceToTarget() {
-		Vect3D toTargetForce = new Vect3D(target.getPos()).substract(movableEntity.getPos()).normalize(movableEntity.getMaxSteeringForce());
-		return toTargetForce;
-	}
-
 	@Override
 	public void render(int glMode) {
 		super.render(glMode);
 
 		if (Model.getModel().getUiContext().isDebugMode()) {
 			GL11.glTranslatef(target.getPos().x, target.getPos().y, target.getPos().z);
-			RenderUtils.renderCircle(range, 3, new Float[] { 0f, 0f, 0f, 0f }, new Float[] { 0f, 1f, 0f, 0.5f }, new Float[] { 0f, 0f, 0f, 0f });
+			RenderUtils.renderCircle(range, 3 / Model.getModel().getViewport().getZoomFactor(),
+					new Float[] { 0f, 0f, 0f, 0f }, new Float[] { 0f, 1f, 0f, 0.5f }, new Float[] { 0f, 0f, 0f, 0f });
 			GL11.glTranslatef(-target.getPos().x, -target.getPos().y, -target.getPos().z);
 		}
 	}
@@ -80,7 +76,6 @@ public class WanderWithinRange extends Wander {
 		if (distanceToTarget > maxDist) {
 			wanderAngle = forcedAngle;
 		} else if (distanceToTarget > minDist) {
-			// TODO il faut adapter pour que le virage soit beaucoup plus progressif
 			float relativeAngle = (wanderAngle - forcedAngle + 180 + 720) % 360;
 			float minAngle = 180 - 180 * (maxDist - distanceToTarget) / (maxDist - minDist);
 			float maxAngle = 180 + 180 * (maxDist - distanceToTarget) / (maxDist - minDist);

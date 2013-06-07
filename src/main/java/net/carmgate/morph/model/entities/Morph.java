@@ -132,6 +132,7 @@ public class Morph implements Renderable, Selectable {
 	public void render(int glMode) {
 		float scale = 1.2f;
 		float typeScale = 0.4f;
+		float width = 64f;
 
 		GL11.glColor4f(1, 1, 1, 1);
 		GL11.glScalef(scale, scale, 1);
@@ -141,13 +142,13 @@ public class Morph implements Renderable, Selectable {
 		baseTexture.bind();
 		GL11.glBegin(GL11.GL_QUADS);
 		GL11.glTexCoord2f(0, 0);
-		GL11.glVertex2f(-32, -32);
+		GL11.glVertex2f(-width / 2, -width / 2);
 		GL11.glTexCoord2f(1, 0);
-		GL11.glVertex2f(32, -32);
+		GL11.glVertex2f(width / 2, -width / 2);
 		GL11.glTexCoord2f(1, 1);
-		GL11.glVertex2f(32, 32);
+		GL11.glVertex2f(width / 2, width / 2);
 		GL11.glTexCoord2f(0, 1);
-		GL11.glVertex2f(-32, 32);
+		GL11.glVertex2f(-width / 2, width / 2);
 		GL11.glEnd();
 
 		if (morphType != null) {
@@ -164,13 +165,13 @@ public class Morph implements Renderable, Selectable {
 			morphTypeTextures.get(morphType).bind();
 			GL11.glBegin(GL11.GL_QUADS);
 			GL11.glTexCoord2f(0, 1);
-			GL11.glVertex2f(-32, 32);
+			GL11.glVertex2f(-width / 2, width / 2);
 			GL11.glTexCoord2f(1, 1);
-			GL11.glVertex2f(32, 32);
+			GL11.glVertex2f(width / 2, width / 2);
 			GL11.glTexCoord2f(1, 0);
-			GL11.glVertex2f(32, -32);
+			GL11.glVertex2f(width / 2, -width / 2);
 			GL11.glTexCoord2f(0, 0);
-			GL11.glVertex2f(-32, -32);
+			GL11.glVertex2f(-width / 2, -width / 2);
 			GL11.glEnd();
 			GL11.glScalef(1f / typeScale, 1f / typeScale, 1);
 		}
@@ -178,7 +179,7 @@ public class Morph implements Renderable, Selectable {
 		GL11.glScalef(1f / scale, 1f / scale, 1);
 
 		String str = "" + level;
-		font.drawString(-font.getWidth(str) / 2, -32, str, Color.white);
+		font.drawString(-font.getWidth(str) / 2, -width / 2, str, Color.white);
 		RenderUtils.renderGauge(30, 20, Math.min(1, xp / 100), 0, new float[] { 1, 1, 0.5f, 1 });
 	}
 

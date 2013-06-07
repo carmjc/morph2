@@ -84,20 +84,20 @@ public class Model {
 	private final Set<Player> players = new HashSet<>();
 
 	// world areas
-	// TODO Replace this with some kind of particles to show that there is some movement without
+	// TODO #24 Replace this with some kind of particles to show that there is some movement without
 	// the hassle of using such a complex system.
 	// However, we should keep the world area code somewhere just in case we need it for optimization purpose later.
-	private WorldArea rootWA;
-	private Entity planet;
+	private final WorldArea rootWA;
 
 	private Model() {
 		self = new Player(PlayerType.HUMAN, "Carm", FOF.SELF);
 
+		// WorldArea deacivated for now
+		// Review this strange initialization when reactivating
 		rootWA = new WorldArea();
-		// TODO The following lines should not be needed
-		for (int i = 0; i < 16; i++) {
-			rootWA = rootWA.getParent();
-		}
+		// for (int i = 0; i < 16; i++) {
+		// rootWA = rootWA.getParent();
+		// }
 	}
 
 	/**
@@ -216,9 +216,7 @@ public class Model {
 	private void init() {
 		Star star = new Star(3000, 3000, 0, 20000, 500, 200000);
 		Model.getModel().addEntity(star);
-		// TODO remove attribute from class
-		planet = new Planet(star, 1000, 100, 500000);
-		// TODO Clean this, we should not have to mention the orbit radius twice
+		Planet planet = new Planet(star, 1000, 100, 500000);
 		planet.addBehavior(new Orbit(planet, star, 500000, true));
 		Model.getModel().addEntity(planet);
 
@@ -229,7 +227,6 @@ public class Model {
 		enemyShip.addMorph(new Morph(MorphType.OVERMIND));
 		enemyShip.addMorph(new Morph(MorphType.SIMPLE_PROPULSOR));
 		enemyShip.addBehavior(new WanderWithinRange(enemyShip, 200, 100, station, 2000));
-		enemyShip.update(); // TODO This is needed so that behaviors are really in the behavior set. That is an issue.
 
 		station.addBehavior(new Orbit(station, planet, 7000, true));
 		station.addBehavior(new SpawnShips(station.getPos(), 10, 5000, enemyShip));
@@ -318,6 +315,7 @@ public class Model {
 		for (EntityMap entityMap : entitiesByEntityType.values()) {
 			for (Entity entity : entityMap.values()) {
 				entity.update();
+				entity.processPendingBehaviors();
 			}
 		}
 

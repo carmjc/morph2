@@ -1,12 +1,12 @@
 package net.carmgate.morph.model.behaviors.steering;
 
+import net.carmgate.morph.model.Constants;
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.behaviors.StarsContribution;
 import net.carmgate.morph.model.behaviors.common.Behavior;
 import net.carmgate.morph.model.behaviors.common.Movement;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Ship;
-import net.carmgate.morph.model.entities.Star;
 import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.ui.common.RenderUtils;
 
@@ -44,21 +44,20 @@ public class Orbit extends Movement {
 		this(null, null, 0, false);
 	}
 
-	// TODO Replace orbiter with a type that would encompass any movable entity
 	public Orbit(Entity orbiter, Entity orbitee, float orbitRadius, boolean instantOrbit) {
 		super(orbiter);
 		this.orbitee = orbitee;
 		this.orbitRadius = orbitRadius;
 		this.instantOrbit = instantOrbit;
-		if (orbiter != null && orbitee != null) {
+		if (movableEntity != null && orbitee != null) {
 			Vect3D orbiteeToOrbiter = new Vect3D(movableEntity.getPos()).substract(orbitee.getPos());
 			Vect3D orbitalTarget = new Vect3D(orbiteeToOrbiter).normalize(orbitRadius).add(orbitee.getPos());
 
 			if (!instantOrbit) {
-				arrive = new Arrive(orbiter, orbitalTarget);
+				arrive = new Arrive(movableEntity, orbitalTarget);
 			}
 		} else {
-			if (orbiter != null) {
+			if (movableEntity != null) {
 				throw new IllegalStateException();
 			}
 		}
@@ -75,20 +74,13 @@ public class Orbit extends Movement {
 	}
 
 	@Override
-	public void initRenderer() {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
 	public void render(int glMode) {
 
-		// LOGGER.debug("orbit around " + orbitee.getPos() + " at " + orbitRadius);
-		// TODO fix this issue
 		GL11.glTranslatef(orbitee.getPos().x, orbitee.getPos().y, orbitee.getPos().z);
 
 		TextureImpl.bindNone();
-		RenderUtils.renderCircle(orbitRadius, 5, new Float[] { 0f, 0f, 0f, 0f }, new Float[] { 1f, 1f, 1f, 0.3f }, new Float[] { 0f, 0f, 0f, 0f });
+		RenderUtils.renderCircle(orbitRadius, 5 / Model.getModel().getViewport().getZoomFactor(),
+				new Float[] { 0f, 0f, 0f, 0f }, new Float[] { 1f, 1f, 1f, 0.3f }, new Float[] { 0f, 0f, 0f, 0f });
 
 		GL11.glTranslatef(-orbitee.getPos().x, -orbitee.getPos().y, -orbitee.getPos().z);
 
@@ -112,17 +104,15 @@ public class Orbit extends Movement {
 	@Override
 	public void run() {
 
-		// TODO add comments
-
 		steeringForce.nullify();
 		Vect3D orbiteeToOrbiter = new Vect3D(movableEntity.getPos()).substract(orbitee.getPos());
 		Vect3D radialVector = new Vect3D(orbiteeToOrbiter).normalize(1);
 		Vect3D tangentialVector = new Vect3D(radialVector).rotate(90);
-		float optimalSpeed = (float) Math.sqrt(Star.SIMPLE_G * (orbitee.getMass() + movableEntity.getMass()) / orbitRadius);
+		float optimalSpeed = (float) Math.sqrt(Constants.SIMPLE_G * (orbitee.getMass() + movableEntity.getMass()) / orbitRadius);
 
 		if (stable || instantOrbit) {
 			// Cheating to stay in orbit
-			// TODO we should check that the non steering force have not changed
+			// IMPROVE we should check that the non steering force have not changed
 			// However, this behavior should not concern ship's or playable entities anywhere in the future
 			// TODO we might do that far less often
 			movableEntity.getPos().substract(orbitee.getPos()).normalize(orbitRadius).add(orbitee.getPos());

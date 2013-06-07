@@ -59,11 +59,6 @@ public class Wander extends Movement {
 	}
 
 	@Override
-	public void initRenderer() {
-		// nothing to do
-	}
-
-	@Override
 	public void render(int glMode) {
 		final Vect3D pos = movableEntity.getPos();
 		final Vect3D speed = movableEntity.getSpeed();

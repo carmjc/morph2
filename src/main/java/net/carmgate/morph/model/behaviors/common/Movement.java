@@ -46,6 +46,16 @@ public abstract class Movement implements Behavior, Renderable {
 
 	public abstract Vect3D getSteeringForce();
 
+	@Override
+	public void initRenderer() {
+		// Empty impl for adapting
+	}
+
+	@Override
+	public void render(int glMode) {
+		// Empty impl for adapting
+	}
+
 	public void rewardMorphs() {
 		if (movableEntity instanceof Ship) {
 			for (Morph morph : ((Ship) movableEntity).getMorphsByType(MorphType.SIMPLE_PROPULSOR)) {

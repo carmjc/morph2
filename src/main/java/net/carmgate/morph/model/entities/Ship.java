@@ -55,9 +55,6 @@ public class Ship extends Entity {
 	private static Texture baseTexture;
 	private static Texture zoomedOutTexture;
 
-	// TODO This should be moved elsewhere
-	private static final float MAX_DAMAGE = 10;
-
 	// morphs
 	private final Map<Integer, Morph> morphsById = new HashMap<>();
 	private final Map<MorphType, List<Morph>> morphsByType = new HashMap<>();
@@ -66,12 +63,10 @@ public class Ship extends Entity {
 	private final List<Order> orderList = new ArrayList<>();
 	private final List<Order> newOrderList = new ArrayList<>();
 
-	// TODO put in conf the dimension of the table
-	private final Vect3D[] trail = new Vect3D[20];
 	/** Stores last trail update. It occurred less than trailUpdateInterval ago. */
 	private long trailLastUpdate;
-	// TODO put in conf the trail update interval
-	private final int trailUpdateInterval = 50;
+	private final int trailUpdateInterval = Conf.getIntProperty(ConfItem.SHIP_TRAIL_UPDATEINTERVAL);
+	private final Vect3D[] trail = new Vect3D[Conf.getIntProperty(ConfItem.SHIP_TRAIL_NUMBEROFSEGMENTS)];
 
 	// Listeners
 	private final List<DeathListener> deathListeners = new ArrayList<>();
@@ -93,9 +88,9 @@ public class Ship extends Entity {
 		this.heading = heading;
 		this.mass = mass;
 
-		// initialize energy
 		// TODO This should be a function of the ship's fitting
 		energy = 100;
+		maxDamage = 10;
 
 	}
 
@@ -130,7 +125,7 @@ public class Ship extends Entity {
 	}
 
 	public void addEnergy(float energyInc) {
-		// TODO implement some kind of max energy
+		// TODO #25 implement some kind of max energy
 		energy += energyInc;
 	}
 
@@ -171,13 +166,23 @@ public class Ship extends Entity {
 			newShip.addBehavior(behavior.cloneForEntity(newShip));
 		}
 
+		// clone behaviors being added
+		for (Behavior behavior : pendingBehaviorsAddition) {
+			newShip.addBehavior(behavior.cloneForEntity(newShip));
+		}
+
+		// clone behaviors
+		for (Behavior behavior : pendingBehaviorsRemoval) {
+			newShip.removeBehavior(behavior.cloneForEntity(newShip));
+		}
+
 		return newShip;
 	}
 
 	public boolean consumeEnergy(float energyDec) {
 		// return true if there is enough energy
 		if (energy >= energyDec) {
-			// TODO implement some kind of max energy
+			// TODO #25 implement some kind of max energy
 			energy -= energyDec;
 			return true;
 		}
@@ -242,7 +247,7 @@ public class Ship extends Entity {
 		if (order instanceof TakeDamage) {
 			// This is not multiplied by lastUpdateTS because the timing is handled by the sender of the event.
 			damage += ((TakeDamage) order).getDamageAmount();
-			if (damage > MAX_DAMAGE) {
+			if (damage > maxDamage) {
 				fireOrder(new Die());
 			}
 
@@ -411,12 +416,12 @@ public class Ship extends Entity {
 		if (!isSelectRendering(glMode) && !minZoom || getPlayer().getFof() == FOF.SELF || selected) {
 			GL11.glScalef(1f / zoomFactor, 1f / zoomFactor, 1);
 			if (!minZoom) {
-				RenderUtils.renderGauge(50, 16 + 64 * zoomFactor * massScale + 5, Math.min(MAX_DAMAGE - damage, MAX_DAMAGE) / MAX_DAMAGE, 0.2f,
+				RenderUtils.renderGauge(50, 16 + 64 * zoomFactor * massScale + 5, Math.min(maxDamage - damage, maxDamage) / maxDamage, 0.2f,
 						new float[] { 0.5f, 1, 0.5f,
 								1 });
 				RenderUtils.renderGauge(50, 16 + 64 * zoomFactor * massScale - 5, Math.min(energy, 100) / 100, 0.05f, new float[] { 0.5f, 0.5f, 1, 1 });
 			} else {
-				RenderUtils.renderGauge(50, 32 + 5, Math.min(MAX_DAMAGE - damage, MAX_DAMAGE) / MAX_DAMAGE, 0.2f, new float[] { 0.5f, 1, 0.5f, 1 });
+				RenderUtils.renderGauge(50, 32 + 5, Math.min(maxDamage - damage, maxDamage) / maxDamage, 0.2f, new float[] { 0.5f, 1, 0.5f, 1 });
 				RenderUtils.renderGauge(50, 32 - 5, Math.min(energy, 100) / 100, 0.05f, new float[] { 0.5f, 0.5f, 1, 1 });
 			}
 			GL11.glScalef(zoomFactor, zoomFactor, 1);
@@ -592,14 +597,11 @@ public class Ship extends Entity {
 
 		// update trail
 		updateTrail();
-
-		// TODO move this somewhere else
-		handlePendingBehaviors();
 	}
 
 	private void updateMorphDependantValues() {
 		// Compute morphs level dependant values
-		// TODO Update these values each time a morph is upgraded
+		// TODO #20 Update these values each time a morph is upgraded
 		// int maxSimplePropulsorLevel = getMaxLevelForMorphType(MorphType.SIMPLE_PROPULSOR);
 		maxSteeringForce = 0;
 		maxSpeed = 0;

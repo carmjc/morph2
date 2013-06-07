@@ -58,11 +58,6 @@ public class Follow extends Movement {
 	}
 
 	@Override
-	public void initRenderer() {
-		// Nothing to do
-	}
-
-	@Override
 	public void render(int glMode) {
 		final Vect3D pos = movableEntity.getPos();
 		final Vect3D speed = movableEntity.getSpeed();
@@ -118,11 +113,7 @@ public class Follow extends Movement {
 		if (target.isDead()) {
 			// Remove existing arrive and combat behaviors
 			movableEntity.removeBehavior(this);
-
-			// Add new arrive behavior
-			// TODO Replace this with a simple break behavior
-			// TODO Add a break behavior triggered by KEY_ESCAPE ?
-			movableEntity.addBehavior(new Arrive(movableEntity, target.getPos()));
+			movableEntity.addBehavior(new Break(movableEntity));
 
 			return;
 		}

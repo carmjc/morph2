@@ -26,10 +26,6 @@ public class Star extends Entity {
 	private static final Logger LOGGER = LoggerFactory.getLogger(Star.class);
 	private static Texture baseTexture;
 
-	public static double SIMPLE_G = 6.67259 * Math.pow(10, 3); // normal one is .. * Math.pow(10, -11)
-	// TODO remove this field, it's not really usefull and might be confusing
-	private final double gm;
-
 	private final float radius;
 	private final float energyFlow;
 
@@ -48,8 +44,6 @@ public class Star extends Entity {
 		pos.z = z;
 		this.mass = mass;
 		this.radius = radius;
-		// TODO remove this field, it's not really usefull and might be confusing
-		gm = SIMPLE_G * mass;
 		this.energyFlow = energyFlow;
 
 		starsContribution = null;
@@ -57,11 +51,6 @@ public class Star extends Entity {
 
 	public float getEnergyFlow() {
 		return energyFlow;
-	}
-
-	// TODO remove this field, it's not really usefull and might be confusing
-	public double getGm() {
-		return gm;
 	}
 
 	public float getKillingRadius() {
@@ -117,30 +106,11 @@ public class Star extends Entity {
 		}
 		GL11.glScalef(1 / scale, 1 / scale, 0);
 
-		// } else {
-		// float adjustedSize = 15 / Model.getModel().getViewport().getZoomFactor();
-		// // zoomedOutTexture.bind();
-		// // TODO make a texture for the zoomed out star
-		// baseTexture.bind();
-		// GL11.glBegin(GL11.GL_QUADS);
-		// GL11.glTexCoord2f(0, 0);
-		// GL11.glVertex2f(-adjustedSize, adjustedSize);
-		// GL11.glTexCoord2f(1, 0);
-		// GL11.glVertex2f(adjustedSize, adjustedSize);
-		// GL11.glTexCoord2f(1, 1);
-		// GL11.glVertex2f(adjustedSize, -adjustedSize);
-		// GL11.glTexCoord2f(0, 1);
-		// GL11.glVertex2f(-adjustedSize, -adjustedSize);
-		// GL11.glEnd();
-		// }
-
 		GL11.glTranslatef(-pos.x, -pos.y, -pos.z);
 	}
 
 	@Override
 	public void update() {
-		// TODO move this somewhere else
-		handlePendingBehaviors();
 		// Nothing to do
 	}
 
