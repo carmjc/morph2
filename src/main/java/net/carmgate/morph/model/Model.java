@@ -9,10 +9,16 @@ import java.util.Map;
 import java.util.Set;
 
 import net.carmgate.morph.actions.common.InteractionStack;
+import net.carmgate.morph.model.behaviors.SpawnShips;
+import net.carmgate.morph.model.behaviors.steering.Orbit;
+import net.carmgate.morph.model.behaviors.steering.WanderWithinRange;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Morph;
 import net.carmgate.morph.model.entities.Morph.MorphType;
+import net.carmgate.morph.model.entities.Planet;
 import net.carmgate.morph.model.entities.Ship;
+import net.carmgate.morph.model.entities.Star;
+import net.carmgate.morph.model.entities.Station;
 import net.carmgate.morph.model.entities.WorldArea;
 import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.model.entities.common.EntityHints;
@@ -81,6 +87,7 @@ public class Model {
 	// the hassle of using such a complex system.
 	// However, we should keep the world area code somewhere just in case we need it for optimization purpose later.
 	private WorldArea rootWA;
+	private Entity planet;
 
 	private Model() {
 		self = new Player(PlayerType.HUMAN, "Carm", FOF.SELF);
@@ -206,13 +213,40 @@ public class Model {
 	}
 
 	private void init() {
-		selfShip = new Ship(0, 0, 0, 10, 10, self);
+		Star star = new Star(3000, 3000, 0, 5000, 500, 100000);
+		Model.getModel().addEntity(star);
+		// TODO remove attribute from class
+		planet = new Planet(star, 1000, 100, 100000);
+		// TODO Clean this, we should not have to mention the orbit radius twice
+		planet.addBehavior(new Orbit(planet, star, 100000, true));
+		Model.getModel().addEntity(planet);
+
+		Station station = new Station(planet, 100, 50, 5000);
+
+		Player player = new Player(PlayerType.AI, "Nemesis", FOF.FOE);
+		Ship enemyShip = new Ship(128, 0, 0, 0, 5, player);
+		enemyShip.addMorph(new Morph(MorphType.OVERMIND));
+		enemyShip.addMorph(new Morph(MorphType.SIMPLE_PROPULSOR));
+		enemyShip.addBehavior(new WanderWithinRange(enemyShip, 200, 100, station, 5000f));
+		enemyShip.update(); // TODO This is needed so that behaviors are really in the behavior set. That is an issue.
+
+		station.addBehavior(new Orbit(station, planet, 5000, true));
+		station.addBehavior(new SpawnShips(station.getPos(), 10, 5000, enemyShip));
+		Model.getModel().addEntity(station);
+
+		selfShip = new Ship(planet.getPos().x, planet.getPos().y, planet.getPos().z, 10, 10, self);
 		selfShip.addMorph(new Morph(MorphType.OVERMIND));
 		selfShip.addMorph(new Morph(MorphType.SHIELD));
 		selfShip.addMorph(new Morph(MorphType.SIMPLE_PROPULSOR));
 		selfShip.addMorph(new Morph(MorphType.SIMPLE_PROPULSOR));
+		selfShip.addMorph(new Morph(MorphType.SIMPLE_PROPULSOR));
 		selfShip.addMorph(new Morph(MorphType.LASER));
 		Model.getModel().addEntity(selfShip);
+
+		Model.getModel().getSimpleSelection().add(selfShip);
+		selfShip.setSelected(true);
+		Model.getModel().getViewport().setLockedOnEntity(selfShip);
+
 	}
 
 	public void removeEntity(Entity entity) {

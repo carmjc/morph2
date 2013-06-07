@@ -10,13 +10,16 @@ import net.carmgate.morph.model.entities.Morph;
 import net.carmgate.morph.model.entities.Morph.MorphType;
 import net.carmgate.morph.model.entities.Ship;
 import net.carmgate.morph.model.entities.common.Entity;
+import net.carmgate.morph.model.entities.common.Renderable;
 import net.carmgate.morph.model.orders.TakeDamage;
+import net.carmgate.morph.ui.common.RenderUtils;
 
+import org.lwjgl.opengl.GL11;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Needs({ @ActivatedMorph(morphType = MorphType.LASER) })
-public class InflictLaserDamage implements Behavior {
+public class InflictLaserDamage implements Behavior, Renderable {
 	private static final float MAX_DAMAGE_PER_HIT = 0.2f;
 
 	private final Logger LOGGER = LoggerFactory.getLogger(InflictLaserDamage.class);
@@ -26,10 +29,16 @@ public class InflictLaserDamage implements Behavior {
 	public static final float MAX_RANGE = 800f;
 
 	private final Ship sourceOfDamage;
-
 	private final Ship target;
 
 	private long timeOfLastAction;
+
+	private long timeOfLastFire = 0;
+
+	@Deprecated
+	public InflictLaserDamage() {
+		this(null, null);
+	}
 
 	public InflictLaserDamage(Ship sourceOfDamage, Ship target) {
 		this.sourceOfDamage = sourceOfDamage;
@@ -53,8 +62,27 @@ public class InflictLaserDamage implements Behavior {
 	}
 
 	@Override
+	public void initRenderer() {
+		// Nothing to do
+	}
+
+	@Override
 	public boolean isActive() {
 		return target != null;
+	}
+
+	@Override
+	public void render(int glMode) {
+		if (timeOfLastFire != 0 && Math.abs(Model.getModel().getCurrentTS() - timeOfLastFire) < 200) {
+			GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
+			RenderUtils.renderLine(sourceOfDamage.getPos(), target.getPos(), (float) (40 + Math.random() * 10)
+					, new Float[] { 1f, 0f, 0f, 1f }
+					, new Float[] { 0f, 0f, 0f, 0.4f });
+			RenderUtils.renderLine(sourceOfDamage.getPos(), target.getPos(), (float) (4 + Math.random() * 1)
+					, new Float[] { 1f, 0f, 0f, 1f }
+					, new Float[] { 1f, 0f, 0f, 0.8f });
+			GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+		}
 	}
 
 	@Override
@@ -70,6 +98,7 @@ public class InflictLaserDamage implements Behavior {
 		if (timeOfLastAction == 0 || (Model.getModel().getCurrentTS() - timeOfLastAction) * rateOfFire > 1) {
 			if (target.getPos().distance(sourceOfDamage.getPos()) < MAX_RANGE && consumeEnergy()) {
 				target.fireOrder(new TakeDamage(MAX_DAMAGE_PER_HIT));
+				timeOfLastFire = Model.getModel().getCurrentTS();
 
 				for (Morph morph : sourceOfDamage.getMorphsByType(MorphType.LASER)) {
 					morph.increaseXp(Conf.getFloatProperty(ConfItem.MORPH_LASER_MAXXPPERHIT));

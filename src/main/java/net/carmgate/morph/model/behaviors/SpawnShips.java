@@ -13,6 +13,10 @@ import net.carmgate.morph.model.entities.common.Entity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Do not use this behavior for ships spwaning ships.
+ * This is intended for stations or other ships factories.
+ */
 public class SpawnShips implements Behavior, DeathListener {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(SpawnShips.class);

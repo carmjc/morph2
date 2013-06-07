@@ -1,6 +1,7 @@
 package net.carmgate.morph.ui.common;
 
 import net.carmgate.morph.model.Model;
+import net.carmgate.morph.model.common.Vect3D;
 
 import org.lwjgl.opengl.GL11;
 import org.newdawn.slick.opengl.TextureImpl;
@@ -12,6 +13,7 @@ public class RenderUtils {
 	private static final float cos = (float) Math.cos(deltaAngle);
 	private static final float sin = (float) Math.sin(deltaAngle);
 
+	// TODO this draws a circle independant of the scale, this is a mistake ..
 	public static void renderCircle(float radius, float lineWidth, Float[] colorInt, Float[] colorMiddle, Float[] colorExt) {
 		// render limit of effect zone
 		TextureImpl.bindNone();
@@ -110,6 +112,24 @@ public class RenderUtils {
 		GL11.glVertex2f(-width / 2, yGaugePosition - 3);
 		GL11.glEnd();
 
+	}
+
+	public static void renderLine(Vect3D from, Vect3D to, float width, Float[] colorInt, Float[] colorExt) {
+		TextureImpl.bindNone();
+		Vect3D ortho = new Vect3D(to).substract(from).normalize(width / 2).rotate(90);
+		GL11.glBegin(GL11.GL_QUADS);
+		GL11.glColor4f(colorExt[0], colorExt[1], colorExt[2], colorExt[3]);
+		GL11.glVertex2f(from.x - ortho.x, from.y - ortho.y);
+		GL11.glVertex2f(to.x - ortho.x, to.y - ortho.y);
+		GL11.glColor4f(colorInt[0], colorInt[1], colorInt[2], colorInt[3]);
+		GL11.glVertex2f(to.x, to.y);
+		GL11.glVertex2f(from.x, from.y);
+		GL11.glVertex2f(to.x, to.y);
+		GL11.glVertex2f(from.x, from.y);
+		GL11.glColor4f(colorExt[0], colorExt[1], colorExt[2], colorExt[3]);
+		GL11.glVertex2f(from.x + ortho.x, from.y + ortho.y);
+		GL11.glVertex2f(to.x + ortho.x, to.y + ortho.y);
+		GL11.glEnd();
 	}
 
 }

@@ -327,6 +327,7 @@ public class Ship extends Entity {
 		boolean minZoom = 64f * massScale * zoomFactor > 16;
 
 		// render trail
+		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
 		if (trail[0] != null) {
 			Vect3D start = new Vect3D(pos);
 			Vect3D end = new Vect3D();
@@ -340,7 +341,7 @@ public class Ship extends Entity {
 				start.copy(trail[i]);
 				startToEnd.copy(start).substract(end).rotate(90).normalize(5);
 
-				GL11.glColor4f(1, 1, 1, ((float) trail.length - i) / trail.length);
+				GL11.glColor4f(1, 1, 1, ((float) trail.length - i) / (2 * trail.length));
 				TextureImpl.bindNone();
 				GL11.glBegin(GL11.GL_QUADS);
 				GL11.glVertex2f(start.x - startToEnd.x, start.y - startToEnd.y);
@@ -348,9 +349,9 @@ public class Ship extends Entity {
 				GL11.glVertex2f(end.x + startToEnd.x, end.y + startToEnd.y);
 				GL11.glVertex2f(start.x + startToEnd.x, start.y + startToEnd.y);
 				GL11.glEnd();
-
 			}
 		}
+		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 
 		GL11.glTranslatef(pos.x, pos.y, pos.z);
 		GL11.glRotatef(heading, 0, 0, 1);
