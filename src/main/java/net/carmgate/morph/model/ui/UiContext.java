@@ -1,4 +1,4 @@
-package net.carmgate.morph.model;
+package net.carmgate.morph.model.ui;
 
 public class UiContext {
 

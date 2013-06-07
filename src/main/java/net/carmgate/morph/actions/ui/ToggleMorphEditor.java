@@ -5,7 +5,7 @@ import net.carmgate.morph.actions.common.ActionHints;
 import net.carmgate.morph.actions.common.Event;
 import net.carmgate.morph.actions.common.Event.EventType;
 import net.carmgate.morph.model.Model;
-import net.carmgate.morph.model.UiState;
+import net.carmgate.morph.model.ui.UiState;
 
 import org.lwjgl.input.Keyboard;
 

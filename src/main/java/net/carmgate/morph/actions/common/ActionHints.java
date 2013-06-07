@@ -3,7 +3,7 @@ package net.carmgate.morph.actions.common;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-import net.carmgate.morph.model.UiState;
+import net.carmgate.morph.model.ui.UiState;
 
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ActionHints {

@@ -19,13 +19,13 @@ import net.carmgate.morph.actions.drag.DragContext;
 import net.carmgate.morph.conf.Conf;
 import net.carmgate.morph.exception.ConcreteInitRendererInAbstractClassException;
 import net.carmgate.morph.model.Model;
-import net.carmgate.morph.model.UiState;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Morph;
 import net.carmgate.morph.model.entities.Morph.MorphType;
 import net.carmgate.morph.model.entities.Ship;
 import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.model.entities.common.Renderable;
+import net.carmgate.morph.model.ui.UiState;
 import net.carmgate.morph.ui.common.RenderingSteps;
 
 import org.lwjgl.LWJGLException;

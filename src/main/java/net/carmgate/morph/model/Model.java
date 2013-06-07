@@ -26,6 +26,7 @@ import net.carmgate.morph.model.entities.common.EntityType;
 import net.carmgate.morph.model.player.Player;
 import net.carmgate.morph.model.player.Player.FOF;
 import net.carmgate.morph.model.player.Player.PlayerType;
+import net.carmgate.morph.model.ui.UiContext;
 import net.carmgate.morph.model.ui.ViewPort;
 import net.carmgate.morph.model.ui.Window;
 import net.carmgate.morph.ui.ParticleEngine;
@@ -213,12 +214,12 @@ public class Model {
 	}
 
 	private void init() {
-		Star star = new Star(3000, 3000, 0, 5000, 500, 100000);
+		Star star = new Star(3000, 3000, 0, 20000, 500, 200000);
 		Model.getModel().addEntity(star);
 		// TODO remove attribute from class
-		planet = new Planet(star, 1000, 100, 100000);
+		planet = new Planet(star, 1000, 100, 500000);
 		// TODO Clean this, we should not have to mention the orbit radius twice
-		planet.addBehavior(new Orbit(planet, star, 100000, true));
+		planet.addBehavior(new Orbit(planet, star, 500000, true));
 		Model.getModel().addEntity(planet);
 
 		Station station = new Station(planet, 100, 50, 7000);
@@ -234,7 +235,7 @@ public class Model {
 		station.addBehavior(new SpawnShips(station.getPos(), 10, 5000, enemyShip));
 		Model.getModel().addEntity(station);
 
-		selfShip = new Ship(planet.getPos().x, planet.getPos().y, planet.getPos().z, 10, 8, self);
+		selfShip = new Ship(station.getPos().x, station.getPos().y, station.getPos().z, 10, 8, self);
 		selfShip.addMorph(new Morph(MorphType.OVERMIND));
 		selfShip.addMorph(new Morph(MorphType.SHIELD));
 		selfShip.addMorph(new Morph(MorphType.SIMPLE_PROPULSOR));

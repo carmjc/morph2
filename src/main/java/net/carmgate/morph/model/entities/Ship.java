@@ -322,7 +322,7 @@ public class Ship extends Entity {
 		float width = 128;
 		float zoomFactor = Model.getModel().getViewport().getZoomFactor();
 		boolean disappearZoom = massScale / mass * zoomFactor < 0.002f;
-		if (disappearZoom && !selected) {
+		if (disappearZoom && !selected && getPlayer().getFof() != FOF.SELF) {
 			return;
 		}
 
