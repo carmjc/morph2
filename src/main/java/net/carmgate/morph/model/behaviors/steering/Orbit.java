@@ -129,6 +129,7 @@ public class Orbit extends Movement {
 		if (stable || instantOrbit) {
 			// Cheating to stay in orbit
 			// TODO we should check that the non steering force have not changed
+			// However, this behavior should not concern ship's or playable entities anywhere in the future
 			// TODO we might do that far less often
 			movableEntity.getPos().substract(orbitee.getPos()).normalize(orbitRadius).add(orbitee.getPos());
 			movableEntity.getSpeed().copy(tangentialVector).normalize(optimalSpeed);

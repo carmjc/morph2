@@ -232,6 +232,11 @@ public class Model {
 		}
 		secondsSinceLastUpdate = ((float) currentTS - lastUpdateTS) / 1000;
 
+		// if time has not progresse, we do nothing in the update part.
+		if (secondsSinceLastUpdate == 0) {
+			return;
+		}
+
 		// Update WAs
 		// Create necessary WAs
 		if (viewport.getZoomFactor() > 0.25) {
@@ -281,13 +286,13 @@ public class Model {
 			}
 		}
 
-		// Remove entities flagged as "being removed"
+		// Remove entities flagged as "needing to be removed"
 		for (Entity entity : entitiesToRemove) {
 			getEntitiesByRenderingType(entity.getClass().getAnnotation(RenderingHints.class).renderingStep()).remove(entity.getId());
 			getEntitiesByType(entity.getClass().getAnnotation(EntityHints.class).entityType()).remove(entity.getId());
 		}
 
-		// particle engin
+		// particle engine update
 		particleEngine.update();
 
 	}
