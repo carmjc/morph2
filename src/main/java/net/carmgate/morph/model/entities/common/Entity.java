@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
 
 public abstract class Entity implements Renderable, Selectable, Updatable {
 
-	protected static final class SameClassPredicate implements Predicate {
+	private static final class SameClassPredicate implements Predicate {
 		private final Class<?> behaviorClass;
 
 		public SameClassPredicate(Class<?> behaviorClass) {
@@ -33,38 +33,34 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 	}
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(Entity.class);
-
 	private static Integer nextId = 0;
-
 	protected final int id;
+
 	/** The ship position in the world. */
 	protected final Vect3D pos = new Vect3D();
 	protected final Vect3D speed = new Vect3D();
 	/** The ship orientation in the world. */
 	protected float heading;
-	// TODO remove the initial 10 value
-	protected float mass = 10;
-	protected boolean selected;
-	protected final Set<Behavior> behaviorSet = new HashSet<>();
-	protected float damage = 0;
-	protected boolean dead;
-	protected float energy;
-
-	protected final Set<Behavior> pendingBehaviorsRemoval = new HashSet<>();
-
-	protected final Set<Behavior> pendingBehaviorsAddition = new HashSet<>();
-
-	protected StarsContribution starsContribution;
 
 	protected float maxSteeringForce;
-
 	protected float maxSpeed;
-
 	protected final Vect3D steeringForce = new Vect3D();
-
 	protected final Vect3D effectiveForce = new Vect3D();
 
+	// TODO remove the initial 10 value
+	protected float mass = 10;
+	protected float damage = 0;
+	protected float energy;
+
+	protected boolean selected;
 	protected final Player player;
+
+	protected final Set<Behavior> behaviorSet = new HashSet<>();
+	protected final Set<Behavior> pendingBehaviorsRemoval = new HashSet<>();
+	protected final Set<Behavior> pendingBehaviorsAddition = new HashSet<>();
+	protected StarsContribution starsContribution;
+
+	protected boolean dead;
 
 	protected Entity(Player player) {
 		synchronized (nextId) {

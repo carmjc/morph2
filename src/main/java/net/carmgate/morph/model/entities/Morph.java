@@ -43,7 +43,7 @@ public class Morph implements Renderable, Selectable {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(Morph.class);
 	private static Integer nextId = 0;
-	private int selectionId;
+	private int id;
 	private static Texture baseTexture;
 	private static Map<MorphType, Texture> morphTypeTextures = new HashMap<>();
 
@@ -60,7 +60,7 @@ public class Morph implements Renderable, Selectable {
 	public Morph(MorphType morphType) {
 		this.morphType = morphType;
 		synchronized (nextId) {
-			selectionId = nextId++;
+			id = nextId++;
 		}
 	}
 
@@ -69,13 +69,13 @@ public class Morph implements Renderable, Selectable {
 		this.level = level;
 		this.xp = xp;
 		synchronized (nextId) {
-			selectionId = nextId++;
+			id = nextId++;
 		}
 	}
 
 	@Override
 	public int getId() {
-		return selectionId;
+		return id;
 	}
 
 	public int getLevel() {

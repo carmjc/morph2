@@ -42,25 +42,28 @@ import org.slf4j.LoggerFactory;
 @RenderingHints(renderingStep = RenderingSteps.SHIP)
 public class Ship extends Entity {
 
+	// Used for drawing circles efficiently
 	private static final int nbSegments = 200;
 	private static final double deltaAngle = (float) (2 * Math.PI / nbSegments);
 	private static final float cos = (float) Math.cos(deltaAngle);
 	private static final float sin = (float) Math.sin(deltaAngle);
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(Ship.class);
+
 	/** The texture under the morph image. */
 	private static Texture baseTexture;
-
 	private static Texture zoomedOutTexture;
 
 	// TODO This should be moved elsewhere
 	private static final float MAX_DAMAGE = 10;
 
+	// morphs
 	private final Map<Integer, Morph> morphsById = new HashMap<>();
-
 	private final Map<MorphType, List<Morph>> morphsByType = new HashMap<>();
 
+	// orders
 	private final List<Order> orderList = new ArrayList<>();
+	private final List<Order> newOrderList = new ArrayList<>();
 
 	// TODO put in conf the dimension of the table
 	private final Vect3D[] trail = new Vect3D[20];
@@ -69,11 +72,10 @@ public class Ship extends Entity {
 	// TODO put in conf the trail update interval
 	private final int trailUpdateInterval = 50;
 
-	private final List<Order> newOrderList = new ArrayList<>();
-
 	// TODO We should move this to entity
 	private float realAccelModulus;
 
+	// Listeners
 	private final List<DeathListener> deathListeners = new ArrayList<>();
 
 	/***
