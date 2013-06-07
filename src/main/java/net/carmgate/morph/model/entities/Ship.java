@@ -342,6 +342,15 @@ public class Ship extends Entity {
 		// render trail
 		renderTrail(glMode);
 
+		// Render behaviors
+		if (!isSelectRendering(glMode)) {
+			for (Behavior behavior : behaviorSet) {
+				if (behavior instanceof Renderable) {
+					((Renderable) behavior).render(glMode);
+				}
+			}
+		}
+
 		GL11.glTranslatef(pos.x, pos.y, pos.z);
 		GL11.glRotatef(heading, 0, 0, 1);
 
@@ -435,15 +444,6 @@ public class Ship extends Entity {
 		}
 
 		GL11.glTranslatef(-pos.x, -pos.y, -pos.z);
-
-		// Render behaviors
-		if (!isSelectRendering(glMode)) {
-			for (Behavior behavior : behaviorSet) {
-				if (behavior instanceof Renderable) {
-					((Renderable) behavior).render(glMode);
-				}
-			}
-		}
 
 	}
 

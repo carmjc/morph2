@@ -271,9 +271,6 @@ public class Main {
 
 			Model.getModel().getRootWA().render(GL11.GL_RENDER);
 
-			// Render particles
-			model.getParticleEngine().render(GL11.GL_RENDER);
-
 			// Rendering all renderable elements
 			for (RenderingSteps renderingStep : RenderingSteps.values()) {
 				if (Model.getModel().getEntitiesByRenderingType(renderingStep) != null) {
@@ -282,6 +279,9 @@ public class Main {
 					}
 				}
 			}
+
+			// Render particles
+			model.getParticleEngine().render(GL11.GL_RENDER);
 
 			GL11.glScalef(1f / zoomFactor, 1f / zoomFactor, 1);
 			GL11.glRotatef(-model.getViewport().getRotation(), 0, 0, 1);
