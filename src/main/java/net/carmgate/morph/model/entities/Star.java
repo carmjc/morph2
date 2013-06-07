@@ -8,11 +8,13 @@ import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.model.entities.common.EntityHints;
 import net.carmgate.morph.model.entities.common.EntityType;
 import net.carmgate.morph.model.player.Player;
+import net.carmgate.morph.ui.common.RenderUtils;
 import net.carmgate.morph.ui.common.RenderingHints;
 import net.carmgate.morph.ui.common.RenderingSteps;
 
 import org.lwjgl.opengl.GL11;
 import org.newdawn.slick.opengl.Texture;
+import org.newdawn.slick.opengl.TextureImpl;
 import org.newdawn.slick.opengl.TextureLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -97,17 +99,22 @@ public class Star extends Entity {
 
 		GL11.glColor4f(1, 1, 1, 1);
 		GL11.glScalef(scale, scale, 0);
-		baseTexture.bind();
-		GL11.glBegin(GL11.GL_QUADS);
-		GL11.glTexCoord2f(0, 0);
-		GL11.glVertex2f(-width / 2, width / 2);
-		GL11.glTexCoord2f(1, 0);
-		GL11.glVertex2f(width / 2, width / 2);
-		GL11.glTexCoord2f(1, 1);
-		GL11.glVertex2f(width / 2, -width / 2);
-		GL11.glTexCoord2f(0, 1);
-		GL11.glVertex2f(-width / 2, -width / 2);
-		GL11.glEnd();
+		if (isSelectRendering(glMode)) {
+			TextureImpl.bindNone();
+			RenderUtils.renderDisc(width / 2);
+		} else {
+			baseTexture.bind();
+			GL11.glBegin(GL11.GL_QUADS);
+			GL11.glTexCoord2f(0, 0);
+			GL11.glVertex2f(-width / 2, -width / 2);
+			GL11.glTexCoord2f(1, 0);
+			GL11.glVertex2f(width / 2, -width / 2);
+			GL11.glTexCoord2f(1, 1);
+			GL11.glVertex2f(width / 2, width / 2);
+			GL11.glTexCoord2f(0, 1);
+			GL11.glVertex2f(-width / 2, width / 2);
+			GL11.glEnd();
+		}
 		GL11.glScalef(1 / scale, 1 / scale, 0);
 
 		// } else {

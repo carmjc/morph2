@@ -26,6 +26,7 @@ import net.carmgate.morph.model.orders.Die;
 import net.carmgate.morph.model.orders.Order;
 import net.carmgate.morph.model.orders.TakeDamage;
 import net.carmgate.morph.model.player.Player;
+import net.carmgate.morph.model.player.Player.FOF;
 import net.carmgate.morph.model.player.Player.PlayerType;
 import net.carmgate.morph.ui.common.RenderUtils;
 import net.carmgate.morph.ui.common.RenderingHints;
@@ -318,46 +319,23 @@ public class Ship extends Entity {
 	public void render(int glMode) {
 
 		float massScale = mass / 10;
+		float width = 128;
 		float zoomFactor = Model.getModel().getViewport().getZoomFactor();
-		boolean disappearZoom = 64f * massScale * zoomFactor < 1;
+		boolean disappearZoom = massScale / mass * zoomFactor < 0.002f;
 		if (disappearZoom && !selected) {
 			return;
 		}
 
-		boolean minZoom = 64f * massScale * zoomFactor > 16;
+		boolean minZoom = massScale / mass * zoomFactor < 0.02f;
 
 		// render trail
-		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
-		if (trail[0] != null) {
-			Vect3D start = new Vect3D(pos);
-			Vect3D end = new Vect3D();
-			Vect3D startToEnd = new Vect3D();
-			for (int i = 0; i < trail.length; i++) {
-				if (trail[i] == null) {
-					break;
-				}
-
-				end.copy(start);
-				start.copy(trail[i]);
-				startToEnd.copy(start).substract(end).rotate(90).normalize(5);
-
-				GL11.glColor4f(1, 1, 1, ((float) trail.length - i) / (2 * trail.length));
-				TextureImpl.bindNone();
-				GL11.glBegin(GL11.GL_QUADS);
-				GL11.glVertex2f(start.x - startToEnd.x, start.y - startToEnd.y);
-				GL11.glVertex2f(end.x - startToEnd.x, end.y - startToEnd.y);
-				GL11.glVertex2f(end.x + startToEnd.x, end.y + startToEnd.y);
-				GL11.glVertex2f(start.x + startToEnd.x, start.y + startToEnd.y);
-				GL11.glEnd();
-			}
-		}
-		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+		renderTrail(glMode);
 
 		GL11.glTranslatef(pos.x, pos.y, pos.z);
 		GL11.glRotatef(heading, 0, 0, 1);
 
 		// Render selection circle around the ship
-		renderSelection(massScale, minZoom);
+		renderSelection(glMode, massScale, minZoom);
 
 		// Render the ship in itself
 		if (Model.getModel().getUiContext().isDebugMode()) {
@@ -371,56 +349,72 @@ public class Ship extends Entity {
 		} else {
 			GL11.glColor3f(1f, 1f, 1f);
 		}
-		if (minZoom) {
-			GL11.glScalef(massScale, massScale, 0);
-			baseTexture.bind();
-			GL11.glBegin(GL11.GL_QUADS);
-			GL11.glTexCoord2f(0, 0);
-			GL11.glVertex2f(-64, -64);
-			GL11.glTexCoord2f(1, 0);
-			GL11.glVertex2f(64, -64);
-			GL11.glTexCoord2f(1, 1);
-			GL11.glVertex2f(64, 64);
-			GL11.glTexCoord2f(0, 1);
-			GL11.glVertex2f(-64, 64);
-			GL11.glEnd();
-			GL11.glScalef(1f / massScale, 1f / massScale, 0);
-		} else {
+		if (minZoom && (selected || getPlayer().getFof() == FOF.SELF)) {
 			GL11.glScalef(1f / (4 * zoomFactor), 1f / (4 * zoomFactor), 0);
-			zoomedOutTexture.bind();
-			GL11.glBegin(GL11.GL_QUADS);
-			GL11.glTexCoord2f(0, 0);
-			GL11.glVertex2f(-64, -64);
-			GL11.glTexCoord2f(1, 0);
-			GL11.glVertex2f(64, -64);
-			GL11.glTexCoord2f(1, 1);
-			GL11.glVertex2f(64, 64);
-			GL11.glTexCoord2f(0, 1);
-			GL11.glVertex2f(-64, 64);
-			GL11.glEnd();
+			if (isSelectRendering(glMode)) {
+				TextureImpl.bindNone();
+				RenderUtils.renderDisc(width / 2);
+			} else {
+				zoomedOutTexture.bind();
+				GL11.glBegin(GL11.GL_QUADS);
+				GL11.glTexCoord2f(0, 0);
+				GL11.glVertex2f(-width / 2, -width / 2);
+				GL11.glTexCoord2f(1, 0);
+				GL11.glVertex2f(width / 2, -width / 2);
+				GL11.glTexCoord2f(1, 1);
+				GL11.glVertex2f(width / 2, width / 2);
+				GL11.glTexCoord2f(0, 1);
+				GL11.glVertex2f(-width / 2, width / 2);
+				GL11.glEnd();
+			}
 			GL11.glScalef(4 * zoomFactor, 4 * zoomFactor, 0);
+		} else {
+			if (isSelectRendering(glMode)) {
+				massScale = (float) Math.max(massScale, 0.02 * mass / zoomFactor);
+			}
+
+			GL11.glScalef(massScale, massScale, 0);
+			if (isSelectRendering(glMode)) {
+				TextureImpl.bindNone();
+				RenderUtils.renderDisc(width / 2);
+			} else {
+				baseTexture.bind();
+				GL11.glBegin(GL11.GL_QUADS);
+				GL11.glTexCoord2f(0, 0);
+				GL11.glVertex2f(-width / 2, -width / 2);
+				GL11.glTexCoord2f(1, 0);
+				GL11.glVertex2f(width / 2, -width / 2);
+				GL11.glTexCoord2f(1, 1);
+				GL11.glVertex2f(width / 2, width / 2);
+				GL11.glTexCoord2f(0, 1);
+				GL11.glVertex2f(-width / 2, width / 2);
+				GL11.glEnd();
+			}
+			GL11.glScalef(1f / massScale, 1f / massScale, 0);
 		}
 
 		GL11.glRotatef(-heading, 0, 0, 1);
 
 		// Render ship forces
-		if (Model.getModel().getUiContext().isDebugMode()) {
+		if (Model.getModel().getUiContext().isDebugMode() && !isSelectRendering(glMode)) {
 			GL11.glColor3f(1, 1, 0);
 			effectiveForce.render(glMode, 1);
 		}
 
 		// Render energy gauge
-		GL11.glScalef(1f / zoomFactor, 1f / zoomFactor, 1);
-		if (minZoom) {
-			RenderUtils.renderGauge(50, 16 + 64 * zoomFactor * massScale + 5, Math.min(MAX_DAMAGE - damage, MAX_DAMAGE) / MAX_DAMAGE, 0.2f,
-					new float[] { 0.5f, 1, 0.5f,
-							1 });
-			RenderUtils.renderGauge(50, 16 + 64 * zoomFactor * massScale - 5, Math.min(energy, 100) / 100, 0.05f, new float[] { 0.5f, 0.5f, 1, 1 });
-		} else {
-			RenderUtils.renderGauge(50, 32 + 5, Math.min(MAX_DAMAGE - damage, MAX_DAMAGE) / MAX_DAMAGE, 0.2f, new float[] { 0.5f, 1, 0.5f, 1 });
-			RenderUtils.renderGauge(50, 32 - 5, Math.min(energy, 100) / 100, 0.05f, new float[] { 0.5f, 0.5f, 1, 1 });
+		if (!isSelectRendering(glMode) && !minZoom || getPlayer().getFof() == FOF.SELF || selected) {
+			GL11.glScalef(1f / zoomFactor, 1f / zoomFactor, 1);
+			if (!minZoom) {
+				RenderUtils.renderGauge(50, 16 + 64 * zoomFactor * massScale + 5, Math.min(MAX_DAMAGE - damage, MAX_DAMAGE) / MAX_DAMAGE, 0.2f,
+						new float[] { 0.5f, 1, 0.5f,
+								1 });
+				RenderUtils.renderGauge(50, 16 + 64 * zoomFactor * massScale - 5, Math.min(energy, 100) / 100, 0.05f, new float[] { 0.5f, 0.5f, 1, 1 });
+			} else {
+				RenderUtils.renderGauge(50, 32 + 5, Math.min(MAX_DAMAGE - damage, MAX_DAMAGE) / MAX_DAMAGE, 0.2f, new float[] { 0.5f, 1, 0.5f, 1 });
+				RenderUtils.renderGauge(50, 32 - 5, Math.min(energy, 100) / 100, 0.05f, new float[] { 0.5f, 0.5f, 1, 1 });
+			}
+			GL11.glScalef(zoomFactor, zoomFactor, 1);
 		}
-		GL11.glScalef(zoomFactor, zoomFactor, 1);
 
 		// Render morphs
 		if (Model.getModel().getUiContext().isMorphsShown()) {
@@ -432,17 +426,19 @@ public class Ship extends Entity {
 		GL11.glTranslatef(-pos.x, -pos.y, -pos.z);
 
 		// Render behaviors
-		for (Behavior behavior : behaviorSet) {
-			if (behavior instanceof Renderable) {
-				((Renderable) behavior).render(glMode);
+		if (!isSelectRendering(glMode)) {
+			for (Behavior behavior : behaviorSet) {
+				if (behavior instanceof Renderable) {
+					((Renderable) behavior).render(glMode);
+				}
 			}
 		}
 
 	}
 
 	// TODO Replace this method by using RenderUtils.renderCircle(...)
-	private void renderSelection(float massScale, boolean maxZoom) {
-		if (selected) {
+	private void renderSelection(int glMode, float massScale, boolean minZoom) {
+		if (selected && !isSelectRendering(glMode)) {
 			// render limit of effect zone
 			TextureImpl.bindNone();
 			float tInt = 0; // temporary data holder
@@ -451,7 +447,7 @@ public class Ship extends Entity {
 			float xExt;
 			float zoomFactor = Model.getModel().getViewport().getZoomFactor();
 
-			if (maxZoom) {
+			if (!minZoom) {
 				xInt = 64 * massScale - 16; // radius
 				xExt = 64 * massScale - 16 + 6 / zoomFactor; // radius
 			} else {
@@ -499,6 +495,36 @@ public class Ship extends Entity {
 				yIntBackup = yInt;
 				yExtBackup = yExt;
 			}
+		}
+	}
+
+	private void renderTrail(int glMode) {
+		if (!isSelectRendering(glMode)) {
+			GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
+			if (trail[0] != null) {
+				Vect3D start = new Vect3D(pos);
+				Vect3D end = new Vect3D();
+				Vect3D startToEnd = new Vect3D();
+				for (int i = 0; i < trail.length; i++) {
+					if (trail[i] == null) {
+						break;
+					}
+
+					end.copy(start);
+					start.copy(trail[i]);
+					startToEnd.copy(start).substract(end).rotate(90).normalize(5);
+
+					GL11.glColor4f(1, 1, 1, ((float) trail.length - i) / (2 * trail.length));
+					TextureImpl.bindNone();
+					GL11.glBegin(GL11.GL_QUADS);
+					GL11.glVertex2f(start.x - startToEnd.x, start.y - startToEnd.y);
+					GL11.glVertex2f(end.x - startToEnd.x, end.y - startToEnd.y);
+					GL11.glVertex2f(end.x + startToEnd.x, end.y + startToEnd.y);
+					GL11.glVertex2f(start.x + startToEnd.x, start.y + startToEnd.y);
+					GL11.glEnd();
+				}
+			}
+			GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		}
 	}
 

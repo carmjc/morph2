@@ -3,6 +3,7 @@ package net.carmgate.morph.model.entities.common;
 import java.util.HashSet;
 import java.util.Set;
 
+import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.behaviors.StarsContribution;
 import net.carmgate.morph.model.behaviors.common.Behavior;
 import net.carmgate.morph.model.behaviors.common.ForceGeneratingBehavior;
@@ -14,6 +15,7 @@ import net.carmgate.morph.model.player.Player;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
+import org.lwjgl.opengl.GL11;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -201,5 +203,10 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 
 			}
 		}
+	}
+
+	protected boolean isSelectRendering(int glMode) {
+		return glMode == GL11.GL_SELECT ||
+				Model.getModel().getUiContext().isDebugMode() && Model.getModel().getUiContext().isSelectViewMode();
 	}
 }

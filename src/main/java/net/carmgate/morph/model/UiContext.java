@@ -6,6 +6,7 @@ public class UiContext {
 	private UiState uiState = UiState.NORMAL;
 	private boolean debugMode = false;
 	private boolean morphsShown = false;
+	private boolean selectViewMode = false;
 
 	public UiState getUiState() {
 		return uiState;
@@ -23,6 +24,10 @@ public class UiContext {
 		return paused;
 	}
 
+	public boolean isSelectViewMode() {
+		return selectViewMode;
+	}
+
 	public void setUiState(UiState uiState) {
 		this.uiState = uiState;
 	}
@@ -37,6 +42,10 @@ public class UiContext {
 
 	public void togglePaused() {
 		paused = !paused;
+	}
+
+	public void toggleSelectViewMode() {
+		selectViewMode = !selectViewMode;
 	}
 
 }

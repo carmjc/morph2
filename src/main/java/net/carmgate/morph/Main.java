@@ -179,10 +179,6 @@ public class Main {
 		initView();
 	}
 
-	private void initModel() {
-
-	}
-
 	/**
 	 * Scans the classpath looking for renderers (classes annotated with @{@link Renders})
 	 * initializes them and add them to the maps of the renderers
@@ -316,8 +312,6 @@ public class Main {
 
 		// scan for renderers
 		initRenderables();
-		// init world model
-		initModel();
 
 		// Configure Actions
 		initActions();

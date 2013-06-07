@@ -11,11 +11,13 @@ import net.carmgate.morph.model.entities.common.EntityHints;
 import net.carmgate.morph.model.entities.common.EntityType;
 import net.carmgate.morph.model.entities.common.Renderable;
 import net.carmgate.morph.model.player.Player;
+import net.carmgate.morph.ui.common.RenderUtils;
 import net.carmgate.morph.ui.common.RenderingHints;
 import net.carmgate.morph.ui.common.RenderingSteps;
 
 import org.lwjgl.opengl.GL11;
 import org.newdawn.slick.opengl.Texture;
+import org.newdawn.slick.opengl.TextureImpl;
 import org.newdawn.slick.opengl.TextureLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +54,7 @@ public class Planet extends Entity {
 	public void initRenderer() {
 		// load texture from PNG file if needed
 		if (baseTexture == null) {
-			try (FileInputStream fileInputStream = new FileInputStream(ClassLoader.getSystemResource("img/planet/planet4.png").getPath())) {
+			try (FileInputStream fileInputStream = new FileInputStream(ClassLoader.getSystemResource("img/planet/planet8.png").getPath())) {
 				baseTexture = TextureLoader.getTexture("PNG", fileInputStream);
 			} catch (IOException e) {
 				LOGGER.error("Exception raised while loading texture", e);
@@ -81,20 +83,25 @@ public class Planet extends Entity {
 
 		GL11.glColor4f(1, 1, 1, 1);
 		GL11.glScalef(scale, scale, 1);
-		baseTexture.bind();
-		GL11.glBegin(GL11.GL_QUADS);
-		GL11.glTexCoord2f(0, 0);
-		GL11.glVertex2f(-width / 2, width / 2);
-		GL11.glTexCoord2f(1, 0);
-		GL11.glVertex2f(width / 2, width / 2);
-		GL11.glTexCoord2f(1, 1);
-		GL11.glVertex2f(width / 2, -width / 2);
-		GL11.glTexCoord2f(0, 1);
-		GL11.glVertex2f(-width / 2, -width / 2);
-		GL11.glEnd();
+		if (isSelectRendering(glMode)) {
+			TextureImpl.bindNone();
+			RenderUtils.renderDisc(width / 2);
+		} else {
+			baseTexture.bind();
+			GL11.glBegin(GL11.GL_QUADS);
+			GL11.glTexCoord2f(0, 0);
+			GL11.glVertex2f(-width / 2, -width / 2);
+			GL11.glTexCoord2f(1, 0);
+			GL11.glVertex2f(width / 2, -width / 2);
+			GL11.glTexCoord2f(1, 1);
+			GL11.glVertex2f(width / 2, width / 2);
+			GL11.glTexCoord2f(0, 1);
+			GL11.glVertex2f(-width / 2, width / 2);
+			GL11.glEnd();
+		}
 		GL11.glScalef(1f / scale, 1f / scale, 1);
 
-		if (Model.getModel().getUiContext().isDebugMode()) {
+		if (Model.getModel().getUiContext().isDebugMode() && !isSelectRendering(glMode)) {
 			GL11.glColor4f(0, 1, 0, 1);
 			speed.render(glMode);
 		}
@@ -102,9 +109,11 @@ public class Planet extends Entity {
 		GL11.glTranslatef(-pos.x, -pos.y, -pos.z);
 
 		// Render behaviors
-		for (Behavior behavior : behaviorSet) {
-			if (behavior instanceof Renderable) {
-				((Renderable) behavior).render(glMode);
+		if (!isSelectRendering(glMode)) {
+			for (Behavior behavior : behaviorSet) {
+				if (behavior instanceof Renderable) {
+					((Renderable) behavior).render(glMode);
+				}
 			}
 		}
 

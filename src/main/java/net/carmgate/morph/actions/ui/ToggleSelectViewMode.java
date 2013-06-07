@@ -7,21 +7,26 @@ import net.carmgate.morph.actions.common.Event.EventType;
 import net.carmgate.morph.model.Model;
 
 import org.lwjgl.input.Keyboard;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-// IMPROVE Remove this action and replace it with some proper visualization of any ship's features. 
 @ActionHints(keyboardActionAutoload = true)
-public class ToggleMorphsShown implements Action {
+public class ToggleSelectViewMode implements Action {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(ToggleSelectViewMode.class);
 
 	@Override
 	public void run() {
 		Event lastEvent = Model.getModel().getInteractionStack().getLastEvent();
 		if (lastEvent.getEventType() != EventType.KEYBOARD_UP
 				|| lastEvent.getButton() != Keyboard.KEY_S
-				|| Model.getModel().getUiContext().isDebugMode()) {
+				|| !Model.getModel().getUiContext().isDebugMode()) {
 			return;
 		}
 
-		Model.getModel().getUiContext().toggleMorphsShown();
+		LOGGER.debug("Toggle debug rendering mode");
+		Model.getModel().getUiContext().toggleSelectViewMode();
+
 	}
 
 }

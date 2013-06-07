@@ -41,6 +41,8 @@ public class DraggingWorld implements Action {
 			return;
 		}
 
+		Model.getModel().getViewport().setLockedOnEntity(null);
+
 		if (dragContext.getOldFP() == null) {
 			dragContext.setOldFP(new Vect3D(Model.getModel().getViewport().getFocalPoint()));
 			dragContext.setOldMousePosInWindow(new Vect3D(GameMouse.getX(), GameMouse.getY(), 0));

@@ -221,20 +221,20 @@ public class Model {
 		planet.addBehavior(new Orbit(planet, star, 100000, true));
 		Model.getModel().addEntity(planet);
 
-		Station station = new Station(planet, 100, 50, 5000);
+		Station station = new Station(planet, 100, 50, 7000);
 
 		Player player = new Player(PlayerType.AI, "Nemesis", FOF.FOE);
-		Ship enemyShip = new Ship(128, 0, 0, 0, 5, player);
+		Ship enemyShip = new Ship(128, 0, 0, 0, 10, player);
 		enemyShip.addMorph(new Morph(MorphType.OVERMIND));
 		enemyShip.addMorph(new Morph(MorphType.SIMPLE_PROPULSOR));
-		enemyShip.addBehavior(new WanderWithinRange(enemyShip, 200, 100, station, 5000f));
+		enemyShip.addBehavior(new WanderWithinRange(enemyShip, 200, 100, station, 5000));
 		enemyShip.update(); // TODO This is needed so that behaviors are really in the behavior set. That is an issue.
 
-		station.addBehavior(new Orbit(station, planet, 5000, true));
+		station.addBehavior(new Orbit(station, planet, 7000, true));
 		station.addBehavior(new SpawnShips(station.getPos(), 10, 5000, enemyShip));
 		Model.getModel().addEntity(station);
 
-		selfShip = new Ship(planet.getPos().x, planet.getPos().y, planet.getPos().z, 10, 10, self);
+		selfShip = new Ship(planet.getPos().x, planet.getPos().y, planet.getPos().z, 10, 8, self);
 		selfShip.addMorph(new Morph(MorphType.OVERMIND));
 		selfShip.addMorph(new Morph(MorphType.SHIELD));
 		selfShip.addMorph(new Morph(MorphType.SIMPLE_PROPULSOR));
@@ -245,7 +245,7 @@ public class Model {
 
 		Model.getModel().getSimpleSelection().add(selfShip);
 		selfShip.setSelected(true);
-		Model.getModel().getViewport().setLockedOnEntity(selfShip);
+		Model.getModel().getViewport().getFocalPoint().copy(new Vect3D(selfShip.getPos()).mult(Model.getModel().getViewport().getZoomFactor()));
 
 	}
 
