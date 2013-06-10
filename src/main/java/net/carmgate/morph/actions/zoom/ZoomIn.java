@@ -4,6 +4,8 @@ import net.carmgate.morph.actions.common.Action;
 import net.carmgate.morph.actions.common.ActionHints;
 import net.carmgate.morph.actions.common.Event;
 import net.carmgate.morph.actions.common.Event.EventType;
+import net.carmgate.morph.conf.Conf;
+import net.carmgate.morph.conf.Conf.ConfItem;
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.ui.ViewPort;
@@ -17,7 +19,7 @@ import org.slf4j.LoggerFactory;
 public class ZoomIn implements Action {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ZoomIn.class);
-	private static final float ZOOM_VARIATION = 1.5f;
+	private static final float ZOOM_VARIATION = Conf.getFloatProperty(ConfItem.ZOOM_VARIATIONFACTOR);
 
 	@Override
 	public void run() {

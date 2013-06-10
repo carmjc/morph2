@@ -11,6 +11,8 @@ public class Conf {
 
 	public static enum ConfItem {
 		MORPH_LASER_MAXXPPERHIT("morph.laser.maxXpPerHit"),
+		MORPH_LASER_MAXDAMAGELEVEL1("morph.laser.maxDamageLevel1"),
+		MORPH_MAXXPLEVEL1("morph.maxXpLevel1"),
 		MORPH_SIMPLEPROPULSOR_MAXANGLESPEEDPERMASSUNIT("morph.simplePropulsor.maxAngleSpeedPerMassUnit"),
 		MORPH_SIMPLEPROPULSOR_MAXFORCE("morph.simplePropulsor.maxForce"),
 		MORPH_SIMPLEPROPULSOR_MAXFORCE_FACTORPERLEVEL("morph.simplePropulsor.maxForce.factorPerLevel"),
@@ -18,7 +20,8 @@ public class Conf {
 		MORPH_SIMPLEPROPULSOR_MAXSPEED_FACTORPERLEVEL("morph.simplePropulsor.maxSpeed.factorPerLevel"),
 		MORPH_SIMPLEPROPULSOR_MAXXPPERSECOND("morph.simplePropulsor.maxXpPerSecond"),
 		SHIP_TRAIL_NUMBEROFSEGMENTS("ship.trail.numberOfSegments"),
-		SHIP_TRAIL_UPDATEINTERVAL("ship.trail.updateInterval");
+		SHIP_TRAIL_UPDATEINTERVAL("ship.trail.updateInterval"),
+		ZOOM_VARIATIONFACTOR("zoom.variationFactor");
 
 		private final String key;
 

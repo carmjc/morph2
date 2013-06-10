@@ -1,5 +1,6 @@
 package net.carmgate.morph;
 
+import java.awt.Font;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
@@ -27,6 +28,7 @@ import net.carmgate.morph.model.entities.Ship;
 import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.model.entities.common.Renderable;
 import net.carmgate.morph.model.ui.UiState;
+import net.carmgate.morph.ui.common.RenderUtils;
 import net.carmgate.morph.ui.common.RenderingSteps;
 
 import org.lwjgl.LWJGLException;
@@ -35,6 +37,7 @@ import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
 import org.lwjgl.opengl.GL11;
+import org.newdawn.slick.TrueTypeFont;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -99,13 +102,13 @@ public class Main {
 	}
 
 	private final Model model = Model.getModel();
+
 	private final List<Action> mouseActions = new LinkedList<>();
 
 	private final List<Action> keyboardActions = new LinkedList<>();
-
 	private int fpsCounter = 0;
-	private float meanFpsCounter = 0;
 
+	private float meanFpsCounter = 0;
 	private long lastFpsResetTs = 0;
 
 	/**
@@ -265,8 +268,6 @@ public class Main {
 			}
 
 			GL11.glTranslatef(-focalPoint.x, -focalPoint.y, -focalPoint.z);
-
-			GL11.glRotatef(model.getViewport().getRotation(), 0, 0, 1);
 			GL11.glScalef(zoomFactor, zoomFactor, 1);
 
 			Model.getModel().getRootWA().render(GL11.GL_RENDER);
@@ -284,8 +285,9 @@ public class Main {
 			model.getParticleEngine().render(GL11.GL_RENDER);
 
 			GL11.glScalef(1f / zoomFactor, 1f / zoomFactor, 1);
-			GL11.glRotatef(-model.getViewport().getRotation(), 0, 0, 1);
 			GL11.glTranslatef(focalPoint.x, focalPoint.y, focalPoint.z);
+
+			RenderUtils.renderLineToConsole("FPS: " + meanFpsCounter, 1);
 
 			if (Model.getModel().getUiContext().getUiState() == UiState.SHIP_EDITOR) {
 				shipEditorRender(Model.getModel().getSelfShip(), GL11.GL_RENDER);
@@ -317,6 +319,10 @@ public class Main {
 
 		// Configure Actions
 		initActions();
+
+		// TODO this should be in a UI renderer
+		Font awtFont = new Font("Tahoma", Font.BOLD, 14);
+		RenderUtils.font = new TrueTypeFont(awtFont, true);
 
 		// Rendering loop
 		while (true) {
@@ -408,49 +414,6 @@ public class Main {
 				}
 			}
 
-			//
-			// // If no morph is selected, the right click should be understood
-			// as a moveto order.
-			// if
-			// (globalModel.getSelectedShip().getSelectedMorphList().isEmpty())
-			// {
-			// List<IA> iaList = globalModel.getSelectedShip().getIAList();
-			//
-			// // Look for existing tracker
-			// for (IA ia : iaList) {
-			// if (ia instanceof FixedPositionTracker) {
-			// ((FixedPositionTracker) ia).setTargetPos(worldMousePos);
-			// }
-			// }
-			//
-			// iaList.add(new
-			// FixedPositionTracker(globalModel.getSelectedShip(),
-			// worldMousePos));
-			// }
-			// }
-			//
-			// // Handling shoot
-			// if (Mouse.getEventButton() == 1 && !Mouse.getEventButtonState()
-			// && globalModel.getSelectedShip() != null && World.combat) {
-			// globalModel.getSelectedShip().getIAList().add(new
-			// WorldPositionFirer(globalModel.getSelectedShip(),
-			// worldMousePos));
-			// }
-			//
-			// // int dWheel = Mouse.getDWheel();
-			// // if (dWheel != 0) {
-			// // float scale = (float) (Math.pow(1 + Math.pow(4, -5 +
-			// Math.abs(dWheel / 120)), Math.signum(dWheel)));
-			// // GL11.glScalef(scale, scale, scale);
-			// // }
-			// }
-			//
-			// if (Keyboard.next()) {
-			// toggleDebugAction.run();
-			// toggleCombatMode.run();
-			// toggleFreezeAction.run();
-			// }
-
 			if (Display.isCloseRequested()) {
 				Display.destroy();
 				System.exit(0);
@@ -462,10 +425,11 @@ public class Main {
 					meanFpsCounter = fpsCounter;
 				}
 				meanFpsCounter = meanFpsCounter * 0.9f + fpsCounter * 0.1f;
-				LOGGER.debug("Fps: " + fpsCounter + ". Mean fps : " + meanFpsCounter);
+				// font.drawString(-font.getWidth(str) / 2, -width / 2, str, Color.white);
 				lastFpsResetTs += 1000;
 				fpsCounter = 0;
 			}
+
 		}
 	}
 }

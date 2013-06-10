@@ -17,11 +17,11 @@ import net.carmgate.morph.model.behaviors.common.Needs;
 import net.carmgate.morph.model.behaviors.steering.Orbit;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Morph.MorphType;
-import net.carmgate.morph.model.entities.common.DeathListener;
 import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.model.entities.common.EntityHints;
 import net.carmgate.morph.model.entities.common.EntityType;
 import net.carmgate.morph.model.entities.common.Renderable;
+import net.carmgate.morph.model.entities.common.listener.DeathListener;
 import net.carmgate.morph.model.orders.Die;
 import net.carmgate.morph.model.orders.Order;
 import net.carmgate.morph.model.orders.TakeDamage;
@@ -256,7 +256,6 @@ public class Ship extends Entity {
 								0.5f, 0.2f);
 			}
 
-			LOGGER.debug("Damage at " + damage + " for " + this);
 		} else if (order instanceof Die) {
 			LOGGER.debug("Die !!!");
 
@@ -441,6 +440,10 @@ public class Ship extends Entity {
 		}
 
 		GL11.glTranslatef(-pos.x, -pos.y, -pos.z);
+
+		if (getPlayer().getFof() == FOF.SELF) {
+			RenderUtils.renderLineToConsole("Max DPS: ", 2);
+		}
 
 	}
 

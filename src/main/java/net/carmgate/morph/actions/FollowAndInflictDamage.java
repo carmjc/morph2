@@ -10,6 +10,8 @@ import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.behaviors.InflictLaserDamage;
 import net.carmgate.morph.model.behaviors.common.Movement;
 import net.carmgate.morph.model.behaviors.steering.Follow;
+import net.carmgate.morph.model.entities.Morph;
+import net.carmgate.morph.model.entities.Morph.MorphType;
 import net.carmgate.morph.model.entities.Ship;
 import net.carmgate.morph.model.entities.common.Entity;
 
@@ -53,7 +55,11 @@ public class FollowAndInflictDamage implements Action {
 				ship.addBehavior(new Follow(selectable, targetShip, InflictLaserDamage.MAX_RANGE * 0.5f));
 
 				// Add new combat behavior
-				ship.addBehavior(new InflictLaserDamage(ship, (Ship) targetShip));
+				InflictLaserDamage inflictLaserDamage = new InflictLaserDamage(ship, (Ship) targetShip);
+				for (Morph morph : ship.getMorphsByType(MorphType.LASER)) {
+					morph.addListener(inflictLaserDamage);
+				}
+				ship.addBehavior(inflictLaserDamage);
 			}
 		}
 	}

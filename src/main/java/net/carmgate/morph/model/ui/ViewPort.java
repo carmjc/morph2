@@ -22,7 +22,7 @@ public class ViewPort {
 	private final float rotation = 0;
 
 	/** The zoom factor. > 1 means what you see is bigger. */
-	private float zoomFactor = 1f;
+	private float zoomFactor = 0.5f;
 
 	private Entity lockedOnEntity;
 

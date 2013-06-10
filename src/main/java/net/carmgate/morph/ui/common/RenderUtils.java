@@ -4,6 +4,8 @@ import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.common.Vect3D;
 
 import org.lwjgl.opengl.GL11;
+import org.newdawn.slick.Color;
+import org.newdawn.slick.TrueTypeFont;
 import org.newdawn.slick.opengl.TextureImpl;
 
 public class RenderUtils {
@@ -12,6 +14,9 @@ public class RenderUtils {
 	private static final double deltaAngle = (float) (2 * Math.PI / nbSegments);
 	private static final float cos = (float) Math.cos(deltaAngle);
 	private static final float sin = (float) Math.sin(deltaAngle);
+
+	// Change the logic to make the font private
+	public static TrueTypeFont font;
 
 	public static void renderCircle(float radius, float lineWidth, Float[] colorInt, Float[] colorMiddle, Float[] colorExt) {
 		// render limit of effect zone
@@ -178,6 +183,12 @@ public class RenderUtils {
 		GL11.glVertex2f(from.x + ortho.x, from.y + ortho.y);
 		GL11.glVertex2f(to.x + ortho.x, to.y + ortho.y);
 		GL11.glEnd();
+	}
+
+	public static void renderLineToConsole(String str, int line) {
+		font.drawString(-Model.getModel().getWindow().getWidth() / 2 + 5,
+				Model.getModel().getWindow().getHeight() / 2 - 3 - font.getHeight() * line,
+				str, Color.white);
 	}
 
 }

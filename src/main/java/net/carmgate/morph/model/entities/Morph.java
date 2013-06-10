@@ -3,12 +3,17 @@ package net.carmgate.morph.model.entities;
 import java.awt.Font;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import net.carmgate.morph.conf.Conf;
+import net.carmgate.morph.conf.Conf.ConfItem;
 import net.carmgate.morph.model.entities.common.Renderable;
 import net.carmgate.morph.model.entities.common.Selectable;
+import net.carmgate.morph.model.entities.common.listener.MorphLevelUpListener;
 import net.carmgate.morph.ui.common.RenderUtils;
 
 import org.lwjgl.opengl.GL11;
@@ -39,19 +44,23 @@ public class Morph implements Renderable, Selectable {
 		}
 	}
 
-	private static TrueTypeFont font;
-
 	private static final Logger LOGGER = LoggerFactory.getLogger(Morph.class);
 	private static Integer nextId = 0;
 	private int id;
 	private static Texture baseTexture;
+	private static TrueTypeFont font;
 	private static Map<MorphType, Texture> morphTypeTextures = new HashMap<>();
+
+	private static float morphMaxXpLevel1 = Conf.getFloatProperty(ConfItem.MORPH_MAXXPLEVEL1);
 
 	// Morph characteristics
 	private final MorphType morphType;
 	private int level = 0;
 	private float xp = 0;
 	private boolean selected;
+
+	// Listeners
+	private final List<MorphLevelUpListener> morphLevelUpListeners = new ArrayList<>();
 
 	public Morph() {
 		this(null);
@@ -71,6 +80,10 @@ public class Morph implements Renderable, Selectable {
 		synchronized (nextId) {
 			id = nextId++;
 		}
+	}
+
+	public void addListener(MorphLevelUpListener listener) {
+		morphLevelUpListeners.add(listener);
 	}
 
 	@Override
@@ -96,6 +109,10 @@ public class Morph implements Renderable, Selectable {
 
 	public void increaseXp(float xpIncrement) {
 		xp += xpIncrement;
+		if (xp > morphMaxXpLevel1 * level) {
+			xp -= morphMaxXpLevel1 * level;
+			level++;
+		}
 	}
 
 	@Override
@@ -126,6 +143,10 @@ public class Morph implements Renderable, Selectable {
 	@Override
 	public boolean isSelected() {
 		return selected;
+	}
+
+	public void removeListener(MorphLevelUpListener listener) {
+		morphLevelUpListeners.remove(listener);
 	}
 
 	@Override
