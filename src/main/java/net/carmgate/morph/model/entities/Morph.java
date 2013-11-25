@@ -136,7 +136,7 @@ public class Morph implements Renderable, Selectable {
 			}
 		}
 
-		Font awtFont = new Font("Tahoma", Font.BOLD, 14);
+		Font awtFont = new Font("Tahoma", Font.BOLD, 28);
 		font = new TrueTypeFont(awtFont, true);
 	}
 
@@ -153,7 +153,7 @@ public class Morph implements Renderable, Selectable {
 	public void render(int glMode) {
 		float scale = 1.2f;
 		float typeScale = 0.4f;
-		float width = 64f;
+		float width = 128f;
 
 		GL11.glColor4f(1, 1, 1, 1);
 		GL11.glScalef(scale, scale, 1);
@@ -201,7 +201,7 @@ public class Morph implements Renderable, Selectable {
 
 		String str = "" + level;
 		font.drawString(-font.getWidth(str) / 2, -width / 2, str, Color.white);
-		RenderUtils.renderGauge(30, 20, Math.min(1, xp / 100), 0, new float[] { 1, 1, 0.5f, 1 });
+		RenderUtils.renderGauge(60, 40, Math.min(1, xp / 100), 0, new float[] { 1, 1, 0.5f, 1 });
 	}
 
 	@Override

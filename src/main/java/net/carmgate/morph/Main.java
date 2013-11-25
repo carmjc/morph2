@@ -54,6 +54,7 @@ public class Main {
 		sample.start();
 	}
 
+	// TODO move this code to some more proper location
 	public static void shipEditorRender(Ship ship, int glMode) {
 		List<Morph> morphsToDraw = new ArrayList<>();
 		for (MorphType morphType : MorphType.values()) {
@@ -74,11 +75,11 @@ public class Main {
 					GL11.glPushName(morph.getId());
 					morph.render(glMode);
 					GL11.glPopName();
-					GL11.glTranslatef(-64, 0, 0);
+					GL11.glTranslatef(-128, 0, 0);
 				}
 			}
 
-			GL11.glTranslatef(64, 0, 0);
+			GL11.glTranslatef(128, 0, 0);
 			GL11.glRotatef(60, 0, 0, 1);
 			for (int i = 0; i < 6; i++) {
 				GL11.glRotatef(60, 0, 0, 1);
@@ -91,14 +92,14 @@ public class Main {
 						GL11.glPopName();
 						GL11.glRotatef((i + 2) * 60, 0, 0, 1);
 					}
-					GL11.glTranslatef(64, 0, 0);
+					GL11.glTranslatef(128, 0, 0);
 				}
 			}
 			GL11.glRotatef(-60, 0, 0, 1);
 
 			layer++;
 		}
-		GL11.glTranslatef(-(layer - 1) * 64, 0, 0);
+		GL11.glTranslatef(-(layer - 1) * 128, 0, 0);
 	}
 
 	private final Model model = Model.getModel();
@@ -364,7 +365,7 @@ public class Main {
 				if (dWheel != 0) {
 					LOGGER.debug("Logged a mouse wheel: " + dWheel);
 					Model.getModel().getInteractionStack()
-							.addEvent(new Event(EventType.MOUSE_WHEEL, dWheel, new int[] { Mouse.getEventX(), Mouse.getEventY() }));
+					.addEvent(new Event(EventType.MOUSE_WHEEL, dWheel, new int[] { Mouse.getEventX(), Mouse.getEventY() }));
 					for (Action action : mouseActions) {
 						runAction(action);
 					}
