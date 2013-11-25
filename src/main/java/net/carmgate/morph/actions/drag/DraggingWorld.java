@@ -18,7 +18,6 @@ import org.slf4j.LoggerFactory;
 @ActionHints(dragAction = true, mouseActionAutoload = true)
 public class DraggingWorld implements Action {
 
-	@SuppressWarnings("unused")
 	private static final Logger LOGGER = LoggerFactory.getLogger(DraggingWorld.class);
 
 	private final DragContext dragContext;

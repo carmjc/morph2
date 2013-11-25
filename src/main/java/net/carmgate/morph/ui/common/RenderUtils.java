@@ -77,7 +77,6 @@ public class RenderUtils {
 		float tExt = 0; // temporary data holder
 		float xInt;
 		float xExt;
-		float zoomFactor = Model.getModel().getViewport().getZoomFactor();
 
 		xInt = 0; // radius
 		xExt = radius; // radius
@@ -185,6 +184,8 @@ public class RenderUtils {
 		GL11.glEnd();
 	}
 
+	// TODO The "line" parameter should not be necessary
+	// The method should adapt to the number of lines printed so far
 	public static void renderLineToConsole(String str, int line) {
 		font.drawString(-Model.getModel().getWindow().getWidth() / 2 + 5,
 				Model.getModel().getWindow().getHeight() / 2 - 3 - font.getHeight() * line,

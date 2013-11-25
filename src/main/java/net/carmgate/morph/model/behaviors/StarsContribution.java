@@ -13,12 +13,8 @@ import net.carmgate.morph.model.entities.common.Renderable;
 import net.carmgate.morph.model.orders.Die;
 
 import org.lwjgl.opengl.GL11;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class StarsContribution extends ForceGeneratingBehavior implements Renderable {
-
-	private static final Logger LOGGER = LoggerFactory.getLogger(StarsContribution.class);
 
 	private final Entity movable;
 

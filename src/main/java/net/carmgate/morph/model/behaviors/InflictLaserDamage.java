@@ -18,7 +18,6 @@ import net.carmgate.morph.model.player.Player.FOF;
 import net.carmgate.morph.ui.common.RenderUtils;
 
 import org.lwjgl.opengl.GL11;
-import org.newdawn.slick.TrueTypeFont;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,14 +39,13 @@ public class InflictLaserDamage implements Behavior, Renderable, MorphLevelUpLis
 
 	private long timeOfLastFire = 0;
 
-	private static TrueTypeFont font;
-
 	@Deprecated
 	public InflictLaserDamage() {
 		this(null, null);
 	}
 
 	public InflictLaserDamage(Ship sourceOfDamage, Ship target) {
+		timeOfLastAction = Model.getModel().getCurrentTS();
 		this.sourceOfDamage = sourceOfDamage;
 		this.target = target;
 		if (sourceOfDamage != null) {
@@ -95,7 +93,6 @@ public class InflictLaserDamage implements Behavior, Renderable, MorphLevelUpLis
 
 	@Override
 	public void render(int glMode) {
-		RenderUtils.renderLineToConsole("Max DPS: ", 3);
 		if (timeOfLastFire != 0 && Math.abs(Model.getModel().getCurrentTS() - timeOfLastFire) < 200) {
 			GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
 			RenderUtils.renderLine(sourceOfDamage.getPos(), target.getPos(), (float) (40 + Math.random() * 10)
@@ -115,7 +112,7 @@ public class InflictLaserDamage implements Behavior, Renderable, MorphLevelUpLis
 
 		// TODO create a message container to add string to, so that there is no need to undo scale and translation
 		if (sourceOfDamage != null && sourceOfDamage.getPlayer().getFof() == FOF.SELF) {
-			RenderUtils.renderLineToConsole("Max DPS: " + maxDps, 2);
+			RenderUtils.renderLineToConsole("Max DPS: " + maxDps + ", rateOfFire: " + rateOfFire + ", timeOfLastAction: " + timeOfLastAction, 2);
 		}
 
 		GL11.glTranslatef(-focalPoint.x, -focalPoint.y, 0);

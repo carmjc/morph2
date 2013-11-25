@@ -11,13 +11,9 @@ import net.carmgate.morph.model.entities.common.Entity;
 
 import org.lwjgl.opengl.GL11;
 import org.newdawn.slick.opengl.TextureImpl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Needs({ @ActivatedMorph(morphType = MorphType.SIMPLE_PROPULSOR) })
 public class Wander extends Movement {
-
-	private static final Logger LOGGER = LoggerFactory.getLogger(Wander.class);
 
 	private static final int nbSegments = 200;
 	private static final double deltaAngle = (float) (2 * Math.PI / nbSegments);
@@ -129,8 +125,6 @@ public class Wander extends Movement {
 
 	@Override
 	public void run() {
-		final Vect3D pos = new Vect3D(movableEntity.getPos());
-
 		wanderAngle += Math.random() * 4 - 2;
 		Vect3D target = new Vect3D(new Vect3D(Vect3D.NORTH).normalize(wanderFocusDistance).rotate(movableEntity.getHeading()))
 				.add(new Vect3D(Vect3D.NORTH).normalize(wanderRadius).rotate(wanderAngle));

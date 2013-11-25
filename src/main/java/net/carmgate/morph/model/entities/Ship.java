@@ -241,6 +241,7 @@ public class Ship extends Entity {
 	 */
 	private void handleOrder(Order order) {
 		if (order instanceof TakeDamage) {
+			LOGGER.debug("Taking damage: " + ((TakeDamage) order).getDamageAmount());
 			// This is not multiplied by lastUpdateTS because the timing is handled by the sender of the event.
 			damage += ((TakeDamage) order).getDamageAmount();
 			if (damage > maxDamage) {

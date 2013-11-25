@@ -10,12 +10,7 @@ import net.carmgate.morph.model.entities.Ship;
 import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.model.entities.common.Renderable;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public abstract class Movement implements Behavior, Renderable {
-	private static final Logger LOGGER = LoggerFactory.getLogger(Movement.class);
-
 	protected final Entity movableEntity;
 
 	/**

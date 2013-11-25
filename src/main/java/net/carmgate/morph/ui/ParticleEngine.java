@@ -93,10 +93,6 @@ public class ParticleEngine implements Renderable, Updatable {
 
 	private final List<Particle> particles = new LinkedList<>();
 
-	/** Timestamp of last time the ship's position was calculated. */
-	// IMPROVE We should move this in a class that can handle this behavior for any Updatable
-	private long lastUpdateTS;
-
 	protected final Random random = new Random();
 
 	public void addParticle(Vect3D pos, Vect3D speed, float initialLife, float initialLifeDeviation, float minInitialAlpha, float maxInitialAlpha) {

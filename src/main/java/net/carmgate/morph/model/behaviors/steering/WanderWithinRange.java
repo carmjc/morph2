@@ -10,13 +10,9 @@ import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.ui.common.RenderUtils;
 
 import org.lwjgl.opengl.GL11;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Needs({ @ActivatedMorph(morphType = MorphType.SIMPLE_PROPULSOR) })
 public class WanderWithinRange extends Wander {
-
-	private static Logger LOGGER = LoggerFactory.getLogger(WanderWithinRange.class);
 
 	private final Entity target;
 	private final float range;
@@ -60,8 +56,6 @@ public class WanderWithinRange extends Wander {
 			movableEntity.removeBehavior(this);
 			return;
 		}
-
-		final Vect3D pos = new Vect3D(movableEntity.getPos());
 
 		wanderAngle += Math.random() * 2 - 1f;
 
