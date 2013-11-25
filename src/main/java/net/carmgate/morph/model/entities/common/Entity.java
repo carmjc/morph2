@@ -111,13 +111,16 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 		steeringForce.add(force);
 	}
 
+	protected void autoRotate() {
+		// Empty default implementation
+	}
+
 	protected void computeForcesFromBehavior() {
 		effectiveForce.nullify();
 		steeringForce.nullify();
 
 		// if no movement needed, no update needed
 		for (Behavior behavior : behaviorSet) {
-			behavior.run();
 
 			// if the behavior is a movement, use the generated steering force
 			if (behavior instanceof Movement) {
@@ -190,6 +193,9 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 		return speed;
 	}
 
+	// No contract specific to the entity
+	// IMPROVE we should probably define the entities in a different way
+
 	/**
 	 * This method handles orders.
 	 * IMPROVE This probably should be improved. It is quite ugly to have such a if-else cascade.
@@ -198,7 +204,7 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 	 */
 	private void handleOrder(Order order) {
 		if (order instanceof TakeDamage) {
-			LOGGER.debug("Taking damage: " + ((TakeDamage) order).getDamageAmount());
+			// LOGGER.debug("Taking damage: " + ((TakeDamage) order).getDamageAmount());
 			// This is not multiplied by lastUpdateTS because the timing is handled by the sender of the event.
 			damage += ((TakeDamage) order).getDamageAmount();
 			if (damage > maxDamage) {
@@ -215,7 +221,7 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 			}
 
 		} else if (order instanceof Die) {
-			LOGGER.debug("Die !!!");
+			// LOGGER.debug("Die !!!");
 
 			dead = true;
 			for (int i = 0; i < 200; i++) {
@@ -235,9 +241,6 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 
 		}
 	}
-
-	// No contract specific to the entity
-	// IMPROVE we should probably define the entities in a different way
 
 	private void handleOrders() {
 		for (Order order : orderList) {
@@ -307,10 +310,6 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 		CollectionUtils.select(behaviorSet, new SameClassPredicate(behaviorClass), pendingBehaviorsRemoval);
 	}
 
-	protected void autoRotate() {
-		// Empty default implementation
-	}
-
 	public void setHeading(float heading) {
 		this.heading = heading;
 	}
@@ -327,6 +326,11 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 		// TODO This is not implemented so far, and this probably is not the best way to handle it
 		if (player.getPlayerType() == PlayerType.AI) {
 			processAI();
+		}
+
+		// Update behaviors
+		for (Behavior behavior : behaviorSet) {
+			behavior.run();
 		}
 
 		computeForcesFromBehavior();

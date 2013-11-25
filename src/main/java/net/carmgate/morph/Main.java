@@ -19,7 +19,6 @@ import net.carmgate.morph.actions.common.Event;
 import net.carmgate.morph.actions.common.Event.EventType;
 import net.carmgate.morph.actions.drag.DragContext;
 import net.carmgate.morph.conf.Conf;
-import net.carmgate.morph.exception.ConcreteInitRendererInAbstractClassException;
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Morph;
@@ -206,9 +205,10 @@ public class Main {
 				// if the initRenderer method is not abstract in this class, log an error
 				try {
 					if (!Modifier.isAbstract(renderable.getMethod("initRenderer", new Class<?>[] {}).getModifiers())) {
-						throw new ConcreteInitRendererInAbstractClassException(renderable);
+						LOGGER.error("There is a concrete initRenderer method in class "
+								+ renderable.getCanonicalName());
 					}
-				} catch (NoSuchMethodException | SecurityException | ConcreteInitRendererInAbstractClassException e) {
+				} catch (NoSuchMethodException | SecurityException e) {
 					LOGGER.error("Error while retrieveing initRenderer method within " + renderable.getName(), e);
 				}
 				continue;
