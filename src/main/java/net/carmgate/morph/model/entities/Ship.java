@@ -24,7 +24,6 @@ import net.carmgate.morph.model.entities.common.Renderable;
 import net.carmgate.morph.model.entities.common.listener.DeathListener;
 import net.carmgate.morph.model.player.Player;
 import net.carmgate.morph.model.player.Player.FOF;
-import net.carmgate.morph.model.player.Player.PlayerType;
 import net.carmgate.morph.ui.common.RenderUtils;
 import net.carmgate.morph.ui.common.RenderingHints;
 import net.carmgate.morph.ui.common.RenderingSteps;
@@ -234,13 +233,6 @@ public class Ship extends Entity {
 				LOGGER.error("Exception raised while loading texture", e);
 			}
 		}
-	}
-
-	private void processAI() {
-		// TODO Outsource this AI to allow several kinds of AIs
-		// TODO implement AI processing
-		// Very simple AI : wander and attack
-
 	}
 
 	public void removeListener(DeathListener e) {
@@ -465,7 +457,8 @@ public class Ship extends Entity {
 		}
 	}
 
-	private void rotateProperly() {
+	@Override
+	protected void autoRotate() {
 
 		float secondsSinceLastUpdate = Model.getModel().getSecondsSinceLastUpdate();
 
@@ -506,25 +499,6 @@ public class Ship extends Entity {
 		return "ship:" + pos.toString();
 	}
 
-	@Override
-	public void update() {
-
-		// handle AI assignements if appropriate
-		if (player.getPlayerType() == PlayerType.AI) {
-			processAI();
-		}
-
-		computeForcesFromBehavior();
-		rotateProperly();
-		computeSpeedAndPos();
-
-		// FIXME This should not be called here
-		super.update();
-
-		// update trail
-		updateTrail();
-	}
-
 	private void updateMorphDependantValues() {
 		// Compute morphs level dependant values
 		// TODO #20 Update these values each time a morph is upgraded
@@ -547,7 +521,7 @@ public class Ship extends Entity {
 		maxSteeringForce /= mass;
 	}
 
-	private void updateTrail() {
+	protected void updateTrail() {
 		if (trailLastUpdate == 0 || Model.getModel().getLastUpdateTS() - trailLastUpdate > trailUpdateInterval) {
 			for (int i = trail.length - 2; i >= 0; i--) {
 				trail[i + 1] = trail[i];

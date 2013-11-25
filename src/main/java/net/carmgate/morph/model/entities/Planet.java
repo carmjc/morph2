@@ -117,11 +117,4 @@ public class Planet extends Entity {
 		}
 
 	}
-
-	@Override
-	public void update() {
-
-		computeForcesFromBehavior();
-		computeSpeedAndPos();
-	}
 }

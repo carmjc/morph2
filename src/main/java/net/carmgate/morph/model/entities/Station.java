@@ -117,12 +117,4 @@ public class Station extends Entity {
 		}
 
 	}
-
-	@Override
-	public void update() {
-
-		computeForcesFromBehavior();
-		computeSpeedAndPos();
-
-	}
 }

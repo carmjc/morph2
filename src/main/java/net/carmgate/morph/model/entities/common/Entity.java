@@ -18,6 +18,7 @@ import net.carmgate.morph.model.orders.Die;
 import net.carmgate.morph.model.orders.Order;
 import net.carmgate.morph.model.orders.TakeDamage;
 import net.carmgate.morph.model.player.Player;
+import net.carmgate.morph.model.player.Player.PlayerType;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
@@ -261,6 +262,14 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 				Model.getModel().getUiContext().isDebugMode() && Model.getModel().getUiContext().isSelectViewMode();
 	}
 
+	// TODO This should be handle in a more generic fashion
+	private void processAI() {
+		// TODO Outsource this AI to allow several kinds of AIs
+		// TODO implement AI processing
+		// Very simple AI : wander and attack
+
+	}
+
 	public void processPendingBehaviors() {
 		// Cleaning
 		for (Behavior behavior : pendingBehaviorsRemoval) {
@@ -298,6 +307,10 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 		CollectionUtils.select(behaviorSet, new SameClassPredicate(behaviorClass), pendingBehaviorsRemoval);
 	}
 
+	protected void autoRotate() {
+		// Empty default implementation
+	}
+
 	public void setHeading(float heading) {
 		this.heading = heading;
 	}
@@ -310,8 +323,26 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 	// FIXME
 	@Override
 	public void update() {
+		// handle AI assignements if appropriate
+		// TODO This is not implemented so far, and this probably is not the best way to handle it
+		if (player.getPlayerType() == PlayerType.AI) {
+			processAI();
+		}
+
+		computeForcesFromBehavior();
+		autoRotate();
+		computeSpeedAndPos();
+
 		// Handle orders
 		handleOrders();
 
+		// update trail
+		updateTrail();
+	}
+
+	protected void updateTrail() {
+		// TODO This mecanism should be handled in something more generic
+		// so that we do not have to add this method to entity but so that the ship has it
+		// empty default implementation
 	}
 }
