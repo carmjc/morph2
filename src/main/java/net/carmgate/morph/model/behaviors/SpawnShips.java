@@ -54,6 +54,7 @@ public class SpawnShips implements Behavior, DeathListener {
 
 			LOGGER.debug("children: " + spawnedShips.size());
 			if (spawnedShips.size() < maxNumberOfShips) {
+				// TODO The ship might not be the best place to clone a ship FOR this behavior ...
 				Ship newShip = modelShip.clone();
 				newShip.getPos().copy(spawnLocation);
 				newShip.setHeading((float) (Math.random() * 360));

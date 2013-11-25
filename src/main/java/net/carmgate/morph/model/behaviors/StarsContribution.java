@@ -63,7 +63,7 @@ public class StarsContribution extends ForceGeneratingBehavior implements Render
 
 			// if the ship enters the star, it's destroyed
 			if (distance < star.getKillingRadius() && movable instanceof Ship) {
-				((Ship) movable).fireOrder(new Die());
+				movable.fireOrder(new Die());
 			}
 
 			// Adds the gravity pulling force
@@ -72,7 +72,7 @@ public class StarsContribution extends ForceGeneratingBehavior implements Render
 			// Add energy inflow
 			if (movable instanceof Ship) {
 				float energyInflux = (float) (star.getEnergyFlow() * Math.sqrt(movable.getMass()) / movable.getPos().distance(star.getPos()));
-				((Entity) movable).addEnergy(energyInflux * Model.getModel().getSecondsSinceLastUpdate());
+				movable.addEnergy(energyInflux * Model.getModel().getSecondsSinceLastUpdate());
 			}
 
 			// TODO Add overflow energy induced damage

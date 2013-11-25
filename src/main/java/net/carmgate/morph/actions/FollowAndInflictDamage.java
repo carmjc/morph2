@@ -55,7 +55,7 @@ public class FollowAndInflictDamage implements Action {
 				ship.addBehavior(new Follow(selectable, targetShip, InflictLaserDamage.MAX_RANGE * 0.5f));
 
 				// Add new combat behavior
-				InflictLaserDamage inflictLaserDamage = new InflictLaserDamage(ship, (Ship) targetShip);
+				InflictLaserDamage inflictLaserDamage = new InflictLaserDamage(ship, targetShip);
 				for (Morph morph : ship.getMorphsByType(MorphType.LASER)) {
 					morph.addListener(inflictLaserDamage);
 				}

@@ -33,7 +33,7 @@ public class InflictLaserDamage implements Behavior, Renderable, MorphLevelUpLis
 	private float maxDps = 0;
 
 	private final Ship sourceOfDamage;
-	private final Ship target;
+	private final Entity target;
 
 	private long timeOfLastAction;
 
@@ -44,7 +44,7 @@ public class InflictLaserDamage implements Behavior, Renderable, MorphLevelUpLis
 		this(null, null);
 	}
 
-	public InflictLaserDamage(Ship sourceOfDamage, Ship target) {
+	public InflictLaserDamage(Ship sourceOfDamage, Entity target) {
 		timeOfLastAction = Model.getModel().getCurrentTS();
 		this.sourceOfDamage = sourceOfDamage;
 		this.target = target;
@@ -97,10 +97,10 @@ public class InflictLaserDamage implements Behavior, Renderable, MorphLevelUpLis
 			GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
 			RenderUtils.renderLine(sourceOfDamage.getPos(), target.getPos(), (float) (40 + Math.random() * 10)
 					, new Float[] { 1f, 0f, 0f, 1f }
-					, new Float[] { 0f, 0f, 0f, 0.4f });
+			, new Float[] { 0f, 0f, 0f, 0.4f });
 			RenderUtils.renderLine(sourceOfDamage.getPos(), target.getPos(), (float) (4 + Math.random() * 1)
 					, new Float[] { 1f, 0f, 0f, 1f }
-					, new Float[] { 1f, 0f, 0f, 0.8f });
+			, new Float[] { 1f, 0f, 0f, 0.8f });
 			GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		}
 
@@ -134,6 +134,7 @@ public class InflictLaserDamage implements Behavior, Renderable, MorphLevelUpLis
 		// TODO The damage sent to the target should take into account current morphs' xp, level and type.
 		// TODO This should also be updated to cope with the improbable possibility that the refresh rate is insufficient to handle
 		// the orders one by one. (currentTs - timeOfLastAction / rateOfFire > 2)
+		// TODO This mechanism of regularly doing something should be generalized with a parameterized frequency
 		if (timeOfLastAction == 0 || (Model.getModel().getCurrentTS() - timeOfLastAction) * rateOfFire > 1) {
 			if (target.getPos().distance(sourceOfDamage.getPos()) < MAX_RANGE && consumeEnergy()) {
 

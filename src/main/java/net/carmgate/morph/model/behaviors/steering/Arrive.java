@@ -191,7 +191,6 @@ public class Arrive extends Movement {
 		}
 
 		// stop condition
-		// TODO remove the instanceof test
 		if (new Vect3D(target).substract(pos).modulus() < 5 && speed.modulus() < 1 && movableEntity instanceof Ship) {
 			movableEntity.removeBehavior(this);
 		}

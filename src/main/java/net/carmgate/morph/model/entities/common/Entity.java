@@ -1,6 +1,8 @@
 package net.carmgate.morph.model.entities.common;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import net.carmgate.morph.model.Model;
@@ -11,6 +13,10 @@ import net.carmgate.morph.model.behaviors.common.Movement;
 import net.carmgate.morph.model.behaviors.steering.Orbit;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Star;
+import net.carmgate.morph.model.entities.common.listener.DeathListener;
+import net.carmgate.morph.model.orders.Die;
+import net.carmgate.morph.model.orders.Order;
+import net.carmgate.morph.model.orders.TakeDamage;
 import net.carmgate.morph.model.player.Player;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -66,6 +72,9 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 
 	protected boolean dead;
 	protected float realAccelModulus;
+	private final List<Order> newOrderList = new ArrayList<>();
+	private final List<Order> orderList = new ArrayList<>();
+	protected final List<DeathListener> deathListeners = new ArrayList<>();
 
 	protected Entity(Player player) {
 		synchronized (nextId) {
@@ -137,6 +146,16 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 		pos.add(new Vect3D(speed).mult(Model.getModel().getSecondsSinceLastUpdate()));
 	}
 
+	/**
+	 * Adds orders.
+	 * The orders are effectively added at the end of the update cycle
+	 * once the current update cycle orders have been processed.
+	 * @param order
+	 */
+	public void fireOrder(Order order) {
+		newOrderList.add(order);
+	}
+
 	public float getHeading() {
 		return heading;
 	}
@@ -170,6 +189,64 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 		return speed;
 	}
 
+	/**
+	 * This method handles orders.
+	 * IMPROVE This probably should be improved. It is quite ugly to have such a if-else cascade.
+	 * However, I don't want to use a handler factory that would kill the current simplicity of orders handling
+	 * @param order
+	 */
+	private void handleOrder(Order order) {
+		if (order instanceof TakeDamage) {
+			LOGGER.debug("Taking damage: " + ((TakeDamage) order).getDamageAmount());
+			// This is not multiplied by lastUpdateTS because the timing is handled by the sender of the event.
+			damage += ((TakeDamage) order).getDamageAmount();
+			if (damage > maxDamage) {
+				fireOrder(new Die());
+			}
+
+			float explosionAngle = (float) (Math.random() * 180 + 90);
+			for (int i = 0; i < 5; i++) {
+				Model.getModel()
+				.getParticleEngine()
+				.addParticle(new Vect3D(pos), new Vect3D(speed).mult(0.25f).rotate((float) (explosionAngle + Math.random() * 5)).add(speed),
+						2, 0.125f,
+						0.5f, 0.2f);
+			}
+
+		} else if (order instanceof Die) {
+			LOGGER.debug("Die !!!");
+
+			dead = true;
+			for (int i = 0; i < 200; i++) {
+				Model.getModel()
+				.getParticleEngine()
+				.addParticle(new Vect3D(pos), new Vect3D(200, 0, 0).rotate((float) (Math.random() * 360)).mult((float) Math.random()).add(speed),
+						2, 0.5f,
+						0.5f, 0.05f);
+			}
+
+			Model.getModel().removeEntity(this);
+
+			// TODO maybe this should better be handled by the Model ?
+			for (DeathListener lst : deathListeners) {
+				lst.handleDeathEvent(this);
+			}
+
+		}
+	}
+
+	// No contract specific to the entity
+	// IMPROVE we should probably define the entities in a different way
+
+	private void handleOrders() {
+		for (Order order : orderList) {
+			handleOrder(order);
+		}
+		orderList.clear();
+		orderList.addAll(newOrderList);
+		newOrderList.clear();
+	}
+
 	public boolean isDead() {
 		return dead;
 	}
@@ -178,9 +255,6 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 	public boolean isSelected() {
 		return selected;
 	}
-
-	// No contract specific to the entity
-	// IMPROVE we should probably define the entities in a different way
 
 	protected boolean isSelectRendering(int glMode) {
 		return glMode == GL11.GL_SELECT ||
@@ -231,5 +305,13 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 	@Override
 	public void setSelected(boolean selected) {
 		this.selected = selected;
+	}
+
+	// FIXME
+	@Override
+	public void update() {
+		// Handle orders
+		handleOrders();
+
 	}
 }

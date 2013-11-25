@@ -22,9 +22,6 @@ import net.carmgate.morph.model.entities.common.EntityHints;
 import net.carmgate.morph.model.entities.common.EntityType;
 import net.carmgate.morph.model.entities.common.Renderable;
 import net.carmgate.morph.model.entities.common.listener.DeathListener;
-import net.carmgate.morph.model.orders.Die;
-import net.carmgate.morph.model.orders.Order;
-import net.carmgate.morph.model.orders.TakeDamage;
 import net.carmgate.morph.model.player.Player;
 import net.carmgate.morph.model.player.Player.FOF;
 import net.carmgate.morph.model.player.Player.PlayerType;
@@ -49,7 +46,7 @@ public class Ship extends Entity {
 	private static final float cos = (float) Math.cos(deltaAngle);
 	private static final float sin = (float) Math.sin(deltaAngle);
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(Ship.class);
+	public static final Logger LOGGER = LoggerFactory.getLogger(Ship.class);
 
 	/** The texture under the morph image. */
 	private static Texture baseTexture;
@@ -59,17 +56,10 @@ public class Ship extends Entity {
 	private final Map<Integer, Morph> morphsById = new HashMap<>();
 	private final Map<MorphType, List<Morph>> morphsByType = new HashMap<>();
 
-	// orders
-	private final List<Order> orderList = new ArrayList<>();
-	private final List<Order> newOrderList = new ArrayList<>();
-
 	/** Stores last trail update. It occurred less than trailUpdateInterval ago. */
 	private long trailLastUpdate;
 	private final int trailUpdateInterval = Conf.getIntProperty(ConfItem.SHIP_TRAIL_UPDATEINTERVAL);
 	private final Vect3D[] trail = new Vect3D[Conf.getIntProperty(ConfItem.SHIP_TRAIL_NUMBEROFSEGMENTS)];
-
-	// Listeners
-	private final List<DeathListener> deathListeners = new ArrayList<>();
 
 	/***
 	 * Creates a new ship with position (0, 0, 0), mass = 10 assigned to player "self".
@@ -187,16 +177,6 @@ public class Ship extends Entity {
 		return false;
 	}
 
-	/** 
-	 * Adds orders.
-	 * The orders are effectively added at the end of the update cycle
-	 * once the current update cycle orders have been processed.
-	 * @param order
-	 */
-	public void fireOrder(Order order) {
-		newOrderList.add(order);
-	}
-
 	public float getEnergy() {
 		return energy;
 	}
@@ -231,61 +211,6 @@ public class Ship extends Entity {
 
 	public float getRealAccelModulus() {
 		return realAccelModulus;
-	}
-
-	/**
-	 * This method handles orders.
-	 * IMPROVE This probably should be improved. It is quite ugly to have such a if-else cascade.
-	 * However, I don't want to use a handler factory that would kill the current simplicity of orders handling
-	 * @param order
-	 */
-	private void handleOrder(Order order) {
-		if (order instanceof TakeDamage) {
-			LOGGER.debug("Taking damage: " + ((TakeDamage) order).getDamageAmount());
-			// This is not multiplied by lastUpdateTS because the timing is handled by the sender of the event.
-			damage += ((TakeDamage) order).getDamageAmount();
-			if (damage > maxDamage) {
-				fireOrder(new Die());
-			}
-
-			float explosionAngle = (float) (Math.random() * 180 + 90);
-			for (int i = 0; i < 5; i++) {
-				Model.getModel()
-						.getParticleEngine()
-						.addParticle(new Vect3D(pos), new Vect3D(speed).mult(0.25f).rotate((float) (explosionAngle + Math.random() * 5)).add(speed),
-								2, 0.125f,
-								0.5f, 0.2f);
-			}
-
-		} else if (order instanceof Die) {
-			LOGGER.debug("Die !!!");
-
-			dead = true;
-			for (int i = 0; i < 200; i++) {
-				Model.getModel()
-						.getParticleEngine()
-						.addParticle(new Vect3D(pos), new Vect3D(200, 0, 0).rotate((float) (Math.random() * 360)).mult((float) Math.random()).add(speed),
-								2, 0.5f,
-								0.5f, 0.05f);
-			}
-
-			Model.getModel().removeEntity(this);
-
-			// TODO maybe this should better be handled by the Model ?
-			for (DeathListener lst : deathListeners) {
-				lst.handleDeathEvent(this);
-			}
-
-		}
-	}
-
-	private void handleOrders() {
-		for (Order order : orderList) {
-			handleOrder(order);
-		}
-		orderList.clear();
-		orderList.addAll(newOrderList);
-		newOrderList.clear();
 	}
 
 	/** List of ships IAs. */
@@ -423,9 +348,9 @@ public class Ship extends Entity {
 			if (!minZoom) {
 				RenderUtils.renderGauge(50, 16 + 64 * zoomFactor * massScale + 5, Math.min(maxDamage - damage, maxDamage) / maxDamage, 0.2f,
 						new float[] { 0.5f, 1, 0.5f,
-								1 });
+					1 });
 				RenderUtils.renderGauge(50, 16 + 64 * zoomFactor * massScale - 5, Math.min(energy, maxEnergy) / maxEnergy, 0.05f, new float[] { 0.5f, 0.5f, 1,
-						1 });
+					1 });
 			} else {
 				RenderUtils.renderGauge(50, 32 + 5, Math.min(maxDamage - damage, maxDamage) / maxDamage, 0.2f, new float[] { 0.5f, 1, 0.5f, 1 });
 				RenderUtils.renderGauge(50, 32 - 5, Math.min(energy, maxEnergy) / maxEnergy, 0.05f, new float[] { 0.5f, 0.5f, 1, 1 });
@@ -593,8 +518,8 @@ public class Ship extends Entity {
 		rotateProperly();
 		computeSpeedAndPos();
 
-		// Handle orders
-		handleOrders();
+		// FIXME This should not be called here
+		super.update();
 
 		// update trail
 		updateTrail();

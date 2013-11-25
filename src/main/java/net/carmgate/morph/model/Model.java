@@ -271,6 +271,7 @@ public class Model {
 
 		// Update WAs
 		// Create necessary WAs
+		// FIXME if content dead code ?
 		if (viewport.getZoomFactor() > 0.25) {
 			float zoomFactor = Model.getModel().getViewport().getZoomFactor();
 			float windowWidthInWorld = window.getWidth() / zoomFactor;

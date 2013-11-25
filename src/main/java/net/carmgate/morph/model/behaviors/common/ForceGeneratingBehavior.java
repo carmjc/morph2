@@ -1,13 +1,10 @@
 package net.carmgate.morph.model.behaviors.common;
 
 import net.carmgate.morph.model.common.Vect3D;
-import net.carmgate.morph.model.entities.common.Entity;
 
 public abstract class ForceGeneratingBehavior implements Behavior {
 
-	@Override
-	public abstract Behavior cloneForEntity(Entity entity);
-
+	// TODO What is the difference between a steering and a non steering force ?
 	public abstract Vect3D getNonSteeringForce();
 
 }
