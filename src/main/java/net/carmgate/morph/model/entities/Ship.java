@@ -14,14 +14,12 @@ import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.behaviors.common.ActivatedMorph;
 import net.carmgate.morph.model.behaviors.common.Behavior;
 import net.carmgate.morph.model.behaviors.common.Needs;
-import net.carmgate.morph.model.behaviors.steering.Orbit;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Morph.MorphType;
 import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.model.entities.common.EntityHints;
 import net.carmgate.morph.model.entities.common.EntityType;
 import net.carmgate.morph.model.entities.common.Renderable;
-import net.carmgate.morph.model.entities.common.listener.DeathListener;
 import net.carmgate.morph.model.player.Player;
 import net.carmgate.morph.model.player.Player.FOF;
 import net.carmgate.morph.ui.common.RenderUtils;
@@ -96,11 +94,7 @@ public class Ship extends Entity {
 				for (ActivatedMorph need : needs) {
 					for (Morph morph : morphsById.values()) {
 						if (morph.getMorphType() == need.morphType()) {
-							pendingBehaviorsAddition.add(behavior);
-							// TODO Clean this and similar items
-							if (behavior instanceof Orbit) {
-								((Orbit) behavior).setStarsContribution(starsContribution);
-							}
+							super.addBehavior(behavior);
 
 							return;
 						}
@@ -114,10 +108,6 @@ public class Ship extends Entity {
 		super.addBehavior(behavior);
 	}
 
-	public void addListener(DeathListener e) {
-		deathListeners.add(e);
-	}
-
 	public void addMorph(Morph morph) {
 		morphsById.put(morph.getId(), morph);
 
@@ -129,6 +119,43 @@ public class Ship extends Entity {
 		list.add(morph);
 
 		updateMorphDependantValues();
+	}
+
+	@Override
+	protected void autoRotate() {
+
+		float secondsSinceLastUpdate = Model.getModel().getSecondsSinceLastUpdate();
+
+		// if steeringForce is too small, we must not change the orientation or we will be
+		// by orientation fluctuations due to improper angle approximation
+		// LOGGER.debug("" + steeringForce.modulus());
+		if (steeringForce.modulus() < 0.1) {
+			return;
+		}
+
+		// rotate properly along the speed vector (historically along the steering force vector)
+		float newHeading;
+		float headingFactor = steeringForce.modulus() / maxSteeringForce * mass * 4;
+		if (headingFactor > 3) {
+			newHeading = new Vect3D(Vect3D.NORTH).angleWith(steeringForce);
+		} else if (headingFactor > 0) {
+			newHeading = new Vect3D(Vect3D.NORTH).angleWith(new Vect3D(steeringForce).mult(headingFactor).add(new Vect3D(speed).mult(1 - headingFactor / 3)));
+		} else {
+			newHeading = new Vect3D(Vect3D.NORTH).angleWith(speed);
+		}
+
+		// heading = newHeading;
+		float angleDiff = (newHeading - heading + 360) % 360;
+		float maxAngleSpeed = Conf.getIntProperty(ConfItem.MORPH_SIMPLEPROPULSOR_MAXANGLESPEEDPERMASSUNIT) / mass;
+		if (angleDiff < maxAngleSpeed * Math.max(1, angleDiff / 180) * secondsSinceLastUpdate) {
+			heading = newHeading;
+		} else if (angleDiff < 180) {
+			heading = heading + maxAngleSpeed * Math.max(1, angleDiff / 180) * secondsSinceLastUpdate;
+		} else if (angleDiff >= 360 - maxAngleSpeed * Math.max(1, angleDiff / 180) * secondsSinceLastUpdate) {
+			heading = newHeading;
+		} else {
+			heading = heading - maxAngleSpeed * Math.max(1, angleDiff / 180) * secondsSinceLastUpdate;
+		}
 	}
 
 	@Override
@@ -146,20 +173,7 @@ public class Ship extends Entity {
 			}
 		}
 
-		// clone behaviors
-		for (Behavior behavior : behaviorSet) {
-			newShip.addBehavior(behavior.cloneForEntity(newShip));
-		}
-
-		// clone behaviors being added
-		for (Behavior behavior : pendingBehaviorsAddition) {
-			newShip.addBehavior(behavior.cloneForEntity(newShip));
-		}
-
-		// clone behaviors
-		for (Behavior behavior : pendingBehaviorsRemoval) {
-			newShip.removeBehavior(behavior.cloneForEntity(newShip));
-		}
+		cloneBehaviors(newShip);
 
 		return newShip;
 	}
@@ -180,6 +194,10 @@ public class Ship extends Entity {
 		return energy;
 	}
 
+	/**
+	 * @param morphType a morph type
+	 * @return the highest level of a morph of given type inthe ship.
+	 */
 	private int getMaxLevelForMorphType(final MorphType morphType) {
 		int maxLevel = 0;
 
@@ -195,12 +213,16 @@ public class Ship extends Entity {
 		return maxLevel;
 	}
 
+	/**
+	 * @param id the id of the morph to retrieve.
+	 * @return the morph matching the given id in the ship.
+	 */
 	public Morph getMorphById(int id) {
 		return morphsById.get(id);
 	}
 
 	/**
-	 * <b>Warning : Do not modify the resulting List</b>
+	 * <b>Warning : Do not modify the resulting List. There might be concurrency issues.</b>
 	 * @param morphType
 	 * @return a list containing all the morphs of a given type.
 	 */
@@ -235,10 +257,6 @@ public class Ship extends Entity {
 		}
 	}
 
-	public void removeListener(DeathListener e) {
-		deathListeners.remove(e);
-	}
-
 	@Override
 	public void render(int glMode) {
 
@@ -257,7 +275,7 @@ public class Ship extends Entity {
 
 		// Render behaviors
 		if (!isSelectRendering(glMode)) {
-			for (Behavior behavior : behaviorSet) {
+			for (Behavior behavior : getBehaviors()) {
 				if (behavior instanceof Renderable) {
 					((Renderable) behavior).render(glMode);
 				}
@@ -351,7 +369,7 @@ public class Ship extends Entity {
 		}
 
 		// Render morphs
-		if (Model.getModel().getUiContext().isMorphsShown()) {
+		if (Model.getModel().getUiContext().isDebugMorphsShown()) {
 			GL11.glScalef(1f / (2 * zoomFactor), 1f / (2 * zoomFactor), 1);
 			Main.shipEditorRender(this, glMode);
 			GL11.glScalef(2 * zoomFactor, 2 * zoomFactor, 1);
@@ -458,43 +476,6 @@ public class Ship extends Entity {
 	}
 
 	@Override
-	protected void autoRotate() {
-
-		float secondsSinceLastUpdate = Model.getModel().getSecondsSinceLastUpdate();
-
-		// if steeringForce is too small, we must not change the orientation or we will be
-		// by orientation fluctuations due to improper angle approximation
-		// LOGGER.debug("" + steeringForce.modulus());
-		if (steeringForce.modulus() < 0.1) {
-			return;
-		}
-
-		// rotate properly along the speed vector (historically along the steering force vector)
-		float newHeading;
-		float headingFactor = steeringForce.modulus() / maxSteeringForce * mass * 4;
-		if (headingFactor > 3) {
-			newHeading = new Vect3D(Vect3D.NORTH).angleWith(steeringForce);
-		} else if (headingFactor > 0) {
-			newHeading = new Vect3D(Vect3D.NORTH).angleWith(new Vect3D(steeringForce).mult(headingFactor).add(new Vect3D(speed).mult(1 - headingFactor / 3)));
-		} else {
-			newHeading = new Vect3D(Vect3D.NORTH).angleWith(speed);
-		}
-
-		// heading = newHeading;
-		float angleDiff = (newHeading - heading + 360) % 360;
-		float maxAngleSpeed = Conf.getIntProperty(ConfItem.MORPH_SIMPLEPROPULSOR_MAXANGLESPEEDPERMASSUNIT) / mass;
-		if (angleDiff < maxAngleSpeed * Math.max(1, angleDiff / 180) * secondsSinceLastUpdate) {
-			heading = newHeading;
-		} else if (angleDiff < 180) {
-			heading = heading + maxAngleSpeed * Math.max(1, angleDiff / 180) * secondsSinceLastUpdate;
-		} else if (angleDiff >= 360 - maxAngleSpeed * Math.max(1, angleDiff / 180) * secondsSinceLastUpdate) {
-			heading = newHeading;
-		} else {
-			heading = heading - maxAngleSpeed * Math.max(1, angleDiff / 180) * secondsSinceLastUpdate;
-		}
-	}
-
-	@Override
 	public String toString() {
 		return "ship:" + pos.toString();
 	}
@@ -521,6 +502,7 @@ public class Ship extends Entity {
 		maxSteeringForce /= mass;
 	}
 
+	@Override
 	protected void updateTrail() {
 		if (trailLastUpdate == 0 || Model.getModel().getLastUpdateTS() - trailLastUpdate > trailUpdateInterval) {
 			for (int i = trail.length - 2; i >= 0; i--) {

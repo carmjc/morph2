@@ -12,6 +12,7 @@ import net.carmgate.morph.model.behaviors.common.ForceGeneratingBehavior;
 import net.carmgate.morph.model.behaviors.common.Movement;
 import net.carmgate.morph.model.behaviors.steering.Orbit;
 import net.carmgate.morph.model.common.Vect3D;
+import net.carmgate.morph.model.entities.Ship;
 import net.carmgate.morph.model.entities.Star;
 import net.carmgate.morph.model.entities.common.listener.DeathListener;
 import net.carmgate.morph.model.orders.Die;
@@ -64,24 +65,26 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 	protected float maxEnergy = 0;
 
 	protected boolean selected;
-	protected final Player player;
+	private final Player player;
 
-	protected final Set<Behavior> behaviorSet = new HashSet<>();
-	protected final Set<Behavior> pendingBehaviorsRemoval = new HashSet<>();
-	protected final Set<Behavior> pendingBehaviorsAddition = new HashSet<>();
-	protected StarsContribution starsContribution;
+	private final Set<Behavior> behaviorSet = new HashSet<>();
+	private final Set<Behavior> pendingBehaviorsRemoval = new HashSet<>();
+	private final Set<Behavior> pendingBehaviorsAddition = new HashSet<>();
+	private StarsContribution starsContribution;
 
-	protected boolean dead;
+	private boolean dead;
 	protected float realAccelModulus;
 	private final List<Order> newOrderList = new ArrayList<>();
 	private final List<Order> orderList = new ArrayList<>();
-	protected final List<DeathListener> deathListeners = new ArrayList<>();
+	private final List<DeathListener> deathListeners = new ArrayList<>();
 
 	protected Entity(Player player) {
 		synchronized (nextId) {
 			id = nextId++;
 		}
 
+		// TODO We should not have to exclude Stars within Entity
+		// Entity should not have to know Stars
 		if (!(this instanceof Star)) {
 			starsContribution = new StarsContribution(this);
 			addBehavior(starsContribution);
@@ -91,7 +94,8 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 	}
 
 	/**
-	 * Adds a behavior to the ship if the needed morphs are present is the ship
+	 * Adds a behavior to the ship if the needed morphs are present is the ship.
+	 * Warning : This method is overridden in {@link Ship}
 	 * @param behavior
 	 * @return true if it was possible to add the behavior
 	 */
@@ -103,7 +107,14 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 		}
 	}
 
-	public void addEnergy(float energyInc) {
+	/**
+	 * @param deathListener The death listener to add
+	 */
+	public void addDeathListener(DeathListener deathListener) {
+		deathListeners.add(deathListener);
+	}
+
+	public final void addEnergy(float energyInc) {
 		energy = Math.min(maxEnergy, energy + energyInc);
 	}
 
@@ -111,11 +122,37 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 		steeringForce.add(force);
 	}
 
+	/**
+	 * Rotates the entity to match its orientation with its heading.
+	 */
 	protected void autoRotate() {
 		// Empty default implementation
 	}
 
-	protected void computeForcesFromBehavior() {
+	/**
+	 * Clone the behaviors of the current entity into the entity passed as parameter.
+	 * TODO The logic should be reversed, it's not clean to have to call this method from the subclass.
+	 * @param clone the entity to clone the behaviors into.
+	 */
+	protected void cloneBehaviors(Entity clone) {
+		// clone behaviors
+		for (Behavior behavior : behaviorSet) {
+			clone.addBehavior(behavior.cloneForEntity(clone));
+		}
+
+		// clone behaviors being added
+		for (Behavior behavior : pendingBehaviorsAddition) {
+			clone.addBehavior(behavior.cloneForEntity(clone));
+		}
+
+		// clone behaviors
+		for (Behavior behavior : pendingBehaviorsRemoval) {
+			clone.removeBehavior(behavior.cloneForEntity(clone));
+		}
+
+	}
+
+	private void computeForcesFromBehavior() {
 		effectiveForce.nullify();
 		steeringForce.nullify();
 
@@ -139,7 +176,7 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 
 	}
 
-	protected void computeSpeedAndPos() {
+	private void computeSpeedAndPos() {
 		// real accel is necessary to calculate propulsors energy consumption
 		// it is the difference between the speed in the new cycle and
 		// the speed in the previous cycle
@@ -156,45 +193,49 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 	 * once the current update cycle orders have been processed.
 	 * @param order
 	 */
-	public void fireOrder(Order order) {
+	public final void fireOrder(Order order) {
 		newOrderList.add(order);
 	}
 
-	public float getHeading() {
+	protected Set<Behavior> getBehaviors() {
+		return behaviorSet;
+	}
+
+	public final float getHeading() {
 		return heading;
 	}
 
 	@Override
-	public int getId() {
+	public final int getId() {
 		return id;
 	}
 
-	public float getMass() {
+	public final float getMass() {
 		return mass;
 	}
 
-	public float getMaxSpeed() {
+	public final float getMaxSpeed() {
 		return maxSpeed;
 	}
 
-	public float getMaxSteeringForce() {
+	public final float getMaxSteeringForce() {
 		return maxSteeringForce;
 	}
 
-	public Player getPlayer() {
+	public final Player getPlayer() {
 		return player;
 	}
 
-	public Vect3D getPos() {
+	public final Vect3D getPos() {
 		return pos;
-	}
-
-	public Vect3D getSpeed() {
-		return speed;
 	}
 
 	// No contract specific to the entity
 	// IMPROVE we should probably define the entities in a different way
+
+	public final Vect3D getSpeed() {
+		return speed;
+	}
 
 	/**
 	 * This method handles orders.
@@ -251,18 +292,18 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 		newOrderList.clear();
 	}
 
-	public boolean isDead() {
+	public final boolean isDead() {
 		return dead;
 	}
 
 	@Override
-	public boolean isSelected() {
+	public final boolean isSelected() {
 		return selected;
 	}
 
-	protected boolean isSelectRendering(int glMode) {
+	protected final boolean isSelectRendering(int glMode) {
 		return glMode == GL11.GL_SELECT ||
-				Model.getModel().getUiContext().isDebugMode() && Model.getModel().getUiContext().isSelectViewMode();
+				Model.getModel().getUiContext().isDebugMode() && Model.getModel().getUiContext().isDebugSelectViewMode();
 	}
 
 	// TODO This should be handle in a more generic fashion
@@ -273,7 +314,7 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 
 	}
 
-	public void processPendingBehaviors() {
+	public final void processPendingBehaviors() {
 		// Cleaning
 		for (Behavior behavior : pendingBehaviorsRemoval) {
 			behaviorSet.remove(behavior);
@@ -293,7 +334,7 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 	 * This way, the handling of behaviors is insensitive to the order in which they are processed and removed.
 	 * @param behavior to remove
 	 */
-	public void removeBehavior(Behavior behavior) {
+	public final void removeBehavior(Behavior behavior) {
 		pendingBehaviorsRemoval.add(behavior);
 	}
 
@@ -302,12 +343,19 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 	 * This method queues the behavior removal.
 	 * @param behaviorClass
 	 */
-	public void removeBehaviorsByClass(Class<?> behaviorClass) {
+	public final void removeBehaviorsByClass(Class<?> behaviorClass) {
 		if (behaviorClass == null) {
 			LOGGER.error("This method parameter should not be null");
 		}
 
 		CollectionUtils.select(behaviorSet, new SameClassPredicate(behaviorClass), pendingBehaviorsRemoval);
+	}
+
+	/**
+	 * @param deathListener The death listener to remove
+	 */
+	public void removeDeathListener(DeathListener deathListener) {
+		deathListeners.remove(deathListener);
 	}
 
 	public void setHeading(float heading) {

@@ -45,7 +45,7 @@ public class EnterOrbit implements Action {
 		for (Entity selectable : Model.getModel().getSimpleSelection()) {
 			if (selectable != target) {
 
-				// Remove existing arrive and combat behaviors
+				// Remove existing movement and combat behaviors
 				// TODO We should find a more systematic way of removing existing user triggered behaviors
 				selectable.removeBehaviorsByClass(Movement.class);
 				selectable.removeBehaviorsByClass(InflictLaserDamage.class);

@@ -38,7 +38,7 @@ public class MoveTo implements Action {
 			if (selectable instanceof Ship) {
 				Vect3D target = new Vect3D(GameMouse.getXInWorld(), GameMouse.getYInWorld(), 0);
 
-				// Remove existing arrive and combat behaviors
+				// Remove existing movement and combat behaviors
 				selectable.removeBehaviorsByClass(Movement.class);
 				selectable.removeBehaviorsByClass(InflictLaserDamage.class);
 

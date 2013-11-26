@@ -11,9 +11,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @ActionHints(keyboardActionAutoload = true)
-public class ToggleSelectViewMode implements Action {
+public class ToggleDebugSelectViewMode implements Action {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(ToggleSelectViewMode.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(ToggleDebugSelectViewMode.class);
 
 	@Override
 	public void run() {
@@ -24,8 +24,8 @@ public class ToggleSelectViewMode implements Action {
 			return;
 		}
 
-		LOGGER.debug("Toggle debug rendering mode");
-		Model.getModel().getUiContext().toggleSelectViewMode();
+		LOGGER.debug("Toggle the rendering to selection mode");
+		Model.getModel().getUiContext().toggleDebugSelectViewMode();
 
 	}
 

@@ -45,8 +45,6 @@ public class Star extends Entity {
 		this.mass = mass;
 		this.radius = radius;
 		this.energyFlow = energyFlow;
-
-		starsContribution = null;
 	}
 
 	public float getEnergyFlow() {

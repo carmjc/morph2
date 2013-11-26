@@ -26,7 +26,7 @@ import net.carmgate.morph.model.entities.Morph.MorphType;
 import net.carmgate.morph.model.entities.Ship;
 import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.model.entities.common.Renderable;
-import net.carmgate.morph.model.ui.UiState;
+import net.carmgate.morph.model.ui.UIState;
 import net.carmgate.morph.ui.common.RenderUtils;
 import net.carmgate.morph.ui.common.RenderingSteps;
 
@@ -74,11 +74,11 @@ public class Main {
 					GL11.glPushName(morph.getId());
 					morph.render(glMode);
 					GL11.glPopName();
-					GL11.glTranslatef(-128, 0, 0);
+					GL11.glTranslatef(-64, 0, 0);
 				}
 			}
 
-			GL11.glTranslatef(128, 0, 0);
+			GL11.glTranslatef(64, 0, 0);
 			GL11.glRotatef(60, 0, 0, 1);
 			for (int i = 0; i < 6; i++) {
 				GL11.glRotatef(60, 0, 0, 1);
@@ -91,14 +91,14 @@ public class Main {
 						GL11.glPopName();
 						GL11.glRotatef((i + 2) * 60, 0, 0, 1);
 					}
-					GL11.glTranslatef(128, 0, 0);
+					GL11.glTranslatef(64, 0, 0);
 				}
 			}
 			GL11.glRotatef(-60, 0, 0, 1);
 
 			layer++;
 		}
-		GL11.glTranslatef(-(layer - 1) * 128, 0, 0);
+		GL11.glTranslatef(-(layer - 1) * 64, 0, 0);
 	}
 
 	private final Model model = Model.getModel();
@@ -290,7 +290,7 @@ public class Main {
 
 			RenderUtils.renderLineToConsole("FPS: " + meanFpsCounter, 1);
 
-			if (Model.getModel().getUiContext().getUiState() == UiState.SHIP_EDITOR) {
+			if (Model.getModel().getUiContext().getUiState() == UIState.SHIP_EDITOR) {
 				shipEditorRender(Model.getModel().getSelfShip(), GL11.GL_RENDER);
 			}
 		} catch (Exception e) {
@@ -300,7 +300,7 @@ public class Main {
 
 	private void runAction(Action action) {
 		ActionHints actionHints = action.getClass().getAnnotation(ActionHints.class);
-		for (UiState uiState : actionHints.uiState()) {
+		for (UIState uiState : actionHints.uiState()) {
 			if (uiState == Model.getModel().getUiContext().getUiState()) {
 				action.run();
 				break;

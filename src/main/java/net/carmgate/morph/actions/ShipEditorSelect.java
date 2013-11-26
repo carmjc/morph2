@@ -10,7 +10,7 @@ import net.carmgate.morph.actions.common.Event;
 import net.carmgate.morph.actions.common.Event.EventType;
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.entities.Morph;
-import net.carmgate.morph.model.ui.UiState;
+import net.carmgate.morph.model.ui.UIState;
 import net.carmgate.morph.model.ui.Window;
 
 import org.lwjgl.BufferUtils;
@@ -20,7 +20,7 @@ import org.lwjgl.util.glu.GLU;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@ActionHints(uiState = UiState.SHIP_EDITOR)
+@ActionHints(uiState = UIState.SHIP_EDITOR)
 public class ShipEditorSelect implements Action {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ShipEditorSelect.class);

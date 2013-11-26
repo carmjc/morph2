@@ -58,7 +58,7 @@ public class SpawnShips implements Behavior, DeathListener {
 				Ship newShip = modelShip.clone();
 				newShip.getPos().copy(spawnLocation);
 				newShip.setHeading((float) (Math.random() * 360));
-				newShip.addListener(this);
+				newShip.addDeathListener(this);
 				Model.getModel().addEntity(newShip);
 				spawnedShips.add(newShip);
 			}

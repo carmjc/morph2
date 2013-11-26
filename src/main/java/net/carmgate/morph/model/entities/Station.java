@@ -109,7 +109,7 @@ public class Station extends Entity {
 
 		// Render behaviors
 		if (!isSelectRendering(glMode)) {
-			for (Behavior behavior : behaviorSet) {
+			for (Behavior behavior : getBehaviors()) {
 				if (behavior instanceof Renderable) {
 					((Renderable) behavior).render(glMode);
 				}

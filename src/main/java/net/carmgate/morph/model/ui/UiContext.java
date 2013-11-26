@@ -1,14 +1,21 @@
 package net.carmgate.morph.model.ui;
 
+/**
+ * This class stores the context of the UI.
+ * Among other things :
+ * <ul><li>The current {@link UIState}</li>
+ * <li>The pause state : true if the game is paused</li>
+ * <li>Some debug specific ui flags.</li></ul>
+ */
 public class UiContext {
 
 	private boolean paused;
-	private UiState uiState = UiState.NORMAL;
+	private UIState uiState = UIState.NORMAL;
 	private boolean debugMode = false;
-	private boolean morphsShown = false;
-	private boolean selectViewMode = false;
+	private boolean debugMorphsShown = false;
+	private boolean debugSelectViewMode = false;
 
-	public UiState getUiState() {
+	public UIState getUiState() {
 		return uiState;
 	}
 
@@ -16,19 +23,19 @@ public class UiContext {
 		return debugMode;
 	}
 
-	public boolean isMorphsShown() {
-		return morphsShown;
+	public boolean isDebugMorphsShown() {
+		return debugMorphsShown;
+	}
+
+	public boolean isDebugSelectViewMode() {
+		return debugSelectViewMode;
 	}
 
 	public boolean isPaused() {
 		return paused;
 	}
 
-	public boolean isSelectViewMode() {
-		return selectViewMode;
-	}
-
-	public void setUiState(UiState uiState) {
+	public void setUiState(UIState uiState) {
 		this.uiState = uiState;
 	}
 
@@ -36,16 +43,16 @@ public class UiContext {
 		debugMode = !debugMode;
 	}
 
-	public void toggleMorphsShown() {
-		morphsShown = !morphsShown;
+	public void toggleDebugMorphsShown() {
+		debugMorphsShown = !debugMorphsShown;
+	}
+
+	public void toggleDebugSelectViewMode() {
+		debugSelectViewMode = !debugSelectViewMode;
 	}
 
 	public void togglePaused() {
 		paused = !paused;
-	}
-
-	public void toggleSelectViewMode() {
-		selectViewMode = !selectViewMode;
 	}
 
 }

@@ -47,7 +47,7 @@ public class FollowAndInflictDamage implements Action {
 			if (selectable instanceof Ship && selectable != targetShip) {
 				Ship ship = (Ship) selectable;
 
-				// Remove existing arrive and combat behaviors
+				// Remove existing movement and combat behaviors
 				ship.removeBehaviorsByClass(Movement.class);
 				ship.removeBehaviorsByClass(InflictLaserDamage.class);
 
