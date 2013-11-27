@@ -20,16 +20,7 @@ public class DraggingWorld implements Action {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(DraggingWorld.class);
 
-	private final DragContext dragContext;
-
-	public DraggingWorld() {
-		dragContext = null;
-	}
-
-	public DraggingWorld(DragContext dragContext) {
-		this.dragContext = dragContext;
-
-	}
+	private DragContext dragContext;
 
 	@Override
 	public void run() {
@@ -58,4 +49,5 @@ public class DraggingWorld implements Action {
 
 		LOGGER.debug(Model.getModel().getViewport().getFocalPoint() + " - " + GameMouse.getPosInWord());
 	}
+
 }

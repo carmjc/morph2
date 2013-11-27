@@ -3,7 +3,6 @@ package net.carmgate.morph.actions;
 import java.nio.IntBuffer;
 import java.util.List;
 
-import net.carmgate.morph.Main;
 import net.carmgate.morph.actions.common.Action;
 import net.carmgate.morph.actions.common.ActionHints;
 import net.carmgate.morph.actions.common.Event;
@@ -12,6 +11,7 @@ import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.entities.Morph;
 import net.carmgate.morph.model.ui.UIState;
 import net.carmgate.morph.model.ui.Window;
+import net.carmgate.morph.model.ui.layers.ShipEditorLayer;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.input.Mouse;
@@ -24,8 +24,10 @@ import org.slf4j.LoggerFactory;
 public class ShipEditorSelect implements Action {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ShipEditorSelect.class);
+	private ShipEditorLayer shipEditor;
 
 	public ShipEditorSelect() {
+		shipEditor = new ShipEditorLayer(Model.getModel().getSelfShip());
 	}
 
 	@Override
@@ -77,7 +79,7 @@ public class ShipEditorSelect implements Action {
 		GL11.glOrtho(0, window.getWidth(), 0, -window.getHeight(), 1, -1);
 		GL11.glViewport(0, 0, window.getWidth(), window.getHeight());
 
-		Main.shipEditorRender(Model.getModel().getSelfShip(), GL11.GL_SELECT);
+		shipEditor.render(GL11.GL_SELECT);
 
 		GL11.glMatrixMode(GL11.GL_PROJECTION);
 		GL11.glPopMatrix();

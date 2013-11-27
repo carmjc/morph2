@@ -2,10 +2,9 @@ package net.carmgate.morph;
 
 import java.awt.Font;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -20,15 +19,12 @@ import net.carmgate.morph.actions.common.Event.EventType;
 import net.carmgate.morph.actions.drag.DragContext;
 import net.carmgate.morph.conf.Conf;
 import net.carmgate.morph.model.Model;
-import net.carmgate.morph.model.common.Vect3D;
-import net.carmgate.morph.model.entities.Morph;
-import net.carmgate.morph.model.entities.Morph.MorphType;
-import net.carmgate.morph.model.entities.Ship;
 import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.model.entities.common.Renderable;
 import net.carmgate.morph.model.ui.UIState;
+import net.carmgate.morph.model.ui.layers.NormalLayer;
+import net.carmgate.morph.model.ui.layers.ShipEditorLayer;
 import net.carmgate.morph.ui.common.RenderUtils;
-import net.carmgate.morph.ui.common.RenderingSteps;
 
 import org.lwjgl.LWJGLException;
 import org.lwjgl.input.Keyboard;
@@ -37,9 +33,12 @@ import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
 import org.lwjgl.opengl.GL11;
 import org.newdawn.slick.TrueTypeFont;
+import org.reflections.ReflectionUtils;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Predicate;
 
 public class Main {
 
@@ -53,63 +52,18 @@ public class Main {
 		sample.start();
 	}
 
-	// TODO move this code to some more proper location
-	public static void shipEditorRender(Ship ship, int glMode) {
-		List<Morph> morphsToDraw = new ArrayList<>();
-		for (MorphType morphType : MorphType.values()) {
-			List<Morph> morphsByType = ship.getMorphsByType(morphType);
-			if (morphsByType != null) {
-				morphsToDraw.addAll(morphsByType);
-			}
-		}
-
-		int layer = 0;
-		Iterator<Morph> morphIt = morphsToDraw.iterator();
-		while (morphIt.hasNext()) {
-
-			// draw the most centric one
-			if (layer == 0) {
-				if (morphIt.hasNext()) {
-					Morph morph = morphIt.next();
-					GL11.glPushName(morph.getId());
-					morph.render(glMode);
-					GL11.glPopName();
-					GL11.glTranslatef(-64, 0, 0);
-				}
-			}
-
-			GL11.glTranslatef(64, 0, 0);
-			GL11.glRotatef(60, 0, 0, 1);
-			for (int i = 0; i < 6; i++) {
-				GL11.glRotatef(60, 0, 0, 1);
-				for (int j = 0; j < layer; j++) {
-					if (morphIt.hasNext()) {
-						Morph morph = morphIt.next();
-						GL11.glRotatef(-(i + 2) * 60, 0, 0, 1);
-						GL11.glPushName(morph.getId());
-						morph.render(glMode);
-						GL11.glPopName();
-						GL11.glRotatef((i + 2) * 60, 0, 0, 1);
-					}
-					GL11.glTranslatef(64, 0, 0);
-				}
-			}
-			GL11.glRotatef(-60, 0, 0, 1);
-
-			layer++;
-		}
-		GL11.glTranslatef(-(layer - 1) * 64, 0, 0);
-	}
-
 	private final Model model = Model.getModel();
 
 	private final List<Action> mouseActions = new LinkedList<>();
 
 	private final List<Action> keyboardActions = new LinkedList<>();
-	private int fpsCounter = 0;
 
+	private int fpsCounter = 0;
 	private float meanFpsCounter = 0;
 	private long lastFpsResetTs = 0;
+
+	private ShipEditorLayer shipEditorLayer;
+	private NormalLayer normalLayer;
 
 	/**
 	 * This method initializes UI handlers.
@@ -119,7 +73,7 @@ public class Main {
 		// The drag context shared by all actions needing to handle drag
 		DragContext dragContext = new DragContext();
 
-		// select actions have to be handled before anything else
+		// select actions having to be handled before anything else
 		// because some other actions (like MoveTo or Attack) need the result of the action selection
 		mouseActions.add(new WorldSelect());
 		mouseActions.add(new WorldMultiSelect());
@@ -131,12 +85,31 @@ public class Main {
 			try {
 				Action actionInstance;
 
+				// Instanciate the action
+				actionInstance = action.newInstance();
+
 				// Handle actions hints
 				// Instanciate drag actions with common drag context
 				if (action.getAnnotation(ActionHints.class).dragAction()) {
-					actionInstance = action.getConstructor(DragContext.class).newInstance(dragContext);
-				} else {
-					actionInstance = action.newInstance();
+					// Get the fields of type DragContext
+					Set<Field> fields = ReflectionUtils.getFields(action, new Predicate<Field>() {
+						@Override
+						public boolean apply(Field input) {
+							return input.getType().equals(DragContext.class);
+						}
+					});
+
+					// set the DragContext fields
+					for (Field field : fields) {
+						boolean accessible = field.isAccessible();
+						if (!accessible) {
+							field.setAccessible(true);
+						}
+						field.set(actionInstance, dragContext);
+						if (!accessible) {
+							field.setAccessible(false);
+						}
+					}
 				}
 
 				// autoload mouse actions if requested
@@ -148,8 +121,7 @@ public class Main {
 				if (action.getAnnotation(ActionHints.class).keyboardActionAutoload()) {
 					keyboardActions.add(actionInstance);
 				}
-			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException
-					| SecurityException e) {
+			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | SecurityException e) {
 				LOGGER.error("Exception raised while creating actions", e);
 			}
 
@@ -200,7 +172,7 @@ public class Main {
 				continue;
 			}
 
-			// if the class is abstract, do not try instanciate either
+			// if the class is abstract, do not try to instanciate either
 			if (Modifier.isAbstract(renderable.getModifiers())) {
 				// if the initRenderer method is not abstract in this class, log an error
 				try {
@@ -262,37 +234,19 @@ public class Main {
 	public void render() {
 
 		try {
-			Vect3D focalPoint = model.getViewport().getFocalPoint();
-			float zoomFactor = model.getViewport().getZoomFactor();
-			if (model.getViewport().getLockedOnEntity() != null) {
-				focalPoint.copy(new Vect3D().add(model.getViewport().getLockedOnEntity().getPos()).mult(zoomFactor));
+
+			switch (Model.getModel().getUiContext().getUiState()) {
+			case NORMAL:
+				normalLayer.render(GL11.GL_RENDER);
+				break;
+			case SHIP_EDITOR:
+				normalLayer.render(GL11.GL_RENDER);
+				shipEditorLayer.render(GL11.GL_RENDER);
+				break;
 			}
-
-			GL11.glTranslatef(-focalPoint.x, -focalPoint.y, -focalPoint.z);
-			GL11.glScalef(zoomFactor, zoomFactor, 1);
-
-			Model.getModel().getRootWA().render(GL11.GL_RENDER);
-
-			// Rendering all renderable elements
-			for (RenderingSteps renderingStep : RenderingSteps.values()) {
-				if (Model.getModel().getEntitiesByRenderingType(renderingStep) != null) {
-					for (Entity renderable : Model.getModel().getEntitiesByRenderingType(renderingStep).values()) {
-						renderable.render(GL11.GL_RENDER);
-					}
-				}
-			}
-
-			// Render particles
-			model.getParticleEngine().render(GL11.GL_RENDER);
-
-			GL11.glScalef(1f / zoomFactor, 1f / zoomFactor, 1);
-			GL11.glTranslatef(focalPoint.x, focalPoint.y, focalPoint.z);
 
 			RenderUtils.renderLineToConsole("FPS: " + meanFpsCounter, 1);
 
-			if (Model.getModel().getUiContext().getUiState() == UIState.SHIP_EDITOR) {
-				shipEditorRender(Model.getModel().getSelfShip(), GL11.GL_RENDER);
-			}
 		} catch (Exception e) {
 			LOGGER.debug("Exception caught in main loop.", e);
 		}
@@ -317,6 +271,10 @@ public class Main {
 
 		// scan for renderers
 		initRenderables();
+
+		// init the layers
+		shipEditorLayer = new ShipEditorLayer(Model.getModel().getSelfShip());
+		normalLayer = new NormalLayer();
 
 		// Configure Actions
 		initActions();

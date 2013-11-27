@@ -11,15 +11,7 @@ import net.carmgate.morph.model.Model;
 @ActionHints(dragAction = true, mouseActionAutoload = true)
 public class DraggedWorld implements Action {
 
-	private final DragContext dragContext;
-
-	public DraggedWorld() {
-		dragContext = null;
-	}
-
-	public DraggedWorld(DragContext dragContext) {
-		this.dragContext = dragContext;
-	}
+	private DragContext dragContext;
 
 	@Override
 	public void run() {

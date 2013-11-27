@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import net.carmgate.morph.Main;
 import net.carmgate.morph.conf.Conf;
 import net.carmgate.morph.conf.Conf.ConfItem;
 import net.carmgate.morph.model.Model;
@@ -22,6 +21,7 @@ import net.carmgate.morph.model.entities.common.EntityType;
 import net.carmgate.morph.model.entities.common.Renderable;
 import net.carmgate.morph.model.player.Player;
 import net.carmgate.morph.model.player.Player.FOF;
+import net.carmgate.morph.model.ui.layers.ShipEditorLayer;
 import net.carmgate.morph.ui.common.RenderUtils;
 import net.carmgate.morph.ui.common.RenderingHints;
 import net.carmgate.morph.ui.common.RenderingSteps;
@@ -57,6 +57,8 @@ public class Ship extends Entity {
 	private long trailLastUpdate;
 	private final int trailUpdateInterval = Conf.getIntProperty(ConfItem.SHIP_TRAIL_UPDATEINTERVAL);
 	private final Vect3D[] trail = new Vect3D[Conf.getIntProperty(ConfItem.SHIP_TRAIL_NUMBEROFSEGMENTS)];
+
+	private ShipEditorLayer shipEditor = new ShipEditorLayer(this);
 
 	/***
 	 * Creates a new ship with position (0, 0, 0), mass = 10 assigned to player "self".
@@ -368,18 +370,14 @@ public class Ship extends Entity {
 			GL11.glScalef(zoomFactor, zoomFactor, 1);
 		}
 
-		// Render morphs
+		// Render morphs for debugging purpose
 		if (Model.getModel().getUiContext().isDebugMorphsShown()) {
 			GL11.glScalef(1f / (2 * zoomFactor), 1f / (2 * zoomFactor), 1);
-			Main.shipEditorRender(this, glMode);
+			shipEditor.render(glMode);
 			GL11.glScalef(2 * zoomFactor, 2 * zoomFactor, 1);
 		}
 
 		GL11.glTranslatef(-pos.x, -pos.y, -pos.z);
-
-		if (getPlayer().getFof() == FOF.SELF) {
-			RenderUtils.renderLineToConsole("Max DPS: ", 2);
-		}
 
 	}
 
