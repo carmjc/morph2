@@ -5,6 +5,6 @@ package net.carmgate.morph.model.orders;
  * (taking damage, dying, etc.).
  * An order should not depend on the amount of time that past since the order was sent. 
  */
-public interface Order {
+public interface Event {
 	// No specific contract other than what is expressed in the class javadoc
 }

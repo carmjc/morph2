@@ -16,7 +16,7 @@ public class WanderWithinRange extends Wander {
 
 	private final Entity target;
 	private final float range;
-	private float delta = 0;
+	private float delta = 0.2f;
 
 	/**
 	 * Do not use.
@@ -30,7 +30,6 @@ public class WanderWithinRange extends Wander {
 		super(entityToMove, wanderFocusDistance, wanderRadius);
 		this.target = target;
 		this.range = range;
-		delta = 0.2f;
 	}
 
 	@Override
@@ -81,12 +80,12 @@ public class WanderWithinRange extends Wander {
 		}
 
 		Vect3D targetDirection = new Vect3D(new Vect3D(Vect3D.NORTH).normalize(wanderFocusDistance).rotate(movableEntity.getHeading()))
-				.add(new Vect3D(Vect3D.NORTH).normalize(wanderRadius).rotate(wanderAngle));
+		.add(new Vect3D(Vect3D.NORTH).normalize(wanderRadius).rotate(wanderAngle));
 
 		// TODO is it right to multiply by mass ?
 		// What are we multiplying by mass ?
 		getSteeringForce().copy(targetDirection).truncate(movableEntity.getMaxSteeringForce())
-				.mult(movableEntity.getMass());
+		.mult(movableEntity.getMass());
 
 	}
 }

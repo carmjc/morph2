@@ -10,13 +10,15 @@ import net.carmgate.morph.model.behaviors.StarsContribution;
 import net.carmgate.morph.model.behaviors.common.Behavior;
 import net.carmgate.morph.model.behaviors.common.ForceGeneratingBehavior;
 import net.carmgate.morph.model.behaviors.common.Movement;
+import net.carmgate.morph.model.behaviors.passive.Dying;
+import net.carmgate.morph.model.behaviors.passive.TakingDamage;
 import net.carmgate.morph.model.behaviors.steering.Orbit;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Ship;
 import net.carmgate.morph.model.entities.Star;
 import net.carmgate.morph.model.entities.common.listener.DeathListener;
 import net.carmgate.morph.model.orders.Die;
-import net.carmgate.morph.model.orders.Order;
+import net.carmgate.morph.model.orders.Event;
 import net.carmgate.morph.model.orders.TakeDamage;
 import net.carmgate.morph.model.player.Player;
 import net.carmgate.morph.model.player.Player.PlayerType;
@@ -74,8 +76,8 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 
 	private boolean dead;
 	protected float realAccelModulus;
-	private final List<Order> newOrderList = new ArrayList<>();
-	private final List<Order> orderList = new ArrayList<>();
+	private final List<Event> newEventList = new ArrayList<>();
+	private final List<Event> eventList = new ArrayList<>();
 	private final List<DeathListener> deathListeners = new ArrayList<>();
 
 	protected Entity(Player player) {
@@ -193,12 +195,20 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 	 * once the current update cycle orders have been processed.
 	 * @param order
 	 */
-	public final void fireOrder(Order order) {
-		newOrderList.add(order);
+	public final void fireOrder(Event order) {
+		newEventList.add(order);
 	}
 
 	protected Set<Behavior> getBehaviors() {
 		return behaviorSet;
+	}
+
+	public float getDamage() {
+		return damage;
+	}
+
+	public List<DeathListener> getDeathListeners() {
+		return deathListeners;
 	}
 
 	public final float getHeading() {
@@ -214,9 +224,16 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 		return mass;
 	}
 
+	public float getMaxDamage() {
+		return maxDamage;
+	}
+
 	public final float getMaxSpeed() {
 		return maxSpeed;
 	}
+
+	// No contract specific to the entity
+	// IMPROVE we should probably define the entities in a different way
 
 	public final float getMaxSteeringForce() {
 		return maxSteeringForce;
@@ -230,9 +247,6 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 		return pos;
 	}
 
-	// No contract specific to the entity
-	// IMPROVE we should probably define the entities in a different way
-
 	public final Vect3D getSpeed() {
 		return speed;
 	}
@@ -240,56 +254,29 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 	/**
 	 * This method handles orders.
 	 * IMPROVE This probably should be improved. It is quite ugly to have such a if-else cascade.
-	 * However, I don't want to use a handler factory that would kill the current simplicity of orders handling
-	 * @param order
+	 * However, I don't want to use a handler factory that would kill the current simplicity of orders handling inner code
+	 * @param event
 	 */
-	private void handleOrder(Order order) {
-		if (order instanceof TakeDamage) {
-			// LOGGER.debug("Taking damage: " + ((TakeDamage) order).getDamageAmount());
-			// This is not multiplied by lastUpdateTS because the timing is handled by the sender of the event.
-			damage += ((TakeDamage) order).getDamageAmount();
-			if (damage > maxDamage) {
-				fireOrder(new Die());
-			}
+	private void handleEvent(Event event) {
+		if (event instanceof TakeDamage) {
+			addBehavior(new TakingDamage(this, ((TakeDamage) event).getDamageAmount()));
 
-			float explosionAngle = (float) (Math.random() * 180 + 90);
-			for (int i = 0; i < 5; i++) {
-				Model.getModel()
-				.getParticleEngine()
-				.addParticle(new Vect3D(pos), new Vect3D(speed).mult(0.25f).rotate((float) (explosionAngle + Math.random() * 5)).add(speed),
-						2, 0.125f,
-						0.5f, 0.2f);
-			}
-
-		} else if (order instanceof Die) {
-			// LOGGER.debug("Die !!!");
-
-			dead = true;
-			for (int i = 0; i < 200; i++) {
-				Model.getModel()
-				.getParticleEngine()
-				.addParticle(new Vect3D(pos), new Vect3D(200, 0, 0).rotate((float) (Math.random() * 360)).mult((float) Math.random()).add(speed),
-						2, 0.5f,
-						0.5f, 0.05f);
-			}
-
-			Model.getModel().removeEntity(this);
-
-			// TODO maybe this should better be handled by the Model ?
-			for (DeathListener lst : deathListeners) {
-				lst.handleDeathEvent(this);
-			}
+		} else if (event instanceof Die) {
+			addBehavior(new Dying(this));
 
 		}
 	}
 
-	private void handleOrders() {
-		for (Order order : orderList) {
-			handleOrder(order);
+	/**
+	 * Handle events for the Entity.
+	 */
+	private void handleEvents() {
+		for (Event event : eventList) {
+			handleEvent(event);
 		}
-		orderList.clear();
-		orderList.addAll(newOrderList);
-		newOrderList.clear();
+		eventList.clear();
+		eventList.addAll(newEventList);
+		newEventList.clear();
 	}
 
 	public final boolean isDead() {
@@ -358,6 +345,14 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 		deathListeners.remove(deathListener);
 	}
 
+	public void setDamage(float damage) {
+		this.damage = damage;
+	}
+
+	public void setDead(boolean dead) {
+		this.dead = dead;
+	}
+
 	public void setHeading(float heading) {
 		this.heading = heading;
 	}
@@ -387,7 +382,7 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 		computeSpeedAndPos();
 
 		// Handle orders
-		handleOrders();
+		handleEvents();
 
 		// update trail
 		updateTrail();

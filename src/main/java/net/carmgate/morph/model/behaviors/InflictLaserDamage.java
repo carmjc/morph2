@@ -157,7 +157,7 @@ public class InflictLaserDamage implements Behavior, Renderable, MorphLevelUpLis
 		if (timeOfLastAction == 0 || (Model.getModel().getCurrentTS() - timeOfLastAction) * rateOfFire > 1) {
 			if (target.getPos().distance(sourceOfDamage.getPos()) < MAX_RANGE && consumeEnergy()) {
 
-				target.fireOrder(new TakeDamage(maxDps));
+				target.fireOrder(new TakeDamage(sourceOfDamage, maxDps));
 				timeOfLastFire = Model.getModel().getCurrentTS();
 
 				targetHit = true;

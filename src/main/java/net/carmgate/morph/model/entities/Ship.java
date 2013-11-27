@@ -183,11 +183,16 @@ public class Ship extends Entity {
 		return newShip;
 	}
 
-	public boolean consumeEnergy(float energyDec) {
+	/**
+	 * Try to consume energy.
+	 * @param energyConsumed the amount of energy to consume
+	 * @return true if there was enough energy, false otherwise
+	 */
+	public boolean consumeEnergy(float energyConsumed) {
 		// return true if there is enough energy
-		if (energy >= energyDec) {
+		if (energy >= energyConsumed) {
 			// TODO #25 implement some kind of max energy
-			energy -= energyDec;
+			energy -= energyConsumed;
 			return true;
 		}
 
@@ -484,7 +489,6 @@ public class Ship extends Entity {
 	private void updateMorphDependantValues() {
 		// Compute morphs level dependant values
 		// TODO #20 Update these values each time a morph is upgraded
-		// int maxSimplePropulsorLevel = getMaxLevelForMorphType(MorphType.SIMPLE_PROPULSOR);
 		maxSteeringForce = 0;
 		maxSpeed = 0;
 		float stackingPenalty = 1;
