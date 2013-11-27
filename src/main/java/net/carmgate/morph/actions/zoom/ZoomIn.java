@@ -20,6 +20,7 @@ public class ZoomIn implements Action {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ZoomIn.class);
 	private static final float ZOOM_VARIATION = Conf.getFloatProperty(ConfItem.ZOOM_VARIATIONFACTOR);
+	private static final float ZOOM_MAX = Conf.getFloatProperty(ConfItem.ZOOM_MAX);
 
 	@Override
 	public void run() {
@@ -32,11 +33,18 @@ public class ZoomIn implements Action {
 		}
 
 		ViewPort viewport = Model.getModel().getViewport();
-		viewport.setZoomFactor(viewport.getZoomFactor() * ZOOM_VARIATION);
+
+		// Correct max zoom level
+		float zoomVariation = ZOOM_VARIATION;
+		if (viewport.getZoomFactor() * zoomVariation > ZOOM_MAX) {
+			zoomVariation = ZOOM_MAX / viewport.getZoomFactor();
+		}
+
+		viewport.setZoomFactor(viewport.getZoomFactor() * zoomVariation);
 		Vect3D fromWindowCenterToMouse = new Vect3D(Model.getModel().getWindow().getWidth() / 2 - GameMouse.getX(),
 				-Model.getModel().getWindow().getHeight() / 2 + GameMouse.getY(), 0);
-		Model.getModel().getViewport().getFocalPoint().add(new Vect3D(fromWindowCenterToMouse).mult(1f / ZOOM_VARIATION)).mult(ZOOM_VARIATION)
-				.substract(new Vect3D(fromWindowCenterToMouse).mult(ZOOM_VARIATION));
+		Model.getModel().getViewport().getFocalPoint().add(new Vect3D(fromWindowCenterToMouse).mult(1f / zoomVariation)).mult(zoomVariation)
+		.substract(new Vect3D(fromWindowCenterToMouse).mult(zoomVariation));
 
 		LOGGER.debug("Zoom factor: " + viewport.getZoomFactor());
 

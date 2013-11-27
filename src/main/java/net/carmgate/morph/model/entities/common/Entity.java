@@ -203,11 +203,11 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 		return behaviorSet;
 	}
 
-	public float getDamage() {
+	public final float getDamage() {
 		return damage;
 	}
 
-	public List<DeathListener> getDeathListeners() {
+	public final List<DeathListener> getDeathListeners() {
 		return deathListeners;
 	}
 
@@ -341,24 +341,24 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 	/**
 	 * @param deathListener The death listener to remove
 	 */
-	public void removeDeathListener(DeathListener deathListener) {
+	public final void removeDeathListener(DeathListener deathListener) {
 		deathListeners.remove(deathListener);
 	}
 
-	public void setDamage(float damage) {
+	public final void setDamage(float damage) {
 		this.damage = damage;
 	}
 
-	public void setDead(boolean dead) {
+	public final void setDead(boolean dead) {
 		this.dead = dead;
 	}
 
-	public void setHeading(float heading) {
+	public final void setHeading(float heading) {
 		this.heading = heading;
 	}
 
 	@Override
-	public void setSelected(boolean selected) {
+	public final void setSelected(boolean selected) {
 		this.selected = selected;
 	}
 

@@ -23,7 +23,8 @@ public class Conf {
 		MORPH_SIMPLEPROPULSOR_MAXXPPERSECOND_FOR_OVERMIND("morph.simplePropulsor.maxXpPerSecond.forOvermind"),
 		SHIP_TRAIL_NUMBEROFSEGMENTS("ship.trail.numberOfSegments"),
 		SHIP_TRAIL_UPDATEINTERVAL("ship.trail.updateInterval"),
-		ZOOM_VARIATIONFACTOR("zoom.variationFactor");
+		ZOOM_VARIATIONFACTOR("zoom.variationFactor"),
+		ZOOM_MAX("zoom.max");
 
 		private final String key;
 
