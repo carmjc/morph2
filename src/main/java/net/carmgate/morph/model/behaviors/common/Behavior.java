@@ -6,5 +6,10 @@ public interface Behavior extends Cloneable {
 
 	Behavior cloneForEntity(Entity entity);
 
-	abstract void run();
+	/**
+	 * This method computes the amount of xp awarded to the ship's morphs by this behavior
+	 */
+	void computeXpContribution();
+
+	void run();
 }

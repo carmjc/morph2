@@ -44,6 +44,11 @@ public class SpawnShips implements Behavior, DeathListener {
 	}
 
 	@Override
+	public void computeXpContribution() {
+		// This behavior is not for ships for now, so there is no xp contribution
+	}
+
+	@Override
 	public void handleDeathEvent(Entity deadShip) {
 		spawnedShips.remove(deadShip);
 	}

@@ -44,6 +44,11 @@ public class StarsContribution extends ForceGeneratingBehavior implements Render
 	}
 
 	@Override
+	public void computeXpContribution() {
+		// Passive behavior so there is no xp contribution
+	}
+
+	@Override
 	public Vect3D getNonSteeringForce() {
 		return force;
 	}

@@ -20,6 +20,28 @@ public abstract class Movement implements Behavior, Renderable {
 	@Override
 	public abstract Behavior cloneForEntity(Entity entity);
 
+	@Override
+	public void computeXpContribution() {
+		if (movableEntity instanceof Ship) {
+			Ship ship = (Ship) movableEntity;
+
+			// Reward simple propulsors
+			for (Morph morph : ship.getMorphsByType(MorphType.SIMPLE_PROPULSOR)) {
+				morph.increaseXp(((Ship) movableEntity).getRealAccelModulus() / movableEntity.getMaxSteeringForce()
+						* Model.getModel().getSecondsSinceLastUpdate()
+						* Conf.getFloatProperty(ConfItem.MORPH_SIMPLEPROPULSOR_MAXXPPERSECOND));
+			}
+
+			// Reward overmind
+			for (Morph morph : ship.getMorphsByType(MorphType.SIMPLE_PROPULSOR)) {
+				morph.increaseXp(((Ship) movableEntity).getRealAccelModulus() / movableEntity.getMaxSteeringForce()
+						* Model.getModel().getSecondsSinceLastUpdate()
+						* Conf.getFloatProperty(ConfItem.MORPH_SIMPLEPROPULSOR_MAXXPPERSECOND));
+			}
+		}
+
+	}
+
 	// TODO the energy consumption should depend on the number and level of the propulsor morphs
 	public boolean consumeEnergy() {
 		if (movableEntity instanceof Ship) {
@@ -41,16 +63,6 @@ public abstract class Movement implements Behavior, Renderable {
 	@Override
 	public void render(int glMode) {
 		// Empty impl for adapting
-	}
-
-	public void rewardMorphs() {
-		if (movableEntity instanceof Ship) {
-			for (Morph morph : ((Ship) movableEntity).getMorphsByType(MorphType.SIMPLE_PROPULSOR)) {
-				morph.increaseXp(((Ship) movableEntity).getRealAccelModulus() / movableEntity.getMaxSteeringForce()
-						* Model.getModel().getSecondsSinceLastUpdate()
-						* Conf.getFloatProperty(ConfItem.MORPH_SIMPLEPROPULSOR_MAXXPPERSECOND));
-			}
-		}
 	}
 
 }

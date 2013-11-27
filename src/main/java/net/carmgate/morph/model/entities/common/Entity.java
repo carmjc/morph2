@@ -379,6 +379,7 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 		// Update behaviors
 		for (Behavior behavior : behaviorSet) {
 			behavior.run();
+			behavior.computeXpContribution();
 		}
 
 		computeForcesFromBehavior();

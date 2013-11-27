@@ -39,6 +39,8 @@ public class InflictLaserDamage implements Behavior, Renderable, MorphLevelUpLis
 
 	private long timeOfLastFire = 0;
 
+	private boolean targetHit;
+
 	@Deprecated
 	public InflictLaserDamage() {
 		this(null, null);
@@ -72,6 +74,23 @@ public class InflictLaserDamage implements Behavior, Renderable, MorphLevelUpLis
 			damageFactor += Math.pow(1.2f, morph.getLevel());
 		}
 		maxDps = maxDamageLevel1 * damageFactor;
+	}
+
+	@Override
+	public void computeXpContribution() {
+		if (targetHit) {
+			// Increase gunner xp
+			for (Morph morph : sourceOfDamage.getMorphsByType(MorphType.LASER)) {
+				morph.increaseXp(Conf.getFloatProperty(ConfItem.MORPH_LASER_MAXXPPERHIT));
+			}
+
+			// Increase overmind xp
+			for (Morph morph : sourceOfDamage.getMorphsByType(MorphType.OVERMIND)) {
+				morph.increaseXp(Conf.getFloatProperty(ConfItem.MORPH_LASER_MAXXPPERHIT));
+			}
+
+			targetHit = false;
+		}
 	}
 
 	public boolean consumeEnergy() {
@@ -141,9 +160,7 @@ public class InflictLaserDamage implements Behavior, Renderable, MorphLevelUpLis
 				target.fireOrder(new TakeDamage(maxDps));
 				timeOfLastFire = Model.getModel().getCurrentTS();
 
-				for (Morph morph : sourceOfDamage.getMorphsByType(MorphType.LASER)) {
-					morph.increaseXp(Conf.getFloatProperty(ConfItem.MORPH_LASER_MAXXPPERHIT));
-				}
+				targetHit = true;
 			}
 
 			// TODO #23 There seems to be an issue with this.
