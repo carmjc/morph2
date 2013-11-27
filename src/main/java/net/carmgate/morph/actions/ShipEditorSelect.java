@@ -24,10 +24,11 @@ import org.slf4j.LoggerFactory;
 public class ShipEditorSelect implements Action {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ShipEditorSelect.class);
-	private ShipEditorLayer shipEditor;
+	private ShipEditorLayer shipEditorLayer;
 
 	public ShipEditorSelect() {
-		shipEditor = new ShipEditorLayer(Model.getModel().getSelfShip());
+		shipEditorLayer = new ShipEditorLayer();
+		shipEditorLayer.setShip(Model.getModel().getSelfShip());
 	}
 
 	@Override
@@ -79,7 +80,7 @@ public class ShipEditorSelect implements Action {
 		GL11.glOrtho(0, window.getWidth(), 0, -window.getHeight(), 1, -1);
 		GL11.glViewport(0, 0, window.getWidth(), window.getHeight());
 
-		shipEditor.render(GL11.GL_SELECT);
+		shipEditorLayer.render(GL11.GL_SELECT);
 
 		GL11.glMatrixMode(GL11.GL_PROJECTION);
 		GL11.glPopMatrix();

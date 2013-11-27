@@ -12,7 +12,7 @@ public class Break extends Movement {
 
 	@Deprecated
 	public Break() {
-		// Nothing to do
+		super(null);
 	}
 
 	public Break(Entity movable) {

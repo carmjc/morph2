@@ -13,14 +13,6 @@ import net.carmgate.morph.model.entities.common.Renderable;
 public abstract class Movement implements Behavior, Renderable {
 	protected final Entity movableEntity;
 
-	/**
-	 * Do not use.
-	 */
-	@Deprecated
-	protected Movement() {
-		movableEntity = null;
-	}
-
 	protected Movement(Entity movable) {
 		movableEntity = movable;
 	}

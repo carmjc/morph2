@@ -30,6 +30,7 @@ public class Wander extends Movement {
 	 */
 	@Deprecated
 	public Wander() {
+		super(null);
 		wanderFocusDistance = 0;
 		wanderRadius = 0;
 		wanderAngle = 0;
@@ -127,11 +128,11 @@ public class Wander extends Movement {
 	public void run() {
 		wanderAngle += Math.random() * 4 - 2;
 		Vect3D target = new Vect3D(new Vect3D(Vect3D.NORTH).normalize(wanderFocusDistance).rotate(movableEntity.getHeading()))
-				.add(new Vect3D(Vect3D.NORTH).normalize(wanderRadius).rotate(wanderAngle));
+		.add(new Vect3D(Vect3D.NORTH).normalize(wanderRadius).rotate(wanderAngle));
 
 		// TODO is it right to multiply by mass ?
 		// What are we multiplying by mass ?
 		steeringForce.copy(target).truncate(movableEntity.getMaxSteeringForce())
-				.mult(movableEntity.getMass());
+		.mult(movableEntity.getMass());
 	}
 }

@@ -19,7 +19,6 @@ import net.carmgate.morph.actions.common.Event.EventType;
 import net.carmgate.morph.actions.drag.DragContext;
 import net.carmgate.morph.conf.Conf;
 import net.carmgate.morph.model.Model;
-import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.model.entities.common.Renderable;
 import net.carmgate.morph.model.ui.UIState;
 import net.carmgate.morph.model.ui.layers.NormalLayer;
@@ -83,10 +82,8 @@ public class Main {
 		Set<Class<? extends Action>> actions = new Reflections("net.carmgate.morph.actions").getSubTypesOf(Action.class);
 		for (Class<? extends Action> action : actions) {
 			try {
-				Action actionInstance;
-
 				// Instanciate the action
-				actionInstance = action.newInstance();
+				Action actionInstance = action.newInstance();
 
 				// Handle actions hints
 				// Instanciate drag actions with common drag context
@@ -148,37 +145,27 @@ public class Main {
 
 		LOGGER.debug("init view: " + width + "x" + height);
 
-		// enable texturing
-		// GL11.glEnable(GL11.GL_TEXTURE_2D);
-		// It seems it's not needed, but I do not understand why ...
-
 		initView();
 	}
 
 	/**
-	 * Scans the classpath looking for renderers (classes annotated with @{@link Renders})
+	 * Scans the classpath looking for renderers (classes annotated with {@link Renderable})
 	 * initializes them and add them to the maps of the renderers
 	 */
 	private void initRenderables() {
 		// Init the reflection API
-		Reflections reflections = new Reflections("net.carmgate.morph");
-
 		// Look for classes implementing the Renderable interface
-		Set<Class<? extends Renderable>> renderables = reflections.getSubTypesOf(Renderable.class);
+		Set<Class<? extends Renderable>> renderables = new Reflections("net.carmgate.morph").getSubTypesOf(Renderable.class);
 
 		// Iterate over the result set to initialize each renderable
 		for (Class<? extends Renderable> renderable : renderables) {
-			if (renderable.equals(Entity.class)) {
-				continue;
-			}
-
 			// if the class is abstract, do not try to instanciate either
 			if (Modifier.isAbstract(renderable.getModifiers())) {
 				// if the initRenderer method is not abstract in this class, log an error
 				try {
 					if (!Modifier.isAbstract(renderable.getMethod("initRenderer", new Class<?>[] {}).getModifiers())) {
-						LOGGER.error("There is a concrete initRenderer method in class "
-								+ renderable.getCanonicalName());
+						LOGGER.error("There is a concrete initRenderer method in abstract class "
+								+ renderable.getCanonicalName() + ". Check the class as it might be an error.");
 					}
 				} catch (NoSuchMethodException | SecurityException e) {
 					LOGGER.error("Error while retrieveing initRenderer method within " + renderable.getName(), e);
@@ -187,7 +174,7 @@ public class Main {
 			}
 
 			try {
-				Constructor<? extends Renderable> constructor = renderable.getConstructor((Class<?>[]) null);
+				Constructor<? extends Renderable> constructor = renderable.getConstructor();
 				constructor.newInstance().initRenderer();
 			} catch (InstantiationException | NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException
 					| InvocationTargetException e) {
@@ -273,7 +260,8 @@ public class Main {
 		initRenderables();
 
 		// init the layers
-		shipEditorLayer = new ShipEditorLayer(Model.getModel().getSelfShip());
+		shipEditorLayer = new ShipEditorLayer();
+		shipEditorLayer.setShip(Model.getModel().getSelfShip());
 		normalLayer = new NormalLayer();
 
 		// Configure Actions

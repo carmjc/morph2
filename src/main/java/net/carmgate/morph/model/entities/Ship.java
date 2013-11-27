@@ -58,7 +58,7 @@ public class Ship extends Entity {
 	private final int trailUpdateInterval = Conf.getIntProperty(ConfItem.SHIP_TRAIL_UPDATEINTERVAL);
 	private final Vect3D[] trail = new Vect3D[Conf.getIntProperty(ConfItem.SHIP_TRAIL_NUMBEROFSEGMENTS)];
 
-	private ShipEditorLayer shipEditor = new ShipEditorLayer(this);
+	private ShipEditorLayer debugShipEditorLayer;
 
 	/***
 	 * Creates a new ship with position (0, 0, 0), mass = 10 assigned to player "self".
@@ -82,6 +82,9 @@ public class Ship extends Entity {
 		maxDamage = 10;
 		maxEnergy = 100;
 
+		// init of the ship editor layer used for debugging purposes
+		debugShipEditorLayer = new ShipEditorLayer();
+		debugShipEditorLayer.setShip(this);
 	}
 
 	@Override
@@ -373,7 +376,7 @@ public class Ship extends Entity {
 		// Render morphs for debugging purpose
 		if (Model.getModel().getUiContext().isDebugMorphsShown()) {
 			GL11.glScalef(1f / (2 * zoomFactor), 1f / (2 * zoomFactor), 1);
-			shipEditor.render(glMode);
+			debugShipEditorLayer.render(glMode);
 			GL11.glScalef(2 * zoomFactor, 2 * zoomFactor, 1);
 		}
 

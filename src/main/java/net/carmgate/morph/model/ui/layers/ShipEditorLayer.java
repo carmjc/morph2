@@ -15,10 +15,6 @@ public class ShipEditorLayer implements Renderable {
 
 	private Ship ship;
 
-	public ShipEditorLayer(Ship ship) {
-		this.ship = ship;
-	}
-
 	@Override
 	public void initRenderer() {
 		// Nothing to do
@@ -70,5 +66,9 @@ public class ShipEditorLayer implements Renderable {
 			layer++;
 		}
 		GL11.glTranslatef(-(layer - 1) * 64, 0, 0);
+	}
+
+	public void setShip(Ship ship) {
+		this.ship = ship;
 	}
 }

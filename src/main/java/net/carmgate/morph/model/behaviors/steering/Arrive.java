@@ -37,6 +37,7 @@ public class Arrive extends Movement {
 	 */
 	@Deprecated
 	public Arrive() {
+		super(null);
 	}
 
 	public Arrive(Entity movable, Entity target) {

@@ -38,6 +38,7 @@ public class Follow extends Movement {
 	 */
 	@Deprecated
 	public Follow() {
+		super(null);
 	}
 
 	public Follow(Entity shipToMove, Entity target, float maxDistance) {
