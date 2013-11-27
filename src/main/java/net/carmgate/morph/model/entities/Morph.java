@@ -95,6 +95,10 @@ public class Morph implements Renderable, Selectable {
 		return level;
 	}
 
+	public float getMaxXpForCurrentLevel() {
+		return morphMaxXpLevel1 * level;
+	}
+
 	public MorphType getMorphType() {
 		return morphType;
 	}
@@ -109,8 +113,8 @@ public class Morph implements Renderable, Selectable {
 
 	public void increaseXp(float xpIncrement) {
 		xp += xpIncrement;
-		if (xp > morphMaxXpLevel1 * level) {
-			xp -= morphMaxXpLevel1 * level;
+		if (xp > getMaxXpForCurrentLevel()) {
+			xp -= getMaxXpForCurrentLevel();
 			level++;
 		}
 	}
@@ -199,9 +203,9 @@ public class Morph implements Renderable, Selectable {
 
 		GL11.glScalef(1f / scale, 1f / scale, 1);
 
-		String str = "" + level;
+		String str = Integer.toString(level);
 		font.drawString(-font.getWidth(str) / 2, -width / 2, str, Color.white);
-		RenderUtils.renderGauge(30, 20, Math.min(1, xp / 100), 0, new float[] { 1, 1, 0.5f, 1 });
+		RenderUtils.renderGauge(30, 20, Math.min(1, xp / getMaxXpForCurrentLevel()), 0, new float[] { 1, 1, 0.5f, 1 });
 	}
 
 	@Override

@@ -58,7 +58,8 @@ public class Main {
 	private final List<Action> keyboardActions = new LinkedList<>();
 
 	private int fpsCounter = 0;
-	private float meanFpsCounter = 0;
+	private float fps = 0;
+	private float minFps = 0;
 	private long lastFpsResetTs = 0;
 
 	private ShipEditorLayer shipEditorLayer;
@@ -135,7 +136,7 @@ public class Main {
 		try {
 			Display.setDisplayMode(new DisplayMode(width, height));
 			Display.create();
-			Display.setTitle("Morph");
+			Display.setTitle("Morph 2");
 			// Display.setVSyncEnabled(true);
 			Display.setResizable(true);
 		} catch (LWJGLException e) {
@@ -159,7 +160,7 @@ public class Main {
 
 		// Iterate over the result set to initialize each renderable
 		for (Class<? extends Renderable> renderable : renderables) {
-			// if the class is abstract, do not try to instanciate either
+			// if the class is abstract, do not try to instanciate
 			if (Modifier.isAbstract(renderable.getModifiers())) {
 				// if the initRenderer method is not abstract in this class, log an error
 				try {
@@ -173,6 +174,7 @@ public class Main {
 				continue;
 			}
 
+			// If the class is not abstract, call the no-arg constructor and then the initRenderer method
 			try {
 				Constructor<? extends Renderable> constructor = renderable.getConstructor();
 				constructor.newInstance().initRenderer();
@@ -184,6 +186,10 @@ public class Main {
 		}
 	}
 
+	/**
+	 * Inits the view, viewport, window, etc.
+	 * This should be called at init and when the view changes (window is resized for instance).
+	 */
 	private void initView() {
 
 		int width = Display.getWidth();
@@ -216,7 +222,7 @@ public class Main {
 	}
 
 	/**
-	 * draw a quad with the image on it
+	 * Render the view.
 	 */
 	public void render() {
 
@@ -232,13 +238,16 @@ public class Main {
 				break;
 			}
 
-			RenderUtils.renderLineToConsole("FPS: " + meanFpsCounter, 1);
+			RenderUtils.renderLineToConsole("FPS: " + fps, 1);
 
 		} catch (Exception e) {
 			LOGGER.debug("Exception caught in main loop.", e);
 		}
 	}
 
+	/**
+	 * Run an action, if the current {@link UIState} matches the {@link UIState} defined for the action.
+	 */
 	private void runAction(Action action) {
 		ActionHints actionHints = action.getClass().getAnnotation(ActionHints.class);
 		for (UIState uiState : actionHints.uiState()) {
@@ -361,17 +370,17 @@ public class Main {
 				}
 			}
 
+			// Handles the window close requested event
 			if (Display.isCloseRequested()) {
 				Display.destroy();
 				System.exit(0);
 			}
 
+			// Compute fps
 			fpsCounter++;
 			if (model.getCurrentTS() - lastFpsResetTs > 1000) {
-				if (meanFpsCounter == 0) {
-					meanFpsCounter = fpsCounter;
-				}
-				meanFpsCounter = meanFpsCounter * 0.9f + fpsCounter * 0.1f;
+				fps = fpsCounter;
+
 				// font.drawString(-font.getWidth(str) / 2, -width / 2, str, Color.white);
 				lastFpsResetTs += 1000;
 				fpsCounter = 0;
