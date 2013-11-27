@@ -59,7 +59,6 @@ public class Main {
 
 	private int fpsCounter = 0;
 	private float fps = 0;
-	private float minFps = 0;
 	private long lastFpsResetTs = 0;
 
 	private ShipEditorLayer shipEditorLayer;
