@@ -57,6 +57,9 @@ public class BalancedAI {
 			dt.takingDamageAmount += ((TakeDamage) event).getDamageAmount();
 
 			lastTsOfDamageTaken = Model.getModel().getCurrentTS();
+
+			// TODO Compute the highest distance at which the enemy has dealt some damage, to set it as the min fleeing
+			// distance.
 		}
 	}
 

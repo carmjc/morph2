@@ -125,7 +125,7 @@ public class Flee extends Movement {
 
 		// Vect3D recomputedTarget = new Vect3D(target.getPos()).add(new
 		// Vect3D(targetSpeed).truncate(targetSpeed.modulus() - minDistance));
-		desiredVelocity.copy(new Vect3D(pos).mult(2).substract(target.getPos()).mult(
+		desiredVelocity.copy(new Vect3D(pos).substract(target.getPos()).mult(
 				movableEntity.getMaxSpeed()));
 		// targetOffset.copy(recomputedTarget).substract(pos);
 		//
