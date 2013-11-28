@@ -2,8 +2,8 @@ package net.carmgate.morph.actions.ui;
 
 import net.carmgate.morph.actions.common.Action;
 import net.carmgate.morph.actions.common.ActionHints;
-import net.carmgate.morph.actions.common.Event;
-import net.carmgate.morph.actions.common.Event.EventType;
+import net.carmgate.morph.actions.common.UIEvent;
+import net.carmgate.morph.actions.common.UIEvent.EventType;
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.entities.common.Entity;
 
@@ -19,7 +19,7 @@ public class LockOnSelectedShip implements Action {
 
 	@Override
 	public void run() {
-		Event lastEvent = Model.getModel().getInteractionStack().getLastEvent();
+		UIEvent lastEvent = Model.getModel().getInteractionStack().getLastEvent();
 		if (lastEvent.getEventType() != EventType.KEYBOARD_UP
 				|| lastEvent.getButton() != Keyboard.KEY_L) {
 			return;

@@ -10,6 +10,7 @@ import java.util.Map;
 import net.carmgate.morph.conf.Conf;
 import net.carmgate.morph.conf.Conf.ConfItem;
 import net.carmgate.morph.model.Model;
+import net.carmgate.morph.model.ai.BalancedAI;
 import net.carmgate.morph.model.behaviors.common.ActivatedMorph;
 import net.carmgate.morph.model.behaviors.common.Behavior;
 import net.carmgate.morph.model.behaviors.common.Needs;
@@ -19,6 +20,8 @@ import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.model.entities.common.EntityHints;
 import net.carmgate.morph.model.entities.common.EntityType;
 import net.carmgate.morph.model.entities.common.Renderable;
+import net.carmgate.morph.model.events.Event;
+import net.carmgate.morph.model.events.MorphLevelUp;
 import net.carmgate.morph.model.player.Player;
 import net.carmgate.morph.model.player.Player.FOF;
 import net.carmgate.morph.model.ui.layers.ShipEditorLayer;
@@ -49,6 +52,9 @@ public class Ship extends Entity {
 	private static Texture baseTexture;
 	private static Texture zoomedOutTexture;
 
+	// Conf
+	private static float maxDamageLevel1 = Conf.getFloatProperty(ConfItem.MORPH_LASER_MAXDAMAGELEVEL1);
+
 	// morphs
 	private final Map<Integer, Morph> morphsById = new HashMap<>();
 	private final Map<MorphType, List<Morph>> morphsByType = new HashMap<>();
@@ -59,6 +65,8 @@ public class Ship extends Entity {
 	private final Vect3D[] trail = new Vect3D[Conf.getIntProperty(ConfItem.SHIP_TRAIL_NUMBEROFSEGMENTS)];
 
 	private ShipEditorLayer debugShipEditorLayer;
+	private float maxDpsInflictable;
+	private BalancedAI ai;
 
 	/***
 	 * Creates a new ship with position (0, 0, 0), mass = 10 assigned to player "self".
@@ -173,12 +181,16 @@ public class Ship extends Entity {
 			List<Morph> morphs = getMorphsByType(morphType);
 			if (morphs != null) {
 				for (Morph morph : morphs) {
-					newShip.addMorph(new Morph(morphType, morph.getLevel(), morph.getXp()));
+					newShip.addMorph(new Morph(morphType, morph.getLevel(), morph.getXp(), this));
 				}
 			}
 		}
 
+		// Clone behaviors
 		cloneBehaviors(newShip);
+
+		// Clone AI
+		newShip.setAi(ai.cloneForShip(newShip));
 
 		return newShip;
 	}
@@ -200,8 +212,17 @@ public class Ship extends Entity {
 		return false;
 	}
 
+	@Override
+	protected BalancedAI getAI() {
+		return ai;
+	}
+
 	public float getEnergy() {
 		return energy;
+	}
+
+	public float getMaxDpsInflictable() {
+		return maxDpsInflictable;
 	}
 
 	/**
@@ -242,6 +263,15 @@ public class Ship extends Entity {
 
 	public float getRealAccelModulus() {
 		return realAccelModulus;
+	}
+
+	@Override
+	protected void handleEvent(Event event) {
+		super.handleEvent(event);
+
+		if (event instanceof MorphLevelUp) {
+			updateMorphDependantValues();
+		}
 	}
 
 	/** List of ships IAs. */
@@ -481,6 +511,10 @@ public class Ship extends Entity {
 		}
 	}
 
+	public void setAi(BalancedAI ai) {
+		this.ai = ai;
+	}
+
 	@Override
 	public String toString() {
 		return "ship:" + pos.toString();
@@ -491,6 +525,9 @@ public class Ship extends Entity {
 		// TODO #20 Update these values each time a morph is upgraded
 		maxSteeringForce = 0;
 		maxSpeed = 0;
+		maxDpsInflictable = 0;
+
+		// Compute max steering force and max speed
 		float stackingPenalty = 1;
 		List<Morph> simplePropulsorMorphs = getMorphsByType(MorphType.SIMPLE_PROPULSOR);
 		if (simplePropulsorMorphs != null) {
@@ -505,6 +542,15 @@ public class Ship extends Entity {
 			maxSpeed *= stackingPenalty;
 		}
 		maxSteeringForce /= mass;
+
+		// Compute max dps
+		float damageFactor = 0;
+		if (getMorphsByType(MorphType.LASER) != null) {
+			for (Morph morph : getMorphsByType(MorphType.LASER)) {
+				damageFactor += Math.pow(1.2f, morph.getLevel());
+			}
+		}
+		maxDpsInflictable = maxDamageLevel1 * damageFactor;
 	}
 
 	@Override

@@ -1,4 +1,4 @@
-package net.carmgate.morph.model.orders;
+package net.carmgate.morph.model.events;
 
 import net.carmgate.morph.model.entities.common.Entity;
 

@@ -2,8 +2,8 @@ package net.carmgate.morph.actions.zoom;
 
 import net.carmgate.morph.actions.common.Action;
 import net.carmgate.morph.actions.common.ActionHints;
-import net.carmgate.morph.actions.common.Event;
-import net.carmgate.morph.actions.common.Event.EventType;
+import net.carmgate.morph.actions.common.UIEvent;
+import net.carmgate.morph.actions.common.UIEvent.EventType;
 import net.carmgate.morph.conf.Conf;
 import net.carmgate.morph.conf.Conf.ConfItem;
 import net.carmgate.morph.model.Model;
@@ -23,7 +23,7 @@ public class ZoomOut implements Action {
 
 	@Override
 	public void run() {
-		Event lastEvent = Model.getModel().getInteractionStack().getLastEvent();
+		UIEvent lastEvent = Model.getModel().getInteractionStack().getLastEvent();
 		if ((lastEvent.getButton() != Keyboard.KEY_DOWN
 				|| lastEvent.getEventType() != EventType.KEYBOARD_UP)
 				&& (lastEvent.getEventType() != EventType.MOUSE_WHEEL

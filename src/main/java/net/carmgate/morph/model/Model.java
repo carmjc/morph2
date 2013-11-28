@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 
 import net.carmgate.morph.actions.common.InteractionStack;
+import net.carmgate.morph.model.ai.BalancedAI;
 import net.carmgate.morph.model.behaviors.SpawnShips;
 import net.carmgate.morph.model.behaviors.steering.Orbit;
 import net.carmgate.morph.model.behaviors.steering.WanderWithinRange;
@@ -224,21 +225,23 @@ public class Model {
 
 		Player player = new Player(PlayerType.AI, "Nemesis", FOF.FOE);
 		Ship enemyShip = new Ship(128, 0, 0, 0, 10, player);
-		enemyShip.addMorph(new Morph(MorphType.OVERMIND));
-		enemyShip.addMorph(new Morph(MorphType.SIMPLE_PROPULSOR));
+		enemyShip.addMorph(new Morph(MorphType.OVERMIND, enemyShip));
+		enemyShip.addMorph(new Morph(MorphType.SIMPLE_PROPULSOR, enemyShip));
+		enemyShip.addMorph(new Morph(MorphType.SIMPLE_PROPULSOR, enemyShip));
 		enemyShip.addBehavior(new WanderWithinRange(enemyShip, 200, 100, station, 2000));
+		enemyShip.setAi(new BalancedAI(enemyShip));
 
 		station.addBehavior(new Orbit(station, planet, 7000, true));
-		station.addBehavior(new SpawnShips(station.getPos(), 10, 5000, enemyShip));
+		station.addBehavior(new SpawnShips(station.getPos(), 1, 5000, enemyShip));
 		Model.getModel().addEntity(station);
 
 		selfShip = new Ship(station.getPos().x, station.getPos().y, station.getPos().z, 10, 8, self);
-		selfShip.addMorph(new Morph(MorphType.OVERMIND));
-		selfShip.addMorph(new Morph(MorphType.SHIELD));
-		selfShip.addMorph(new Morph(MorphType.SIMPLE_PROPULSOR));
-		selfShip.addMorph(new Morph(MorphType.SIMPLE_PROPULSOR));
-		selfShip.addMorph(new Morph(MorphType.SIMPLE_PROPULSOR));
-		selfShip.addMorph(new Morph(MorphType.LASER));
+		selfShip.addMorph(new Morph(MorphType.OVERMIND, selfShip));
+		selfShip.addMorph(new Morph(MorphType.SHIELD, selfShip));
+		selfShip.addMorph(new Morph(MorphType.SIMPLE_PROPULSOR, selfShip));
+		// selfShip.addMorph(new Morph(MorphType.SIMPLE_PROPULSOR, selfShip));
+		// selfShip.addMorph(new Morph(MorphType.SIMPLE_PROPULSOR, selfShip));
+		selfShip.addMorph(new Morph(MorphType.LASER, selfShip));
 		Model.getModel().addEntity(selfShip);
 
 		Model.getModel().getSimpleSelection().add(selfShip);

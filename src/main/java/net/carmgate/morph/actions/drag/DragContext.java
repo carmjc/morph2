@@ -1,6 +1,6 @@
 package net.carmgate.morph.actions.drag;
 
-import net.carmgate.morph.actions.common.Event;
+import net.carmgate.morph.actions.common.UIEvent;
 import net.carmgate.morph.model.common.Vect3D;
 
 public class DragContext {
@@ -15,7 +15,7 @@ public class DragContext {
 		return oldMousePosInWindow;
 	}
 
-	public boolean isDragging(Event event) {
+	public boolean isDragging(UIEvent event) {
 		return oldMousePosInWindow != null
 				&& (event.getPositionInWindow()[0] != oldMousePosInWindow.x || event.getPositionInWindow()[1] != oldMousePosInWindow.y);
 	}

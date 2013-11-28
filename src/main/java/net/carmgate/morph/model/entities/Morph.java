@@ -3,17 +3,15 @@ package net.carmgate.morph.model.entities;
 import java.awt.Font;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import net.carmgate.morph.conf.Conf;
 import net.carmgate.morph.conf.Conf.ConfItem;
 import net.carmgate.morph.model.entities.common.Renderable;
 import net.carmgate.morph.model.entities.common.Selectable;
-import net.carmgate.morph.model.entities.common.listener.MorphLevelUpListener;
+import net.carmgate.morph.model.events.MorphLevelUp;
 import net.carmgate.morph.ui.common.RenderUtils;
 
 import org.lwjgl.opengl.GL11;
@@ -58,32 +56,24 @@ public class Morph implements Renderable, Selectable {
 	private int level = 0;
 	private float xp = 0;
 	private boolean selected;
-
-	// Listeners
-	private final List<MorphLevelUpListener> morphLevelUpListeners = new ArrayList<>();
+	private Ship ship;
 
 	public Morph() {
-		this(null);
+		this(null, null);
 	}
 
-	public Morph(MorphType morphType) {
-		this.morphType = morphType;
-		synchronized (nextId) {
-			id = nextId++;
-		}
-	}
-
-	public Morph(MorphType morphType, int level, float xp) {
+	public Morph(MorphType morphType, int level, float xp, Ship ship) {
 		this.morphType = morphType;
 		this.level = level;
 		this.xp = xp;
+		this.ship = ship;
 		synchronized (nextId) {
 			id = nextId++;
 		}
 	}
 
-	public void addListener(MorphLevelUpListener listener) {
-		morphLevelUpListeners.add(listener);
+	public Morph(MorphType morphType, Ship ship) {
+		this(morphType, 0, 0, ship);
 	}
 
 	@Override
@@ -116,6 +106,7 @@ public class Morph implements Renderable, Selectable {
 		if (xp > getMaxXpForCurrentLevel()) {
 			xp -= getMaxXpForCurrentLevel();
 			level++;
+			ship.fireEvent(new MorphLevelUp(this));
 		}
 	}
 
@@ -147,10 +138,6 @@ public class Morph implements Renderable, Selectable {
 	@Override
 	public boolean isSelected() {
 		return selected;
-	}
-
-	public void removeListener(MorphLevelUpListener listener) {
-		morphLevelUpListeners.remove(listener);
 	}
 
 	@Override

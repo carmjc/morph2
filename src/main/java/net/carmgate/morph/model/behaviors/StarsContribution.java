@@ -10,7 +10,7 @@ import net.carmgate.morph.model.entities.Star;
 import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.model.entities.common.EntityType;
 import net.carmgate.morph.model.entities.common.Renderable;
-import net.carmgate.morph.model.orders.Die;
+import net.carmgate.morph.model.events.Die;
 
 import org.lwjgl.opengl.GL11;
 
@@ -77,7 +77,7 @@ public class StarsContribution extends ForceGeneratingBehavior implements Render
 
 			// if the ship enters the star, it's destroyed
 			if (distance < star.getKillingRadius() && movable instanceof Ship) {
-				movable.fireOrder(new Die());
+				movable.fireEvent(new Die());
 			}
 
 			// Adds the gravity pulling force

@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 
 import net.carmgate.morph.model.Model;
+import net.carmgate.morph.model.ai.BalancedAI;
 import net.carmgate.morph.model.behaviors.StarsContribution;
 import net.carmgate.morph.model.behaviors.common.Behavior;
 import net.carmgate.morph.model.behaviors.common.ForceGeneratingBehavior;
@@ -17,9 +18,9 @@ import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Ship;
 import net.carmgate.morph.model.entities.Star;
 import net.carmgate.morph.model.entities.common.listener.DeathListener;
-import net.carmgate.morph.model.orders.Die;
-import net.carmgate.morph.model.orders.Event;
-import net.carmgate.morph.model.orders.TakeDamage;
+import net.carmgate.morph.model.events.Die;
+import net.carmgate.morph.model.events.Event;
+import net.carmgate.morph.model.events.TakeDamage;
 import net.carmgate.morph.model.player.Player;
 import net.carmgate.morph.model.player.Player.PlayerType;
 
@@ -195,8 +196,13 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 	 * once the current update cycle orders have been processed.
 	 * @param order
 	 */
-	public final void fireOrder(Event order) {
+	public final void fireEvent(Event order) {
 		newEventList.add(order);
+	}
+
+	protected BalancedAI getAI() {
+		// empty default implem
+		return null;
 	}
 
 	protected Set<Behavior> getBehaviors() {
@@ -232,12 +238,12 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 		return maxSpeed;
 	}
 
-	// No contract specific to the entity
-	// IMPROVE we should probably define the entities in a different way
-
 	public final float getMaxSteeringForce() {
 		return maxSteeringForce;
 	}
+
+	// No contract specific to the entity
+	// IMPROVE we should probably define the entities in a different way
 
 	public final Player getPlayer() {
 		return player;
@@ -257,7 +263,7 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 	 * However, I don't want to use a handler factory that would kill the current simplicity of orders handling inner code
 	 * @param event
 	 */
-	private void handleEvent(Event event) {
+	protected void handleEvent(Event event) {
 		if (event instanceof TakeDamage) {
 			addBehavior(new TakingDamage(this, ((TakeDamage) event).getDamageAmount()));
 
@@ -272,11 +278,22 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 	 */
 	private void handleEvents() {
 		for (Event event : eventList) {
+			if (getAI() != null) {
+				getAI().handleEvent(event);
+			}
 			handleEvent(event);
 		}
 		eventList.clear();
 		eventList.addAll(newEventList);
 		newEventList.clear();
+	}
+
+	public boolean hasBehaviorByClass(Class<?> behaviorClass) {
+		if (behaviorClass == null) {
+			LOGGER.error("This method parameter should not be null");
+		}
+
+		return CollectionUtils.countMatches(behaviorSet, new SameClassPredicate(behaviorClass)) > 0;
 	}
 
 	public final boolean isDead() {
@@ -291,14 +308,6 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 	protected final boolean isSelectRendering(int glMode) {
 		return glMode == GL11.GL_SELECT ||
 				Model.getModel().getUiContext().isDebugMode() && Model.getModel().getUiContext().isDebugSelectViewMode();
-	}
-
-	// TODO This should be handle in a more generic fashion
-	private void processAI() {
-		// TODO Outsource this AI to allow several kinds of AIs
-		// TODO implement AI processing
-		// Very simple AI : wander and attack
-
 	}
 
 	public final void processPendingBehaviors() {
@@ -368,7 +377,10 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 		// handle AI assignements if appropriate
 		// TODO This is not implemented so far, and this probably is not the best way to handle it
 		if (player.getPlayerType() == PlayerType.AI) {
-			processAI();
+			if (getAI() != null) {
+				LOGGER.debug("Process AI");
+				getAI().run();
+			}
 		}
 
 		// Update behaviors

@@ -4,8 +4,8 @@ import java.util.List;
 
 import net.carmgate.morph.actions.common.Action;
 import net.carmgate.morph.actions.common.ActionHints;
-import net.carmgate.morph.actions.common.Event;
-import net.carmgate.morph.actions.common.Event.EventType;
+import net.carmgate.morph.actions.common.UIEvent;
+import net.carmgate.morph.actions.common.UIEvent.EventType;
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.behaviors.InflictLaserDamage;
 import net.carmgate.morph.model.behaviors.common.Movement;
@@ -25,7 +25,7 @@ public class MoveTo implements Action {
 
 	@Override
 	public void run() {
-		List<Event> lastEvents = Model.getModel().getInteractionStack().getLastEvents(2);
+		List<UIEvent> lastEvents = Model.getModel().getInteractionStack().getLastEvents(2);
 		// LOGGER.debug("empty : " + Model.getModel().getActionSelection().isEmpty());
 		if (lastEvents.get(0).getEventType() != EventType.MOUSE_BUTTON_UP
 				|| lastEvents.get(0).getButton() != 1

@@ -14,8 +14,8 @@ import net.carmgate.morph.actions.WorldMultiSelect;
 import net.carmgate.morph.actions.WorldSelect;
 import net.carmgate.morph.actions.common.Action;
 import net.carmgate.morph.actions.common.ActionHints;
-import net.carmgate.morph.actions.common.Event;
-import net.carmgate.morph.actions.common.Event.EventType;
+import net.carmgate.morph.actions.common.UIEvent;
+import net.carmgate.morph.actions.common.UIEvent.EventType;
 import net.carmgate.morph.actions.drag.DragContext;
 import net.carmgate.morph.conf.Conf;
 import net.carmgate.morph.model.Model;
@@ -319,7 +319,7 @@ public class Main {
 				if (dWheel != 0) {
 					LOGGER.debug("Logged a mouse wheel: " + dWheel);
 					Model.getModel().getInteractionStack()
-					.addEvent(new Event(EventType.MOUSE_WHEEL, dWheel, new int[] { Mouse.getEventX(), Mouse.getEventY() }));
+					.addEvent(new UIEvent(EventType.MOUSE_WHEEL, dWheel, new int[] { Mouse.getEventX(), Mouse.getEventY() }));
 					for (Action action : mouseActions) {
 						runAction(action);
 					}
@@ -333,7 +333,7 @@ public class Main {
 					} else {
 						evtType = EventType.MOUSE_BUTTON_UP;
 					}
-					Event event = new Event(evtType, Mouse.getEventButton(), new int[] { Mouse.getEventX(), Mouse.getEventY() });
+					UIEvent event = new UIEvent(evtType, Mouse.getEventButton(), new int[] { Mouse.getEventX(), Mouse.getEventY() });
 					Model.getModel().getInteractionStack().addEvent(event);
 					for (Action action : mouseActions) {
 						runAction(action);
@@ -349,7 +349,7 @@ public class Main {
 				} else {
 					evtType = EventType.KEYBOARD_UP;
 				}
-				Event event = new Event(evtType, Keyboard.getEventKey(), new int[] { Mouse.getEventX(), Mouse.getEventY() });
+				UIEvent event = new UIEvent(evtType, Keyboard.getEventKey(), new int[] { Mouse.getEventX(), Mouse.getEventY() });
 				Model.getModel().getInteractionStack().addEvent(event);
 				LOGGER.debug("Sending keyboard event " + Keyboard.getEventKey());
 				for (Action action : keyboardActions) {
@@ -361,7 +361,7 @@ public class Main {
 			int dy = Mouse.getDY();
 			if (dx != 0 || dy != 0) {
 				for (Action action : mouseActions) {
-					Event event = new Event(EventType.MOUSE_MOVE, Mouse.getEventButton(), new int[] { Mouse.getX(), Mouse.getY() });
+					UIEvent event = new UIEvent(EventType.MOUSE_MOVE, Mouse.getEventButton(), new int[] { Mouse.getX(), Mouse.getY() });
 					if (Model.getModel().getInteractionStack().getLastEvent().getEventType() != EventType.MOUSE_MOVE) {
 						Model.getModel().getInteractionStack().addEvent(event);
 					}

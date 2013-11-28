@@ -12,8 +12,7 @@ import net.carmgate.morph.model.entities.Morph.MorphType;
 import net.carmgate.morph.model.entities.Ship;
 import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.model.entities.common.Renderable;
-import net.carmgate.morph.model.entities.common.listener.MorphLevelUpListener;
-import net.carmgate.morph.model.orders.TakeDamage;
+import net.carmgate.morph.model.events.TakeDamage;
 import net.carmgate.morph.model.player.Player.FOF;
 import net.carmgate.morph.ui.common.RenderUtils;
 
@@ -22,7 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Needs({ @ActivatedMorph(morphType = MorphType.LASER) })
-public class InflictLaserDamage implements Behavior, Renderable, MorphLevelUpListener {
+public class InflictLaserDamage implements Behavior, Renderable {
 	private static float maxDamageLevel1 = Conf.getFloatProperty(ConfItem.MORPH_LASER_MAXDAMAGELEVEL1);
 
 	private final Logger LOGGER = LoggerFactory.getLogger(InflictLaserDamage.class);
@@ -30,7 +29,6 @@ public class InflictLaserDamage implements Behavior, Renderable, MorphLevelUpLis
 	/** rate of fire (nb/ms). */
 	private static final float rateOfFire = 0.005f;
 	public static final float MAX_RANGE = 800f;
-	private float maxDps = 0;
 
 	private final Ship sourceOfDamage;
 	private final Entity target;
@@ -50,9 +48,6 @@ public class InflictLaserDamage implements Behavior, Renderable, MorphLevelUpLis
 		timeOfLastAction = Model.getModel().getCurrentTS();
 		this.sourceOfDamage = sourceOfDamage;
 		this.target = target;
-		if (sourceOfDamage != null) {
-			computeMaxDps();
-		}
 	}
 
 	@Override
@@ -65,15 +60,6 @@ public class InflictLaserDamage implements Behavior, Renderable, MorphLevelUpLis
 		}
 
 		return null;
-	}
-
-	// TODO maybe we should decrease the advante of having more and more low level morphs
-	private void computeMaxDps() {
-		float damageFactor = 0;
-		for (Morph morph : sourceOfDamage.getMorphsByType(MorphType.LASER)) {
-			damageFactor += Math.pow(1.2f, morph.getLevel());
-		}
-		maxDps = maxDamageLevel1 * damageFactor;
 	}
 
 	@Override
@@ -97,12 +83,6 @@ public class InflictLaserDamage implements Behavior, Renderable, MorphLevelUpLis
 		// TODO #21
 		return sourceOfDamage.consumeEnergy(Model.getModel().getSecondsSinceLastUpdate()
 				* MorphType.LASER.getEnergyConsumption());
-	}
-
-	@Override
-	public void handleMorphLevelUp(Morph morph) {
-		computeMaxDps();
-		LOGGER.debug("New max DPS : " + maxDps);
 	}
 
 	@Override
@@ -131,7 +111,8 @@ public class InflictLaserDamage implements Behavior, Renderable, MorphLevelUpLis
 
 		// TODO create a message container to add string to, so that there is no need to undo scale and translation
 		if (sourceOfDamage != null && sourceOfDamage.getPlayer().getFof() == FOF.SELF) {
-			RenderUtils.renderLineToConsole("Max DPS: " + maxDps + ", rateOfFire: " + rateOfFire + ", timeOfLastAction: " + timeOfLastAction, 2);
+			RenderUtils.renderLineToConsole("Max DPS: " + sourceOfDamage.getMaxDpsInflictable() + ", rateOfFire: "
+					+ rateOfFire + ", timeOfLastAction: " + timeOfLastAction, 2);
 		}
 
 		GL11.glTranslatef(-focalPoint.x, -focalPoint.y, 0);
@@ -143,9 +124,6 @@ public class InflictLaserDamage implements Behavior, Renderable, MorphLevelUpLis
 		if (target.isDead()) {
 			// TODO This should be handled differently, we depend far too much on the developer knowledge
 			// debugging would be very tough
-			for (Morph morph : sourceOfDamage.getMorphsByType(MorphType.LASER)) {
-				morph.removeListener(this);
-			}
 			sourceOfDamage.removeBehavior(this);
 		}
 
@@ -157,7 +135,7 @@ public class InflictLaserDamage implements Behavior, Renderable, MorphLevelUpLis
 		if (timeOfLastAction == 0 || (Model.getModel().getCurrentTS() - timeOfLastAction) * rateOfFire > 1) {
 			if (target.getPos().distance(sourceOfDamage.getPos()) < MAX_RANGE && consumeEnergy()) {
 
-				target.fireOrder(new TakeDamage(sourceOfDamage, maxDps));
+				target.fireEvent(new TakeDamage(sourceOfDamage, sourceOfDamage.getMaxDpsInflictable()));
 				timeOfLastFire = Model.getModel().getCurrentTS();
 
 				targetHit = true;

@@ -5,12 +5,12 @@ import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
 
-import net.carmgate.morph.actions.common.Event.EventType;
+import net.carmgate.morph.actions.common.UIEvent.EventType;
 
 public class InteractionStack {
 	private static final int STACK_SIZE = 10;
 
-	private final Deque<Event> stack = new LinkedList<>();
+	private final Deque<UIEvent> stack = new LinkedList<>();
 
 	/**
 	 * Default constructor.
@@ -19,25 +19,25 @@ public class InteractionStack {
 	 */
 	public InteractionStack() {
 		for (int i = 0; i < STACK_SIZE; i++) {
-			addEvent(new Event(EventType.NOOP));
+			addEvent(new UIEvent(EventType.NOOP));
 		}
 	}
 
-	public void addEvent(Event event) {
+	public void addEvent(UIEvent event) {
 		stack.addFirst(event);
 		if (stack.size() > STACK_SIZE) {
 			stack.removeLast();
 		}
 	}
 
-	public Event getLastEvent() {
+	public UIEvent getLastEvent() {
 		return stack.getFirst();
 	}
 
-	public List<Event> getLastEvents(int n) {
-		List<Event> result = new ArrayList<>();
+	public List<UIEvent> getLastEvents(int n) {
+		List<UIEvent> result = new ArrayList<>();
 		int i = 0;
-		for (Event event : stack) {
+		for (UIEvent event : stack) {
 			if (i++ >= n) {
 				break;
 			}

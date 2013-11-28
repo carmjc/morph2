@@ -1,4 +1,4 @@
-package net.carmgate.morph.model.orders;
+package net.carmgate.morph.model.events;
 
 /**
  * An order defines something that an entity will have to comply with

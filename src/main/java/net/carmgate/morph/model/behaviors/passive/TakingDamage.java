@@ -5,7 +5,7 @@ import net.carmgate.morph.model.behaviors.common.Behavior;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.model.entities.common.Renderable;
-import net.carmgate.morph.model.orders.Die;
+import net.carmgate.morph.model.events.Die;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,7 +66,7 @@ public class TakingDamage implements Behavior, Renderable {
 		// TODO It should take the shields into account
 		target.setDamage(target.getDamage() + maxDamage);
 		if (target.getDamage() > target.getMaxDamage()) {
-			target.fireOrder(new Die());
+			target.fireEvent(new Die());
 		}
 		maxDamage = 0;
 
