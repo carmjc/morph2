@@ -26,6 +26,7 @@ public class Flee extends Movement {
 	private final Vect3D desiredVelocity = new Vect3D();
 
 	private float slowingDistance;
+	private float minDist;
 	// private final Vect3D speedOpposition = new Vect3D();
 	// private final Vect3D targetOffset = new Vect3D();
 	// private final Vect3D normalizedTargetOffset = new Vect3D();
@@ -40,15 +41,16 @@ public class Flee extends Movement {
 		super(null);
 	}
 
-	public Flee(Entity shipToMove, Entity target) {
+	public Flee(Entity shipToMove, Entity target, float minDist) {
 		super(shipToMove);
 		this.target = target;
+		this.minDist = minDist;
 		// targetSpeed = target.getSpeed();
 	}
 
 	@Override
 	public Behavior cloneForEntity(Entity entity) {
-		return new Flee(entity, target);
+		return new Flee(entity, target, minDist);
 	}
 
 	@Override
@@ -123,36 +125,9 @@ public class Flee extends Movement {
 		final Vect3D pos = new Vect3D(movableEntity.getPos());
 		final Vect3D speed = new Vect3D(movableEntity.getSpeed());
 
-		// Vect3D recomputedTarget = new Vect3D(target.getPos()).add(new
-		// Vect3D(targetSpeed).truncate(targetSpeed.modulus() - minDistance));
-		desiredVelocity.copy(new Vect3D(pos).substract(target.getPos()).mult(
-				movableEntity.getMaxSpeed()));
-		// targetOffset.copy(recomputedTarget).substract(pos);
-		//
-		// normalizedTargetOffset.copy(targetOffset).normalize(1);
-		// speedOpposition.copy(normalizedTargetOffset).rotate(90).mult(speed.prodVectOnZ(normalizedTargetOffset));
-		//
-		// float cosSpeedToTO = 1;
-		// if (speed.modulus() != 0) {
-		// cosSpeedToTO = Math.abs(new Vect3D(speed).normalize(1).prodScal(normalizedTargetOffset));
-		// }
-		//
-		// // distance = length (target_offset)
-		// float distance = targetOffset.modulus();
-		//
-		// // Optimal slowing distance when cruising at MAX_SPEED before entering the slowing radius
-		// // Optimal slowing distance is computed for debugging purposes only
-		// slowingDistance = 0.00001f + (float) (Math.pow(speed.modulus(), 2) / (2 * movableEntity.getMaxSteeringForce()
-		// / mass * cosSpeedToTO));
-		//
-		// desired_velocity would be the optimal speed vector if we had unlimited thrust
-		// desiredVelocity.copy(targetOffset).add(speedOpposition).normalize(distance);
+		desiredVelocity.copy(new Vect3D(pos).substract(target.getPos())).mult(movableEntity.getMaxSpeed());
 
 		steeringForce.copy(desiredVelocity).substract(speed).mult(mass);
 
-		// stop condition
-		// if (new Vect3D(recomputedTarget).substract(pos).modulus() < 5 && speed.modulus() < 60) {
-		// movableEntity.removeBehavior(this);
-		// }
 	}
 }

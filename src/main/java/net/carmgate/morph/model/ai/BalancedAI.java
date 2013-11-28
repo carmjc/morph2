@@ -8,6 +8,7 @@ import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.behaviors.common.Movement;
 import net.carmgate.morph.model.behaviors.steering.Break;
 import net.carmgate.morph.model.behaviors.steering.Flee;
+import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Ship;
 import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.model.events.Event;
@@ -65,7 +66,7 @@ public class BalancedAI {
 
 	private void preRun() {
 		float maxDps = 0;
-		worstEnemy = null;
+		// worstEnemy = null;
 		for (Entry<Entity, DamageTaken> entry : damage.entrySet()) {
 			// Compute dps taken by Ship as a whole
 			if (Model.getModel().getCurrentTS() - entry.getValue().takingDamageTsForDps > 1000
@@ -106,18 +107,25 @@ public class BalancedAI {
 			if (!fleeing) {
 				LOGGER.debug("Run, Forest, run !!");
 				ship.removeBehaviorsByClass(Movement.class);
-				ship.addBehavior(new Flee(ship, worstEnemy));
+				ship.addBehavior(new Flee(ship, worstEnemy, 1000));
 				fleeing = true;
 			}
 		}
 
 		// if we are fleeing but have not taken any damage for more than 2s, the break and reset AI
-		if (fleeing && Model.getModel().getCurrentTS() - lastTsOfDamageTaken > 3000) {
-			LOGGER.debug("Now, we're safe ... no damage for more than 3s");
-			ship.removeBehaviorsByClass(Flee.class);
-			ship.addBehavior(new Break(ship));
-			fleeing = false;
-			reset();
+		if (fleeing) {
+			if (ship.getPos().distance(new Vect3D(worstEnemy.getPos()).add(worstEnemy.getSpeed())) > 1000) {
+				LOGGER.debug("Now, we're safe ... no damage for more than 3s");
+				ship.removeBehaviorsByClass(Flee.class);
+				ship.addBehavior(new Break(ship));
+				// fleeing = false;
+				// reset();
+			} else {
+				if (!ship.hasBehaviorByClass(Flee.class)) {
+					ship.removeBehaviorsByClass(Movement.class);
+					ship.addBehavior(new Flee(ship, worstEnemy, 200));
+				}
+			}
 		} else {
 			LOGGER.debug(fleeing + " - " + (Model.getModel().getCurrentTS() - lastTsOfDamageTaken) + " - "
 					+ ship.hasBehaviorByClass(Flee.class) + " - " + ship.hasBehaviorByClass(Break.class));
