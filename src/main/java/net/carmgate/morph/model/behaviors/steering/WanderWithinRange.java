@@ -72,9 +72,11 @@ public class WanderWithinRange extends Wander {
 		float minDist = range * (1 - delta);
 		float maxDist = range * (1 + delta);
 		float forcedAngle = Vect3D.NORTH.angleWith(offsetToTarget);
-		if (distanceToTarget > maxDist) {
+		float speedAdjustment = Math.abs(new Vect3D(offsetToTarget).normalize(1).prodScal(movableEntity.getSpeed()));
+		// TODO Improve speed adjustment use
+		if (distanceToTarget + speedAdjustment > maxDist) {
 			wanderAngle = forcedAngle;
-		} else if (distanceToTarget > minDist) {
+		} else if (distanceToTarget + speedAdjustment > minDist) {
 			float relativeAngle = (wanderAngle - forcedAngle + 180 + 720) % 360;
 			float minAngle = 180 - 180 * (maxDist - distanceToTarget) / (maxDist - minDist);
 			float maxAngle = 180 + 180 * (maxDist - distanceToTarget) / (maxDist - minDist);

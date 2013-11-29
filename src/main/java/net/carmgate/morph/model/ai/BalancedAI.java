@@ -17,7 +17,9 @@ import net.carmgate.morph.model.entities.Ship;
 import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.model.events.Event;
 import net.carmgate.morph.model.events.TakeDamage;
+import net.carmgate.morph.model.player.Player.PlayerType;
 
+import org.apache.commons.collections.Predicate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -93,7 +95,15 @@ public class BalancedAI {
 
 	private Set<Entity> detectEnemies() {
 		return Model.getModel().findEntitiesWithinDistanceOfLocationAndNotPlayerOwned(ship.getPos(),
-				1000, ship.getPlayer());
+				1000, new Predicate() {
+
+			@Override
+			public boolean evaluate(Object object) {
+				Entity entity = (Entity) object;
+						return entity.getPlayer() != ship.getPlayer()
+								&& entity.getPlayer().getPlayerType() != PlayerType.NOONE;
+			}
+		});
 	}
 
 	public void handleEvent(Event event) {

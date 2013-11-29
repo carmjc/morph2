@@ -36,6 +36,7 @@ import net.carmgate.morph.ui.ParticleEngine;
 import net.carmgate.morph.ui.common.RenderingHints;
 import net.carmgate.morph.ui.common.RenderingSteps;
 
+import org.apache.commons.collections.Predicate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -144,7 +145,7 @@ public class Model {
 
 	// TODO Rework this method .. maybe with a Predicate
 	public Set<Entity> findEntitiesWithinDistanceOfLocationAndNotPlayerOwned(final Vect3D location, float radius,
-			Player player) {
+			Predicate predicate) {
 		// TODO Check this ... it is probably very bad in terms of performance
 		Set<Entity> resultSet = new TreeSet<>(new Comparator<Entity>() {
 			@Override
@@ -162,7 +163,7 @@ public class Model {
 		});
 
 		for (Entity entity : entities) {
-			if (entity.getPos().distance(location) < radius && entity.getPlayer() != player) {
+			if (entity.getPos().distance(location) < radius && predicate.evaluate(entity)) {
 				resultSet.add(entity);
 			}
 		}
