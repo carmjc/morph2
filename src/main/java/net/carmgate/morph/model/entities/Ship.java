@@ -87,7 +87,7 @@ public class Ship extends Entity {
 
 		// TODO This should be a function of the ship's fitting
 		energy = 100;
-		maxDamage = 10;
+		maxDamage = 10 * mass;
 		maxEnergy = 100;
 
 		// init of the ship editor layer used for debugging purposes
@@ -190,7 +190,9 @@ public class Ship extends Entity {
 		cloneBehaviors(newShip);
 
 		// Clone AI
-		newShip.setAi(ai.cloneForShip(newShip));
+		if (ai != null) {
+			newShip.setAi(ai.cloneForShip(newShip));
+		}
 
 		return newShip;
 	}

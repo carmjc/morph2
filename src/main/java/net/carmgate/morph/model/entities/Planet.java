@@ -53,7 +53,8 @@ public class Planet extends Entity {
 	public void initRenderer() {
 		// load texture from PNG file if needed
 		if (baseTexture == null) {
-			try (FileInputStream fileInputStream = new FileInputStream(ClassLoader.getSystemResource("img/planet/planet8.png").getPath())) {
+			try (FileInputStream fileInputStream = new FileInputStream(ClassLoader.getSystemResource(
+					"img/planet/planet4.png").getPath())) {
 				baseTexture = TextureLoader.getTexture("PNG", fileInputStream);
 			} catch (IOException e) {
 				LOGGER.error("Exception raised while loading texture", e);

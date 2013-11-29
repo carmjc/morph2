@@ -28,8 +28,9 @@ public class Morph implements Renderable, Selectable {
 		OVERMIND(0),
 		SHIELD(20),
 		LASER(100),
-		SIMPLE_PROPULSOR(10),
-		CARGO(0);
+		SIMPLE_PROPULSOR(30),
+		ARMOR(2);
+		//		CARGO(0);
 
 		private final float energyConsumption;
 
