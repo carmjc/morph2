@@ -54,7 +54,7 @@ public class Morph implements Renderable, Selectable {
 
 	// Morph characteristics
 	private final MorphType morphType;
-	private int level = 0;
+	private int level;
 	private float xp = 0;
 	private boolean selected;
 	private Ship ship;
@@ -74,7 +74,7 @@ public class Morph implements Renderable, Selectable {
 	}
 
 	public Morph(MorphType morphType, Ship ship) {
-		this(morphType, 0, 0, ship);
+		this(morphType, 1, 0, ship);
 	}
 
 	@Override

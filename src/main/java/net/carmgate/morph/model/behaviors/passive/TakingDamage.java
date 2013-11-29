@@ -65,7 +65,7 @@ public class TakingDamage implements Behavior, Renderable {
 		// This is not multiplied by lastUpdateTS because the timing is handled by the sender of the event.
 		// TODO It should take the shields into account
 		target.setDamage(target.getDamage() + maxDamage);
-		if (target.getDamage() > target.getMaxDamage()) {
+		if (target.getDamage() > target.getMaxHitPoints()) {
 			target.fireEvent(new Die());
 		}
 		maxDamage = 0;

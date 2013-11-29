@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 public class Conf {
 
 	public static enum ConfItem {
+		MORPH_ARMOR_HITPOINTS_LEVEL1("morph.armor.hitpoints.level1"),
 		MORPH_LASER_MAXXPPERHIT("morph.laser.maxXpPerHit"),
 		MORPH_LASER_MAXXPPERHIT_FOR_OVERMIND("morph.laser.maxXpPerHit.forOvermind"),
 		MORPH_LASER_MAXDAMAGELEVEL1("morph.laser.maxDamageLevel1"),

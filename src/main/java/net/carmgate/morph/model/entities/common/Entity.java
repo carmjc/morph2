@@ -63,7 +63,7 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 	// TODO remove the initial 10 value
 	protected float mass = 10;
 	protected float damage = 0;
-	protected float maxDamage = 1;
+	protected float maxHitPoints;
 	protected float energy;
 	protected float maxEnergy = 0;
 
@@ -230,8 +230,8 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 		return mass;
 	}
 
-	public float getMaxDamage() {
-		return maxDamage;
+	public float getMaxHitPoints() {
+		return maxHitPoints;
 	}
 
 	public final float getMaxSpeed() {

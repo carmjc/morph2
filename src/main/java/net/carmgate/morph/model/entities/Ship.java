@@ -87,7 +87,7 @@ public class Ship extends Entity {
 
 		// TODO This should be a function of the ship's fitting
 		energy = 100;
-		maxDamage = 10 * mass;
+		maxHitPoints = 10 * mass;
 		maxEnergy = 100;
 
 		// init of the ship editor layer used for debugging purposes
@@ -398,13 +398,13 @@ public class Ship extends Entity {
 		if (!isSelectRendering(glMode) && !minZoom || getPlayer().getFof() == FOF.SELF || selected) {
 			GL11.glScalef(1f / zoomFactor, 1f / zoomFactor, 1);
 			if (!minZoom) {
-				RenderUtils.renderGauge(50, 16 + 64 * zoomFactor * massScale + 5, Math.min(maxDamage - damage, maxDamage) / maxDamage, 0.2f,
+				RenderUtils.renderGauge(50, 16 + 64 * zoomFactor * massScale + 5, Math.min(maxHitPoints - damage, maxHitPoints) / maxHitPoints, 0.2f,
 						new float[] { 0.5f, 1, 0.5f,
 					1 });
 				RenderUtils.renderGauge(50, 16 + 64 * zoomFactor * massScale - 5, Math.min(energy, maxEnergy) / maxEnergy, 0.05f, new float[] { 0.5f, 0.5f, 1,
 					1 });
 			} else {
-				RenderUtils.renderGauge(50, 32 + 5, Math.min(maxDamage - damage, maxDamage) / maxDamage, 0.2f, new float[] { 0.5f, 1, 0.5f, 1 });
+				RenderUtils.renderGauge(50, 32 + 5, Math.min(maxHitPoints - damage, maxHitPoints) / maxHitPoints, 0.2f, new float[] { 0.5f, 1, 0.5f, 1 });
 				RenderUtils.renderGauge(50, 32 - 5, Math.min(energy, maxEnergy) / maxEnergy, 0.05f, new float[] { 0.5f, 0.5f, 1, 1 });
 			}
 			GL11.glScalef(zoomFactor, zoomFactor, 1);
@@ -553,6 +553,14 @@ public class Ship extends Entity {
 			}
 		}
 		maxDpsInflictable = maxDamageLevel1 * damageFactor;
+
+		// update max hit points with armor
+		maxHitPoints = 10 * mass;
+		if (getMorphsByType(MorphType.ARMOR) != null) {
+			maxHitPoints += Conf.getFloatProperty(ConfItem.MORPH_ARMOR_HITPOINTS_LEVEL1)
+					* getMorphsByType(MorphType.ARMOR).size();
+		}
+
 	}
 
 	@Override
