@@ -126,6 +126,7 @@ public class Flee extends Movement {
 		final Vect3D speed = new Vect3D(movableEntity.getSpeed());
 
 		desiredVelocity.copy(new Vect3D(pos).substract(target.getPos())).mult(movableEntity.getMaxSpeed());
+		// we should add some wandering to delinearize the flee behavior
 
 		steeringForce.copy(desiredVelocity).substract(speed).mult(mass);
 

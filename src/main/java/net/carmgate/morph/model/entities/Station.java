@@ -33,11 +33,11 @@ public class Station extends Entity {
 
 	@Deprecated
 	public Station() {
-		this(null, 0, 0, 0);
+		this(null, 0, 0, 0, null);
 	}
 
-	public Station(Entity orbitee, float mass, float radius, float orbit) {
-		super(Player.NO_ONE);
+	public Station(Entity orbitee, float mass, float radius, float orbit, Player player) {
+		super(player);
 		maxSpeed = 100000;
 		maxSteeringForce = 100000;
 

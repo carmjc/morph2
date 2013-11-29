@@ -10,9 +10,13 @@ import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.ui.common.RenderUtils;
 
 import org.lwjgl.opengl.GL11;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Needs({ @ActivatedMorph(morphType = MorphType.SIMPLE_PROPULSOR) })
 public class WanderWithinRange extends Wander {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(WanderWithinRange.class);
 
 	private final Entity target;
 	private final float range;
@@ -51,6 +55,8 @@ public class WanderWithinRange extends Wander {
 
 	@Override
 	public void run() {
+		LOGGER.debug("Wandering within range");
+
 		if (wanderRadius == 0) {
 			movableEntity.removeBehavior(this);
 			return;

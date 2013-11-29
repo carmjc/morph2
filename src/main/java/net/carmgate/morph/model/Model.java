@@ -1,5 +1,6 @@
 package net.carmgate.morph.model;
 
+import java.util.Comparator;
 import java.util.Date;
 import java.util.Deque;
 import java.util.HashMap;
@@ -7,6 +8,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import net.carmgate.morph.actions.common.InteractionStack;
 import net.carmgate.morph.model.ai.BalancedAI;
@@ -72,6 +74,7 @@ public class Model {
 
 	/** All the entities of the world can be searched by @entity uniqueId and entity instance uniqueId. */
 	// TODO we should rework this structure, it's not clean.
+	private final Set<Entity> entities = new HashSet<>();
 	private final Map<EntityType, EntityMap> entitiesByEntityType = new HashMap<>();
 	private final Map<RenderingSteps, EntityMap> entitiesByRenderingStep = new HashMap<>();
 	private final Set<Entity> entitiesToRemove = new HashSet<>();
@@ -106,7 +109,6 @@ public class Model {
 	 * @param entity
 	 */
 	public void addEntity(Entity entity) {
-		// Add it the selection model
 		EntityType entityType = entity.getClass().getAnnotation(EntityHints.class).entityType();
 		RenderingSteps renderingStep = entity.getClass().getAnnotation(RenderingHints.class).renderingStep();
 		EntityMap entityMap = getEntitiesByType(entityType);
@@ -116,6 +118,7 @@ public class Model {
 			entitiesByRenderingStep.put(renderingStep, entityMap);
 		}
 		entityMap.put(entity.getId(), entity);
+		entities.add(entity);
 	}
 
 	// IMPROVE We must fix the temptation to use getSelection.clear() instead
@@ -137,6 +140,34 @@ public class Model {
 			selectable.setSelected(false);
 		}
 		simpleSelection.clear();
+	}
+
+	// TODO Rework this method .. maybe with a Predicate
+	public Set<Entity> findEntitiesWithinDistanceOfLocationAndNotPlayerOwned(final Vect3D location, float radius,
+			Player player) {
+		// TODO Check this ... it is probably very bad in terms of performance
+		Set<Entity> resultSet = new TreeSet<>(new Comparator<Entity>() {
+			@Override
+			public int compare(Entity o1, Entity o2) {
+				float d1 = o1.getPos().distance(location);
+				float d2 = o2.getPos().distance(location);
+				if (d1 < d2) {
+					return -1;
+				}
+				if (d1 > d2) {
+					return 1;
+				}
+				return 0;
+			}
+		});
+
+		for (Entity entity : entities) {
+			if (entity.getPos().distance(location) < radius && entity.getPlayer() != player) {
+				resultSet.add(entity);
+			}
+		}
+
+		return resultSet;
 	}
 
 	public Deque<Entity> getActionSelection() {
@@ -221,13 +252,14 @@ public class Model {
 		planet.addBehavior(new Orbit(planet, star, 500000, true));
 		Model.getModel().addEntity(planet);
 
-		Station station = new Station(planet, 100, 50, 7000);
-
 		Player player = new Player(PlayerType.AI, "Nemesis", FOF.FOE);
+		Station station = new Station(planet, 100, 50, 7000, player);
+
 		Ship enemyShip = new Ship(128, 0, 0, 0, 10, player);
 		enemyShip.addMorph(new Morph(MorphType.OVERMIND, enemyShip));
 		enemyShip.addMorph(new Morph(MorphType.SIMPLE_PROPULSOR, enemyShip));
 		enemyShip.addMorph(new Morph(MorphType.SIMPLE_PROPULSOR, enemyShip));
+		enemyShip.addMorph(new Morph(MorphType.LASER, enemyShip));
 		enemyShip.addBehavior(new WanderWithinRange(enemyShip, 200, 100, station, 2000));
 		enemyShip.setAi(new BalancedAI(enemyShip));
 
@@ -241,6 +273,7 @@ public class Model {
 		selfShip.addMorph(new Morph(MorphType.SIMPLE_PROPULSOR, selfShip));
 		// selfShip.addMorph(new Morph(MorphType.SIMPLE_PROPULSOR, selfShip));
 		// selfShip.addMorph(new Morph(MorphType.SIMPLE_PROPULSOR, selfShip));
+		selfShip.addMorph(new Morph(MorphType.LASER, selfShip));
 		selfShip.addMorph(new Morph(MorphType.LASER, selfShip));
 		Model.getModel().addEntity(selfShip);
 

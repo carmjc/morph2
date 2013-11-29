@@ -344,7 +344,14 @@ public abstract class Entity implements Renderable, Selectable, Updatable {
 			LOGGER.error("This method parameter should not be null");
 		}
 
+		// Remove active behaviors
 		CollectionUtils.select(behaviorSet, new SameClassPredicate(behaviorClass), pendingBehaviorsRemoval);
+
+		// Remove behaviors that were added in the current iteration
+		Set<Behavior> tempSet = new HashSet<>();
+		CollectionUtils.selectRejected(pendingBehaviorsAddition, new SameClassPredicate(behaviorClass), tempSet);
+		pendingBehaviorsAddition.clear();
+		pendingBehaviorsAddition.addAll(tempSet);
 	}
 
 	/**

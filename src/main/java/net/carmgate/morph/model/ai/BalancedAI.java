@@ -1,13 +1,17 @@
 package net.carmgate.morph.model.ai;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import net.carmgate.morph.model.Model;
+import net.carmgate.morph.model.behaviors.InflictLaserDamage;
 import net.carmgate.morph.model.behaviors.common.Movement;
 import net.carmgate.morph.model.behaviors.steering.Break;
 import net.carmgate.morph.model.behaviors.steering.Flee;
+import net.carmgate.morph.model.behaviors.steering.Follow;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.Ship;
 import net.carmgate.morph.model.entities.common.Entity;
@@ -20,20 +24,26 @@ import org.slf4j.LoggerFactory;
 public class BalancedAI {
 
 	private class DamageTaken {
-		protected float takingDamageAmount;
-		protected long takingDamageTsForDps = 0;
-		protected float takingDamageDps;
+		protected long firstHitTs;
+		protected long lastHitTs;
+		protected float totalDamageTaken;
+		protected float dps;
 	}
 
 	private final static Logger LOGGER = LoggerFactory.getLogger(BalancedAI.class);
 
 	private Map<Entity, DamageTaken> damage = new HashMap<>();
-	private Entity worstEnemy;
+	private Set<Entity> enemies = new HashSet<>();
+	private Entity mostDangerousEnemy;
 	private Ship ship;
-	private float runTotalDpsTaken;
+
+	/** Instant DPS from all damage sources. */
+	private float currentTotalDpsTaken;
 	private long lastTsOfDamageTaken;
 
 	private boolean fleeing;
+
+	private Entity target;
 
 	public BalancedAI(Ship ship) {
 		this.ship = ship;
@@ -42,6 +52,48 @@ public class BalancedAI {
 	public BalancedAI cloneForShip(Ship ship) {
 		BalancedAI balancedAI = new BalancedAI(ship);
 		return balancedAI;
+	}
+
+	/**
+	 * Compute values needed by the AI.
+	 */
+	private void computePremices() {
+		computePremicesDamageTaken();
+	}
+
+	/**
+	 * Compute values needed by the AI regarding damage taken.
+	 */
+	private void computePremicesDamageTaken() {
+		float maxDps = 0;
+		currentTotalDpsTaken = 0;
+
+		for (Entry<Entity, DamageTaken> entry : damage.entrySet()) {
+			DamageTaken dt = entry.getValue();
+
+			// Compute dps taken by Ship as a whole
+			if (Model.getModel().getCurrentTS() - dt.firstHitTs > 500) {
+				dt.dps = dt.totalDamageTaken / (Model.getModel().getCurrentTS() - dt.firstHitTs) * 1000;
+				LOGGER.debug("taking dps: " + dt.dps);
+			}
+
+			// Assume dps = 0 if no hit during last second
+			// TODO We should compute a moving average considering the hitting frequency of the damage source
+			if (Model.getModel().getCurrentTS() - dt.lastHitTs > 1000) {
+				LOGGER.debug("No damage for last 1s");
+				dt.dps = 0;
+			}
+
+			currentTotalDpsTaken += dt.dps;
+			if (dt.dps > maxDps) {
+				mostDangerousEnemy = entry.getKey();
+			}
+		}
+	}
+
+	private Set<Entity> detectEnemies() {
+		return Model.getModel().findEntitiesWithinDistanceOfLocationAndNotPlayerOwned(ship.getPos(),
+				1000, ship.getPlayer());
 	}
 
 	public void handleEvent(Event event) {
@@ -53,9 +105,14 @@ public class BalancedAI {
 			if (dt == null) {
 				dt = new DamageTaken();
 				damage.put(entity, dt);
+				enemies.add(entity);
 			}
 
-			dt.takingDamageAmount += ((TakeDamage) event).getDamageAmount();
+			if (dt.firstHitTs == 0) {
+				dt.firstHitTs = Model.getModel().getCurrentTS();
+			}
+			dt.lastHitTs = Model.getModel().getCurrentTS();
+			dt.totalDamageTaken += ((TakeDamage) event).getDamageAmount();
 
 			lastTsOfDamageTaken = Model.getModel().getCurrentTS();
 
@@ -64,71 +121,48 @@ public class BalancedAI {
 		}
 	}
 
-	private void preRun() {
-		float maxDps = 0;
-		// worstEnemy = null;
-		for (Entry<Entity, DamageTaken> entry : damage.entrySet()) {
-			// Compute dps taken by Ship as a whole
-			if (Model.getModel().getCurrentTS() - entry.getValue().takingDamageTsForDps > 1000
-					&& entry.getValue().takingDamageAmount > 0) {
-				entry.getValue().takingDamageDps = entry.getValue().takingDamageAmount;
-				LOGGER.debug("taking dps: " + entry.getValue().takingDamageDps);
-				entry.getValue().takingDamageAmount = 0;
-				entry.getValue().takingDamageTsForDps = Model.getModel().getCurrentTS();
-			}
-
-			if (Model.getModel().getCurrentTS() - entry.getValue().takingDamageTsForDps > 2000) {
-				LOGGER.debug("No damage for last 2s");
-				entry.getValue().takingDamageAmount = 0;
-				entry.getValue().takingDamageDps = 0;
-			}
-
-			runTotalDpsTaken += entry.getValue().takingDamageDps;
-			if (entry.getValue().takingDamageDps > maxDps) {
-				worstEnemy = entry.getKey();
-			}
-		}
-	}
-
-	private void reset() {
-		// TODO we should get back to original plan instead of just stopping everything
-		damage.clear();
-		runTotalDpsTaken = 0;
-		worstEnemy = null;
-	}
-
 	public void run() {
-		preRun();
+		computePremices();
+		Set<Entity> detectedEnemies = detectEnemies();
 
 		// If dps is too high to win the battle : flee
-		if (runTotalDpsTaken > ship.getMaxDpsInflictable()) {
-			LOGGER.debug("If I do not flee, the battle will end in a loss or a draw (" + runTotalDpsTaken + "/"
+		if (currentTotalDpsTaken > ship.getMaxDpsInflictable()) {
+			LOGGER.debug("If I do not flee, the battle will end in a loss or a draw (" + currentTotalDpsTaken + "/"
 					+ ship.getMaxDpsInflictable() + ")");
-			if (!fleeing) {
+			if (!ship.hasBehaviorByClass(Flee.class)) {
+				// TODO We should flee the barycenter of enemies positions weighted by the dps they deal
 				LOGGER.debug("Run, Forest, run !!");
 				ship.removeBehaviorsByClass(Movement.class);
-				ship.addBehavior(new Flee(ship, worstEnemy, 1000));
+				ship.addBehavior(new Flee(ship, mostDangerousEnemy, 1000));
 				fleeing = true;
 			}
 		}
 
 		// if we are fleeing but have not taken any damage for more than 2s, the break and reset AI
 		if (fleeing) {
-			if (ship.getPos().distance(new Vect3D(worstEnemy.getPos()).add(worstEnemy.getSpeed())) > 1000) {
+			if (ship.getPos().distance(new Vect3D(mostDangerousEnemy.getPos()).add(mostDangerousEnemy.getSpeed())) > 1000) {
 				LOGGER.debug("Now, we're safe ... no damage for more than 3s");
 				ship.removeBehaviorsByClass(Flee.class);
 				ship.addBehavior(new Break(ship));
-				// fleeing = false;
-				// reset();
 			} else {
 				if (!ship.hasBehaviorByClass(Flee.class)) {
 					ship.removeBehaviorsByClass(Movement.class);
-					ship.addBehavior(new Flee(ship, worstEnemy, 200));
+					ship.addBehavior(new Flee(ship, mostDangerousEnemy, 200)); // The 200 is useless for now as it's not used by
 				}
 			}
 		} else {
-			LOGGER.debug(fleeing + " - " + (Model.getModel().getCurrentTS() - lastTsOfDamageTaken) + " - "
-					+ ship.hasBehaviorByClass(Flee.class) + " - " + ship.hasBehaviorByClass(Break.class));
+			// LOGGER.debug(fleeing + " - " + (Model.getModel().getCurrentTS() - lastTsOfDamageTaken) + " - "
+			// + ship.hasBehaviorByClass(Flee.class) + " - " + ship.hasBehaviorByClass(Break.class));
+			// LOGGER.debug("Inflictable damage: " + ship.getMaxDpsInflictable() + " - detected enemies: "
+			// + detectedEnemies.size());
+
+			if (ship.getMaxDpsInflictable() > 0 && !detectedEnemies.isEmpty() && target == null) {
+				target = detectedEnemies.iterator().next();
+				LOGGER.debug("Removing movement");
+				ship.removeBehaviorsByClass(Movement.class);
+				ship.addBehavior(new Follow(ship, target, 200));
+				ship.addBehavior(new InflictLaserDamage(ship, target));
+			}
 		}
 
 	}

@@ -21,6 +21,7 @@ public class Conf {
 		MORPH_SIMPLEPROPULSOR_MAXSPEED_FACTORPERLEVEL("morph.simplePropulsor.maxSpeed.factorPerLevel"),
 		MORPH_SIMPLEPROPULSOR_MAXXPPERSECOND("morph.simplePropulsor.maxXpPerSecond"),
 		MORPH_SIMPLEPROPULSOR_MAXXPPERSECOND_FOR_OVERMIND("morph.simplePropulsor.maxXpPerSecond.forOvermind"),
+		SHIP_NORADAR_DETECTION_RANGE("ship.noradar.detectionRange"),
 		SHIP_TRAIL_NUMBEROFSEGMENTS("ship.trail.numberOfSegments"),
 		SHIP_TRAIL_UPDATEINTERVAL("ship.trail.updateInterval"),
 		ZOOM_VARIATIONFACTOR("zoom.variationFactor"),
