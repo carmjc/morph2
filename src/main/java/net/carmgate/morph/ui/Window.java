@@ -1,4 +1,4 @@
-package net.carmgate.morph.model.ui;
+package net.carmgate.morph.ui;
 
 import net.carmgate.morph.conf.Conf;
 

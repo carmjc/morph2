@@ -8,8 +8,8 @@ import net.carmgate.morph.conf.Conf;
 import net.carmgate.morph.conf.Conf.ConfItem;
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.common.Vect3D;
-import net.carmgate.morph.model.ui.ViewPort;
 import net.carmgate.morph.ui.GameMouse;
+import net.carmgate.morph.ui.ViewPort;
 
 import org.lwjgl.input.Keyboard;
 import org.slf4j.Logger;

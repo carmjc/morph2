@@ -24,10 +24,10 @@ import net.carmgate.morph.model.events.Event;
 import net.carmgate.morph.model.events.MorphLevelUp;
 import net.carmgate.morph.model.player.Player;
 import net.carmgate.morph.model.player.Player.FOF;
-import net.carmgate.morph.model.ui.layers.ShipEditorLayer;
 import net.carmgate.morph.ui.common.RenderUtils;
 import net.carmgate.morph.ui.common.RenderingHints;
 import net.carmgate.morph.ui.common.RenderingSteps;
+import net.carmgate.morph.ui.layers.ShipEditorLayer;
 
 import org.lwjgl.opengl.GL11;
 import org.newdawn.slick.opengl.Texture;

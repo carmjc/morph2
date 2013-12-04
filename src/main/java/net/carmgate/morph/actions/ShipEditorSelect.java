@@ -9,9 +9,9 @@ import net.carmgate.morph.actions.common.UIEvent;
 import net.carmgate.morph.actions.common.UIEvent.EventType;
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.entities.Morph;
-import net.carmgate.morph.model.ui.UIState;
-import net.carmgate.morph.model.ui.Window;
-import net.carmgate.morph.model.ui.layers.ShipEditorLayer;
+import net.carmgate.morph.ui.UIState;
+import net.carmgate.morph.ui.Window;
+import net.carmgate.morph.ui.layers.ShipEditorLayer;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.input.Mouse;

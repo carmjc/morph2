@@ -20,10 +20,10 @@ import net.carmgate.morph.actions.drag.DragContext;
 import net.carmgate.morph.conf.Conf;
 import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.entities.common.Renderable;
-import net.carmgate.morph.model.ui.UIState;
-import net.carmgate.morph.model.ui.layers.NormalLayer;
-import net.carmgate.morph.model.ui.layers.ShipEditorLayer;
+import net.carmgate.morph.ui.UIState;
 import net.carmgate.morph.ui.common.RenderUtils;
+import net.carmgate.morph.ui.layers.NormalLayer;
+import net.carmgate.morph.ui.layers.ShipEditorLayer;
 
 import org.lwjgl.LWJGLException;
 import org.lwjgl.input.Keyboard;

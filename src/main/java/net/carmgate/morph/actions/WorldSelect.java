@@ -12,7 +12,7 @@ import net.carmgate.morph.model.Model;
 import net.carmgate.morph.model.common.Vect3D;
 import net.carmgate.morph.model.entities.common.Entity;
 import net.carmgate.morph.model.entities.common.EntityHints;
-import net.carmgate.morph.model.ui.Window;
+import net.carmgate.morph.ui.Window;
 import net.carmgate.morph.ui.common.RenderingSteps;
 
 import org.lwjgl.BufferUtils;

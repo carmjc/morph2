@@ -1,4 +1,4 @@
-package net.carmgate.morph.model.ui;
+package net.carmgate.morph.ui;
 
 /**
  * The different states of the UI.

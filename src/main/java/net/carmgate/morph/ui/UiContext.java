@@ -1,4 +1,4 @@
-package net.carmgate.morph.model.ui;
+package net.carmgate.morph.ui;
 
 /**
  * This class stores the context of the UI.
